@@ -9,56 +9,53 @@ st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide")
 LOGO_MAIN = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo1.png?raw=true" 
 LOGO_PROFILE = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true"
 
-# --- 2. SIÊU CSS (CĂN CHỈNH THEO YÊU CẦU MỚI) ---
+# --- 2. SIÊU CSS (Tối ưu vị trí các thành phần) ---
 st.markdown("""
     <style>
-    /* Nền và tổng thể */
     .stApp { background-color: #050a0e; color: #e0e6ed; }
     .block-container { padding-top: 0.5rem !important; max-width: 98% !important; }
     header { visibility: hidden; height: 0px !important; }
 
-    /* Logo giữa màn hình */
+    /* Logo & Slogan giữa màn hình */
     .logo-container {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        margin-top: 10px;
         margin-bottom: 20px;
     }
     .logo-img { 
-        width: 280px; /* Thu nhỏ logo lại */
+        width: 250px; 
         filter: drop-shadow(0px 0px 10px rgba(0, 212, 255, 0.4));
     }
     .slogan {
         color: #00d4ff;
-        font-size: 18px;
+        font-size: 16px;
         font-weight: bold;
-        margin-top: 10px;
+        margin-top: 8px;
         text-transform: uppercase;
         letter-spacing: 1px;
     }
 
-    /* Tinh chỉnh thanh tìm kiếm góc trái sát bảng */
+    /* Đưa phần chọn ngôn ngữ lên góc phải màn hình (Fixed) */
+    .lang-container {
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        z-index: 1000;
+        background: rgba(13, 27, 42, 0.8);
+        padding: 5px 15px;
+        border-radius: 20px;
+        border: 1px solid #00d4ff;
+    }
+
+    /* Thanh tìm kiếm sát bảng bên trái */
     div[data-testid="stSelectbox"] {
-        max-width: 400px !important;
-        margin-bottom: -15px; /* Ép sát xuống bảng */
+        max-width: 350px !important;
+        margin-bottom: -10px;
     }
 
-    /* Sidebar (Tab bên trái) */
-    [data-testid="stSidebar"] {
-        background-color: #0d1b2a;
-        border-right: 1px solid #00d4ff;
-    }
-    .sidebar-title {
-        color: #ffd700;
-        font-size: 16px;
-        font-weight: bold;
-        padding: 10px 0;
-        text-align: center;
-        border-bottom: 1px solid #1a2a3a;
-    }
-
-    /* Bảng dữ liệu */
     [data-testid="stDataFrame"] { 
         background: #0d1b2a; 
         border-radius: 10px; 
@@ -74,13 +71,11 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. MENU SIDEBAR (TAB BÊN TRÁI) ---
-with st.sidebar:
-    st.markdown('<div class="sidebar-title">BẢNG ĐIỀU KHIỂN</div>', unsafe_allow_html=True)
-    st.write("")
-    lang = st.radio("NGÔN NGỮ / LANGUAGE", ["VN", "EN"], horizontal=False)
-    st.divider()
-    st.info("Hệ thống quản lý KPI tự động cho Kingdom 3625.")
+# --- 3. ĐIỀU KHIỂN NGÔN NGỮ (Luôn hiển thị góc phải) ---
+# Dùng cột để tạo layout giả lập vị trí
+col_space, col_lang = st.columns([8, 1])
+with col_lang:
+    lang = st.radio("", ["VN", "EN"], horizontal=True, label_visibility="collapsed")
 
 # --- 4. DỮ LIỆU ---
 texts = {
@@ -134,7 +129,7 @@ df = load_data()
 
 # --- 5. GIAO DIỆN CHÍNH ---
 if df is not None:
-    # 1. Logo & Slogan giữa màn hình
+    # Logo & Slogan
     st.markdown(f"""
         <div class="logo-container">
             <img src="{LOGO_MAIN}" class="logo-img">
@@ -142,10 +137,10 @@ if df is not None:
         </div>
     """, unsafe_allow_html=True)
 
-    # 2. Thanh tìm kiếm nằm góc trái sát bảng
+    # Thanh tìm kiếm bên trái
     sel = st.selectbox("", sorted(df['Tên_2'].unique()), index=None, placeholder=L['search'], label_visibility="collapsed")
 
-    # Hiển thị Profile Card khi chọn thành viên
+    # Hiển thị Card
     if sel:
         d = df[df['Tên_2'] == sel].iloc[0]
         html_card = f"""
@@ -218,7 +213,7 @@ if df is not None:
         """
         components.html(html_card, height=580)
 
-    # 3. Bảng dữ liệu chính
+    # Bảng số liệu
     display_df = df[['Tên_2', 'ID', 'Liên Minh_2', 'KillRank', 'Sức Mạnh_2', 'Tổng Tiêu Diệt_2', 'Điểm Chết_2', 'KI', 'DI', 'KPI_T']].copy()
     display_df.columns = L['cols']
     for col in L['cols'][4:9]:
@@ -229,4 +224,4 @@ if df is not None:
 
     st.markdown(f'<div class="footer">🛡️ Discord: <b>louiss.nee</b> | Zalo: <b>0.3.7.3.2.7.4.6.0.0</b></div>', unsafe_allow_html=True)
 else:
-    st.error("⚠️ Không thể tải dữ liệu từ Sheets.")
+    st.error("⚠️ Không thể tải dữ liệu.")
