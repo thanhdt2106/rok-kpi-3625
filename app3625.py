@@ -1,103 +1,114 @@
 import streamlit as st
-import pandas as pd
 import plotly.graph_objects as go
 
 # --- CẤU HÌNH TRANG ---
 st.set_page_config(layout="wide")
 
-# --- CSS INJECTION: BIẾN TOÀN BỘ APP THÀNH KHUNG XANH ---
+# --- CSS TẠO KHUNG NỔI GIỮA MÀN HÌNH ---
 st.markdown("""
     <style>
-    /* Biến toàn bộ nền ứng dụng thành màu xanh đặc trưng */
+    /* Nền tối sâu phía sau để khung nổi bật lên */
     .stApp {
-        background: linear-gradient(180deg, #1d82b5 0%, #135d88 100%) !important;
-        color: white !important;
+        background-color: #050a0e !important;
     }
 
-    /* Tùy chỉnh tiêu đề và text */
-    h1, h2, h3, p, span, label {
-        color: white !important;
+    /* Container chính căn giữa */
+    .flex-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 40px 0;
     }
 
-    /* Các ô thông số (Stats) */
-    .stat-container {
-        background: rgba(0, 0, 0, 0.3) !important;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 10px;
+    /* Hiệu ứng khung nổi màu xanh đậm (Glassmorphism) */
+    .floating-card {
+        background: linear-gradient(145deg, #0f4c75, #082d45);
+        border: 2px solid #3282b8;
+        border-radius: 20px;
+        padding: 40px;
+        width: 85%;
+        max-width: 1000px;
+        /* Tạo bóng đổ để có hiệu ứng nổi 3D */
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 
+                    inset 0 0 20px rgba(50, 130, 184, 0.2);
+        color: white;
+        text-align: left;
+    }
+
+    /* Hiệu ứng bóng bẩy cho các ô thông số */
+    .stat-box {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 12px;
         padding: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
         text-align: center;
-        margin-bottom: 10px;
+        transition: transform 0.3s ease;
     }
-    .s-label { font-size: 11px; color: #b0d4e3; text-transform: uppercase; font-weight: bold; }
-    .s-value { font-size: 22px; font-weight: 800; display: block; margin-top: 5px; }
+    .stat-box:hover {
+        transform: translateY(-5px); /* Hiệu ứng nổi lên khi di chuột vào */
+        border-color: #3282b8;
+    }
 
-    /* Fix lỗi hiển thị biểu đồ Plotly trên nền xanh */
-    .js-plotly-plot .plotly .main-svg {
-        background: transparent !important;
-    }
+    .label { color: #bbe1fa; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+    .value { font-size: 24px; font-weight: 800; display: block; margin-top: 5px; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- HÀM VẼ BIỂU ĐỒ (SỬA LỖI VALUEERROR GÂY SẬP APP) ---
-def draw_kpi(pct, color, title):
-    try:
-        val = float(pct)
-    except:
-        val = 0.0
-        
-    fig = go.Figure(go.Pie(
-        hole=0.7,
-        values=[val, max(0, 100-val)],
-        marker=dict(colors=[color, "rgba(255,255,255,0.1)"]),
-        showlegend=False,
-        hoverinfo='skip'
-    ))
+# --- HÀM VẼ BIỂU ĐỒ (SỬA LỖI VALUEERROR) ---
+def draw_chart(pct, color, title):
+    try: val = float(pct)
+    except: val = 0.0
     
+    fig = go.Figure(go.Pie(
+        hole=0.7, values=[val, max(0, 100-val)],
+        marker=dict(colors=[color, "rgba(255,255,255,0.05)"]),
+        showlegend=False, hoverinfo='skip'
+    ))
     fig.update_layout(
-        # Sửa lỗi VALUEERROR: Không dùng fontWeight, dùng thẻ <b> trong text
-        title={'text': f"<b>{title}</b>", 'y':0.9, 'x':0.5, 'xanchor':'center', 'font':{'color':'white', 'size':14}},
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        margin=dict(t=30, b=0, l=10, r=10),
-        height=200,
-        annotations=[dict(
-            text=f"<b>{val}%</b>", 
-            x=0.5, y=0.5, 
-            showarrow=False, 
-            font=dict(color='white', size=20)
-        )]
+        title={'text': f"<b>{title}</b>", 'y':0.95, 'x':0.5, 'xanchor':'center', 'font':{'color':'white','size':14}},
+        paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+        margin=dict(t=40, b=0, l=10, r=10), height=180,
+        annotations=[dict(text=f"<b>{val}%</b>", x=0.5, y=0.5, showarrow=False, font=dict(color='white', size=20))]
     )
     return fig
 
-# --- DỮ LIỆU GIẢ LẬP (Thay bằng df.iloc[0] của bạn) ---
+# --- DỮ LIỆU ---
 d = {
     "Tên": "56 3IMAD",
     "ID": "154411253",
     "Liên Minh": "[[C/56]PRAETORIA]",
     "Tiêu Diệt": 3358382,
     "Sức Mạnh": 13212420,
-    "KPI_K": 0.0,
-    "KPI_D": 0.0,
-    "KPI_T": 0.0
+    "KPI_K": 0.0, "KPI_D": 0.0, "KPI_T": 0.0
 }
 
-# --- HIỂN THỊ GIAO DIỆN ---
-# Header
-st.title(f"战士: {d['Tên']}")
-st.write(f"ID: {d['ID']} | Liên minh: {d['Liên Minh']}")
-st.markdown("---")
+# --- BẮT ĐẦU HIỂN THỊ ---
+# Bao bọc toàn bộ trong một class flex để căn giữa
+st.markdown('<div class="flex-container">', unsafe_allow_html=True)
 
-# Hàng 1: Các ô thông số lồng trong khung mờ
+# Mở khung nổi
+st.markdown(f"""
+    <div class="floating-card">
+        <div style="margin-bottom: 30px;">
+            <h1 style="margin:0; font-size:45px; letter-spacing: 2px;">战士: {d['Tên']}</h1>
+            <p style="color:#bbe1fa; font-size:16px;">ID: {d['ID']} | <span style="color:#ffd700;">{d['Liên Minh']}</span></p>
+        </div>
+    """, unsafe_allow_html=True)
+
+# Chia cột thông số bên trong khung
 c1, c2, c3, c4 = st.columns(4)
-with c1: st.markdown(f'<div class="stat-container"><span class="s-label">TIÊU DIỆT</span><span class="s-value">{d["Tiêu Diệt"]:,}</span></div>', unsafe_allow_html=True)
-with c2: st.markdown(f'<div class="stat-container"><span class="s-label">SỨC MẠNH</span><span class="s-value">{d["Sức Mạnh"]:,}</span></div>', unsafe_allow_html=True)
-with c3: st.markdown(f'<div class="stat-container"><span class="s-label">ĐIỂM CHẾT</span><span class="s-value">0</span></div>', unsafe_allow_html=True)
-with c4: st.markdown(f'<div class="stat-container"><span class="s-label">XẾP HẠNG</span><span class="s-value" style="color:#ffd700">S-RANK</span></div>', unsafe_allow_html=True)
+with c1: st.markdown(f'<div class="stat-box"><span class="label">Tiêu Diệt</span><span class="value">{d["Tiêu Diệt"]:,}</span></div>', unsafe_allow_html=True)
+with c2: st.markdown(f'<div class="stat-box"><span class="label">Sức Mạnh</span><span class="value">{d["Sức Mạnh"]:,}</span></div>', unsafe_allow_html=True)
+with c3: st.markdown(f'<div class="stat-box"><span class="label">Điểm Chết</span><span class="value">0</span></div>', unsafe_allow_html=True)
+with c4: st.markdown(f'<div class="stat-box"><span class="label">Xếp Hạng</span><span class="value" style="color:#ffd700">S-RANK</span></div>', unsafe_allow_html=True)
 
-st.write("### TIẾN ĐỘ KVK")
+st.markdown('<div style="margin-top:40px; text-align:center;"><p class="label">Tiến độ chiến dịch KVK</p></div>', unsafe_allow_html=True)
 
-# Hàng 2: Biểu đồ KPI
+# Biểu đồ KPI
 k1, k2, k3 = st.columns(3)
-with k1: st.plotly_chart(draw_kpi(d['KPI_K'], "#00ffff", "KPI KILL"), use_container_width=True)
-with k2: st.plotly_chart(draw_kpi(d['KPI_D'], "#ff4b4b", "KPI DEAD"), use_container_width=True)
-with k3: st.plotly_chart(draw_kpi(d['KPI_T'], "#ffd700", "TOTAL KPI"), use_container_width=True)
+with k1: st.plotly_chart(draw_chart(d['KPI_K'], "#00ffff", "KPI KILL"), use_container_width=True, config={'displayModeBar': False})
+with k2: st.plotly_chart(draw_chart(d['KPI_D'], "#ff4b4b", "KPI DEAD"), use_container_width=True, config={'displayModeBar': False})
+with k3: st.plotly_chart(draw_chart(d['KPI_T'], "#ffd700", "TỔNG KPI"), use_container_width=True, config={'displayModeBar': False})
+
+# Đóng khung nổi và flex-container
+st.markdown('</div></div>', unsafe_allow_html=True)
