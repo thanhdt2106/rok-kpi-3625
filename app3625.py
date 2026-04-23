@@ -34,7 +34,6 @@ st.markdown("""
         text-transform: uppercase;
     }
 
-    /* Tùy chỉnh ô Selectbox để trông giống ô Search hơn */
     div[data-baseweb="select"] {
         background-color: rgba(28, 46, 62, 0.8) !important;
         border-radius: 4px !important;
@@ -78,8 +77,6 @@ def load_data():
         df['KI'] = df['Tổng Tiêu Diệt_2'] - df['Tổng Tiêu Diệt_1']
         df['DI'] = df['Điểm Chết_2'] - df['Điểm Chết_1']
         df['Rank'] = df['KI'].rank(ascending=False, method='min').astype(int)
-        
-        # Tạo danh sách gợi ý gộp Tên và ID
         df['Search_Label'] = df['Tên_2'] + " (" + df['ID'] + ")"
         
         def calc_kpi(r):
@@ -96,13 +93,12 @@ def load_data():
 
 df = load_data()
 
-# --- 4. HEADER & SEARCH (AUTO-SUGGEST) ---
+# --- 4. HEADER & SEARCH ---
 if df is not None:
     h_col1, h_col2 = st.columns([1, 1])
     with h_col1:
         st.markdown('<div class="header-left-text">FIGHT TO DEAD 3625</div>', unsafe_allow_html=True)
     with h_col2:
-        # Selectbox cho phép gõ để lọc nhưng không hiện list ban đầu (index=None)
         search_choice = st.selectbox(
             "",
             options=df['Search_Label'].unique(),
@@ -111,7 +107,7 @@ if df is not None:
             label_visibility="collapsed"
         )
 
-    # --- 5. PROFILE CARD ---
+    # --- 5. PROFILE CARD (KHÔI PHỤC THANH MỤC TIÊU) ---
     if search_choice:
         d = df[df['Search_Label'] == search_choice].iloc[0]
         cur_k = f"{d['KI']/1e6:.1f}M"
@@ -120,6 +116,16 @@ if df is not None:
         tar_d = f"{d['T_D']/1e3:.0f}K"
 
         html_card = f"""
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Saira:wght@400;700&display=swap');
+            .mini-bar-box {{ margin-top: 10px; width: 110px; margin-left: auto; margin-right: auto; }}
+            .mini-progress-container {{ width: 100%; background: #0d151f; height: 6px; border-radius: 3px; overflow: hidden; margin: 5px 0; border: 1px solid rgba(255,255,255,0.05); }}
+            .mini-fill-k {{ height: 100%; background: linear-gradient(90deg, #008299, #00ffff); }}
+            .mini-fill-d {{ height: 100%; background: linear-gradient(90deg, #991b1b, #ff4b4b); }}
+            .target-label {{ font-family: 'Saira', sans-serif; font-size: 10px; color: #ffd700; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }}
+            .current-label {{ font-family: 'Rajdhani', sans-serif; font-size: 16px; color: #fff; font-weight: 700; }}
+        </style>
+
         <div style="position: relative; max-width: 800px; margin: 55px auto 15px; font-family: 'Saira', sans-serif;">
             <div style="position: absolute; top: -40px; left: 50%; transform: translateX(-50%); background: #1c2e3e; border: 1px solid #00d4ff; border-radius: 8px; padding: 10px 25px; z-index: 10; text-align: center; border-bottom: 3px solid #ffd700; width: 340px;">
                 <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
@@ -132,43 +138,58 @@ if df is not None:
             <div style="background: rgba(13, 25, 47, 0.98); border: 1px solid #00d4ff; border-radius: 12px; padding: 60px 20px 25px 20px;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 12px;">
                     <div style="background: rgba(35, 53, 73, 0.4); border-radius: 8px; padding: 10px; text-align: center; border-left: 4px solid #ffd700;">
-                        <div style="font-size: 10px; color: #8b949e;">RANK (BY KILL+)</div>
-                        <div style="font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700; color: #ffd700;">#{int(d['Rank'])}</div>
+                        <div style="font-size: 10px; color: #8b949e; font-weight:700;">RANK (KILL+)</div>
+                        <div style="font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; color: #ffd700;">#{int(d['Rank'])}</div>
                     </div>
                     <div style="background: rgba(35, 53, 73, 0.4); border-radius: 8px; padding: 10px; text-align: center; border-left: 4px solid #00d4ff;">
-                        <div style="font-size: 10px; color: #8b949e;">POWER</div>
-                        <div style="font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700; color: #fff;">{int(d['Sức Mạnh_2']):,}</div>
+                        <div style="font-size: 10px; color: #8b949e; font-weight:700;">POWER</div>
+                        <div style="font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; color: #fff;">{int(d['Sức Mạnh_2']):,}</div>
                     </div>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
                     <div style="background: rgba(35, 53, 73, 0.4); border-radius: 8px; padding: 10px; text-align: center; border-left: 4px solid #00ffcc;">
-                        <div style="font-size: 10px; color: #8b949e;">TOTAL KILL</div>
-                        <div style="font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700; color: #00ffcc;">{int(d['Tổng Tiêu Diệt_2']):,}</div>
+                        <div style="font-size: 10px; color: #8b949e; font-weight:700;">TOTAL KILL</div>
+                        <div style="font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; color: #00ffcc;">{int(d['Tổng Tiêu Diệt_2']):,}</div>
                     </div>
                     <div style="background: rgba(35, 53, 73, 0.4); border-radius: 8px; padding: 10px; text-align: center; border-left: 4px solid #ff4b4b;">
-                        <div style="font-size: 10px; color: #8b949e;">DEAD PT</div>
-                        <div style="font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700; color: #ff4b4b;">{int(d['Điểm Chết_2']):,}</div>
+                        <div style="font-size: 10px; color: #8b949e; font-weight:700;">DEAD PT</div>
+                        <div style="font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; color: #ff4b4b;">{int(d['Điểm Chết_2']):,}</div>
                     </div>
                 </div>
 
                 <div style="background: rgba(26, 42, 58, 0.3); border-radius: 8px; padding: 25px 10px; border: 1px solid rgba(0, 212, 255, 0.1); display: flex; justify-content: space-around; align-items: flex-start;">
+                    
                     <div style="text-align: center;">
                         <svg width="55" height="55" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#00ffff" stroke-width="3" stroke-dasharray="{min(d['KPI_K'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
                         <div style="font-family: 'Rajdhani', sans-serif; color:#00ffff; font-size: 16px; font-weight:700; margin-top:4px;">{d['KPI_K']}%</div>
+                        <div class="mini-bar-box">
+                            <div class="current-label">{cur_k}</div>
+                            <div class="mini-progress-container"><div class="mini-fill-k" style="width:{min(d['KPI_K'], 100)}%"></div></div>
+                            <div class="target-label">Target: {tar_k}</div>
+                        </div>
                     </div>
+
                     <div style="text-align: center;">
                         <svg width="85" height="85" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ffd700" stroke-width="4" stroke-dasharray="{min(d['KPI_T'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
                         <div style="font-family: 'Rajdhani', sans-serif; color:#ffd700; font-size:28px; font-weight:700;">{d['KPI_T']}%</div>
+                        <div style="font-size:11px; color:#ffd700; font-weight:700; letter-spacing:1px; margin-top:5px;">TOTAL KPI</div>
                     </div>
+
                     <div style="text-align: center;">
                         <svg width="55" height="55" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ff4b4b" stroke-width="3" stroke-dasharray="{min(d['KPI_D'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
                         <div style="font-family: 'Rajdhani', sans-serif; color:#ff4b4b; font-size: 16px; font-weight:700; margin-top:4px;">{d['KPI_D']}%</div>
+                        <div class="mini-bar-box">
+                            <div class="current-label">{cur_d}</div>
+                            <div class="mini-progress-container"><div class="mini-fill-d" style="width:{min(d['KPI_D'], 100)}%"></div></div>
+                            <div class="target-label">Target: {tar_d}</div>
+                        </div>
                     </div>
+
                 </div>
             </div>
         </div>
         """
-        components.html(html_card, height=600)
+        components.html(html_card, height=650)
 
     # --- 6. TABLE ---
     df_sorted = df.sort_values(by='KI', ascending=False)
@@ -188,10 +209,10 @@ if df is not None:
             <td style="text-align:right; color:#8b949e;">{int(r['Điểm Chết_1']):,}</td>
             <td style="text-align:right;">{int(r['Điểm Chết_2']):,}</td>
             <td style="text-align:right; color:#ff4b4b; font-weight:bold;">+{int(r['DI']):,}</td>
-            <td style="text-align:center; color:#ffd700;">{r['KPI_T']}%</td>
+            <td style="text-align:center; color:#ffd700; font-weight:700;">{r['KPI_T']}%</td>
         </tr>""")
 
     st.markdown(f'<div class="table-wrapper"><table class="elite-table"><thead><tr>{"".join([f"<th>{h}</th>" for h in headers])}</tr></thead><tbody>{"".join(rows_list)}</tbody></table></div>', unsafe_allow_html=True)
 
     # Footer
-    st.markdown(f'<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999; font-size:12px; font-family: Rajdhani;">🛡️ ADMIN LOUIS | V13.0 | SMART SEARCH UI</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999; font-size:12px; font-family: Rajdhani;">🛡️ ADMIN LOUIS | V13.1 | PROGRESS BARS RESTORED</div>', unsafe_allow_html=True)
