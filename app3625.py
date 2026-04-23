@@ -5,58 +5,69 @@ import streamlit.components.v1 as components
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide")
 
+# Link ảnh của bạn
+LOGO_URL = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true"
+
 # --- 2. SIÊU CSS ---
-st.markdown("""
+st.markdown(f"""
     <style>
-    .stApp { background-color: #050a0e; color: #e0e6ed; }
-    .block-container { 
+    .stApp {{ background-color: #050a0e; color: #e0e6ed; }}
+    .block-container {{ 
         padding-top: 1rem !important; 
         padding-bottom: 4rem !important; 
         padding-left: 1.5rem !important; 
         padding-right: 1.5rem !important;
         max-width: 100% !important;
-    }
-    header { visibility: hidden; height: 0px !important; }
-    div[data-testid="stSelectbox"] label { display: none; }
-    div[data-testid="stSelectbox"] { margin-top: -10px; }
+    }}
+    header {{ visibility: hidden; height: 0px !important; }}
+    div[data-testid="stSelectbox"] label {{ display: none; }}
+    div[data-testid="stSelectbox"] {{ margin-top: -10px; }}
 
-    .main-title {
+    /* Layout cho Header chứa Logo */
+    .header-container {{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        margin-bottom: 15px;
+    }}
+    
+    .main-title {{
         color: #00d4ff;
         font-size: 32px !important;
         font-weight: bold;
-        text-align: center;
         text-shadow: 0px 0px 15px rgba(0,212,255,0.6);
-        margin-bottom: 10px;
-    }
+        margin: 0;
+    }}
 
-    .hr-line {
+    .hr-line {{
         border: 0; height: 1px;
         background-image: linear-gradient(to right, rgba(0, 212, 255, 0), rgba(0, 212, 255, 0.75), rgba(0, 212, 255, 0));
         margin: 20px 0;
-    }
+    }}
 
-    .footer {
+    .footer {{
         position: fixed; left: 0; bottom: 0; width: 100%;
         background-color: rgba(5, 10, 14, 0.9);
         color: #8b949e; text-align: center;
         padding: 10px; font-size: 13px;
         border-top: 1px solid #1a2a3a; z-index: 999;
-    }
-    .footer b { color: #00d4ff; }
-    [data-testid="stDataFrame"] { background: #1a2a3a; border-radius: 10px; border: 1px solid #00d4ff; }
+    }}
+    .footer b {{ color: #00d4ff; }}
+    [data-testid="stDataFrame"] {{ background: #1a2a3a; border-radius: 10px; border: 1px solid #00d4ff; }}
     </style>
     """, unsafe_allow_html=True)
 
 # --- 3. QUẢN LÝ NGÔN NGỮ ---
 texts = {
     "VN": {
-        "header": "🛡️ HỆ THỐNG QUẢN TRỊ 3625", 
+        "header": "HỆ THỐNG QUẢN TRỊ 3625", 
         "placeholder": "👤 Điền tên của bạn để tìm kiếm 🔍",
         "pow": "SỨC MẠNH", "tk": "TỔNG TIÊU DIỆT", "td": "ĐIỂM CHẾT", "rank": "HẠNG",
         "cols": ['Tên', 'ID', 'Liên minh', 'Hạng', 'Sức mạnh', 'Tổng Kill', 'Điểm Chết', 'Kill +', 'Dead +', 'KPI %']
     },
     "EN": {
-        "header": "🛡️ COMMAND CENTER 3625", 
+        "header": "COMMAND CENTER 3625", 
         "placeholder": "👤 Enter member name to search 🔍",
         "pow": "POWER", "tk": "TOTAL KILL", "td": "TOTAL DEAD", "rank": "RANK",
         "cols": ['Name', 'ID', 'Alliance', 'Rank', 'Power', 'Total Kill', 'Total Dead', 'Kill Inc', 'Dead Inc', 'KPI %']
@@ -65,8 +76,8 @@ texts = {
 
 # --- 4. TẢI DỮ LIỆU ---
 SHEET_ID = '1MJQSE3siwFWmQNdJmbbJ6RsilvcoxWTu-r6h-UdHugE'
-URL_T = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=731741617'
-URL_S = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=371969335'
+URL_T = f'https://docs.google.com/spreadsheets/d/{{SHEET_ID}}/export?format=csv&gid=731741617'
+URL_S = f'https://docs.google.com/spreadsheets/d/{{SHEET_ID}}/export?format=csv&gid=371969335'
 
 @st.cache_data(ttl=30)
 def load_data():
@@ -89,7 +100,6 @@ def load_data():
             gd = 400e3 if p >= 30e6 else 300e3 if p >= 20e6 else 200e3
             pk = max(0.0, float(r['KI']) / gk) if gk > 0 else 0.0
             pdv = max(0.0, float(r['DI']) / gd) if gd > 0 else 0.0
-            # Lưu lại Target để hiển thị
             return pd.Series([round(pk * 100, 1), round(pdv * 100, 1), round(((pk + pdv) / 2) * 100, 1), gk, gd])
             
         df[['KPI_K', 'KPI_D', 'KPI_T', 'Target_K', 'Target_D']] = df.apply(get_metrics, axis=1)
@@ -105,7 +115,13 @@ if df is not None:
         lang = st.radio("LANG:", ["VN", "EN"], horizontal=True, label_visibility="collapsed")
     L = texts[lang]
 
-    st.markdown(f"<p class='main-title'>{L['header']}</p>", unsafe_allow_html=True)
+    # Header với Logo
+    st.markdown(f"""
+        <div class="header-container">
+            <img src="{LOGO_URL}" width="60">
+            <p class="main-title">{L['header']}</p>
+        </div>
+    """, unsafe_allow_html=True)
 
     col_l, col_search, col_r = st.columns([1.5, 3, 1.5])
     with col_search:
@@ -115,12 +131,13 @@ if df is not None:
 
     if sel:
         d = df[df['Tên_2'] == sel].iloc[0]
-        # Định dạng Target hiển thị (Rút gọn M cho triệu và K cho ngàn)
         tk_str = f"{int(d['Target_K']/1e6)}M" if d['Target_K'] >= 1e6 else f"{int(d['Target_K']/1e3)}K"
         td_str = f"{int(d['Target_D']/1e3)}K"
 
         html_card = f"""
         <div style="position: relative; width: 100%; margin: 55px auto 5px; font-family: 'Segoe UI', sans-serif;">
+            <img src="{LOGO_URL}" style="position: absolute; top: -35px; right: 10px; width: 50px; opacity: 0.8; z-index: 11;">
+            
             <div style="position: absolute; top: -45px; left: 50%; transform: translateX(-50%); 
                         background: #1c2e3e; border: 2px solid #00d4ff; border-radius: 12px; 
                         padding: 10px 70px; z-index: 10; text-align: center;
