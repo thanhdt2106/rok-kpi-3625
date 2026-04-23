@@ -9,47 +9,47 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. OPTIMIZED CSS ---
+# --- 2. ADVANCED CSS (FONT & UI) ---
 st.markdown("""
     <style>
+    /* Import phông chữ chuyên dụng cho Gaming/Tech */
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;600;800&display=swap');
+
     [data-testid="stSidebar"], [data-testid="stSidebarCollapseButton"] { display: none !important; width: 0px !important; }
     header { visibility: hidden; }
     .main .block-container { max-width: 100% !important; padding: 0.5rem 1.5rem !important; }
-    .stApp { background-color: #050a0e; color: #e0e6ed; }
+    
+    /* Giao diện tổng thể */
+    .stApp { 
+        background-color: #050a0e; 
+        color: #e0e6ed;
+        font-family: 'Inter', sans-serif; 
+    }
     
     .header-left-text {
+        font-family: 'Orbitron', sans-serif;
         color: #00d4ff;
         font-weight: 900;
-        font-size: 22px;
-        text-shadow: 0 0 10px #00d4ff;
+        font-size: 24px;
+        text-shadow: 0 0 15px rgba(0, 212, 255, 0.6);
+        letter-spacing: 1px;
     }
 
-    /* MINI PROGRESS BAR STYLE (REFINED) */
-    .mini-bar-box { margin-top: 8px; width: 80px; margin-left: auto; margin-right: auto; }
-    .mini-progress-container {
-        width: 100%;
-        background: rgba(255,255,255,0.05);
-        height: 5px;
-        border-radius: 10px;
-        overflow: hidden;
-        border: 1px solid rgba(255,255,255,0.1);
-    }
-    .mini-fill-k { height: 100%; background: linear-gradient(90deg, #00d4ff, #00ffcc); box-shadow: 0 0 8px #00d4ff; }
-    .mini-fill-d { height: 100%; background: linear-gradient(90deg, #ff4b4b, #ff8f8f); box-shadow: 0 0 8px #ff4b4b; }
-    .target-label { font-size: 9px; color: #ffd700; font-weight: bold; margin-top: 3px; letter-spacing: 0.5px; opacity: 0.9; }
-    .current-label { font-size: 10px; color: #fff; font-weight: bold; }
-
-    /* TABLE STYLE */
+    /* Tùy chỉnh bảng dữ liệu */
     .table-wrapper { 
-        background: rgba(13, 27, 42, 0.6); border: 1px solid #1e3a5a; 
+        background: rgba(13, 27, 42, 0.6); 
+        border: 1px solid #1e3a5a; 
         border-radius: 12px; padding: 15px; margin-top: 10px; overflow-x: auto;
     }
     .elite-table { width: 100%; border-collapse: collapse; min-width: 850px;}
     .elite-table thead th { 
+        font-family: 'Orbitron', sans-serif;
         background: rgba(0, 212, 255, 0.1); color: #00d4ff; 
-        text-align: center !important; padding: 12px; font-size: 13px; border-bottom: 3px solid #00d4ff; 
+        text-align: center !important; padding: 12px; font-size: 12px; border-bottom: 3px solid #00d4ff; 
     }
-    .elite-table td { padding: 10px 15px; font-size: 13px; color: #e0e6ed; border-bottom: 1px solid #1a2a3a; }
+    .elite-table td { 
+        padding: 10px 15px; font-size: 13px; color: #e0e6ed; border-bottom: 1px solid #1a2a3a; 
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -95,81 +95,85 @@ if df is not None:
     with h_col2:
         sel = st.selectbox("", sorted(df['Tên_2'].dropna().unique()), index=None, placeholder="🔍 Search member name...", label_visibility="collapsed")
 
-    # --- 5. PROFILE (REFINED PROGRESS BARS) ---
+    # --- 5. PROFILE (NEW FONTS & COMPACT UI) ---
     if sel:
         d = df[df['Tên_2'] == sel].iloc[0]
-        
         cur_k = f"{d['KI']/1e6:.1f}M"
         tar_k = f"{d['T_K']/1e6:.0f}M"
         cur_d = f"{d['DI']/1e3:.1f}K"
         tar_d = f"{d['T_D']/1e3:.0f}K"
 
         html_card = f"""
-        <div style="position: relative; max-width: 800px; margin: 60px auto 20px; font-family: 'Segoe UI', sans-serif;">
-            <div style="position: absolute; top: -45px; left: 50%; transform: translateX(-50%); background: #1c2e3e; border: 2px solid #00d4ff; border-radius: 12px; padding: 8px 30px; z-index: 10; text-align: center; border-bottom: 4px solid #ffd700; box-shadow: 0 0 15px rgba(0, 212, 255, 0.4); width: 280px;">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;700;800&display=swap');
+            .mini-bar-box {{ margin-top: 8px; width: 85px; margin-left: auto; margin-right: auto; }}
+            .mini-progress-container {{ width: 100%; background: #0d151f; height: 6px; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }}
+            .mini-fill-k {{ height: 100%; background: linear-gradient(90deg, #00d4ff, #00ffcc); box-shadow: 0 0 8px #00d4ff; }}
+            .mini-fill-d {{ height: 100%; background: linear-gradient(90deg, #ff4b4b, #ff8f8f); box-shadow: 0 0 8px #ff4b4b; }}
+            .target-label {{ font-family: 'Inter', sans-serif; font-size: 9px; color: #ffd700; font-weight: 700; margin-top: 4px; letter-spacing: 0.5px; }}
+            .current-label {{ font-family: 'Orbitron', sans-serif; font-size: 11px; color: #fff; font-weight: 700; margin-bottom: 2px; }}
+        </style>
+
+        <div style="position: relative; max-width: 800px; margin: 60px auto 20px; font-family: 'Inter', sans-serif;">
+            <div style="position: absolute; top: -45px; left: 50%; transform: translateX(-50%); background: #1c2e3e; border: 2px solid #00d4ff; border-radius: 12px; padding: 10px 30px; z-index: 10; text-align: center; border-bottom: 4px solid #ffd700; box-shadow: 0 0 15px rgba(0, 212, 255, 0.4); width: 300px;">
                 <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
                     <img src="https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true" style="width: 32px;">
-                    <div style="color: #ffffff; font-size: 22px; font-weight: bold; white-space: nowrap;">{sel}</div>
+                    <div style="font-family: 'Orbitron', sans-serif; color: #ffffff; font-size: 20px; font-weight: 900; letter-spacing: 1px;">{sel}</div>
                 </div>
-                <div style="font-size: 10px; color: #8b949e;">ID: {d['ID']} | {d['Liên Minh_2']}</div>
+                <div style="font-size: 10px; color: #8b949e; font-weight: 600;">ID: {d['ID']} | {d['Liên Minh_2']}</div>
             </div>
             
             <div style="background: rgba(13, 25, 47, 0.98); border: 2px solid #00d4ff; border-radius: 15px; padding: 60px 20px 20px 20px;">
-                
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
                     <div style="background: #233549; border-radius: 8px; padding: 12px; text-align: center; border-bottom: 2px solid #ffd700;">
-                        <div style="font-size: 10px; color: #8b949e;">RANK</div>
-                        <div style="font-size: 20px; font-weight: 900; color: #ffd700;">#{int(d['Rank'])}</div>
+                        <div style="font-size: 10px; color: #8b949e; font-weight: 700;">RANK</div>
+                        <div style="font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 900; color: #ffd700;">#{int(d['Rank'])}</div>
                     </div>
                     <div style="background: #233549; border-radius: 8px; padding: 12px; text-align: center; border-bottom: 2px solid #00d4ff;">
-                        <div style="font-size: 10px; color: #8b949e;">POWER</div>
-                        <div style="font-size: 20px; font-weight: 900; color: #fff;">{int(d['Sức Mạnh_2']):,}</div>
+                        <div style="font-size: 10px; color: #8b949e; font-weight: 700;">POWER</div>
+                        <div style="font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 900; color: #fff;">{int(d['Sức Mạnh_2']):,}</div>
                     </div>
                     <div style="background: #233549; border-radius: 8px; padding: 12px; text-align: center; border-bottom: 2px solid #00ffcc;">
-                        <div style="font-size: 10px; color: #8b949e;">TOTAL KILL</div>
-                        <div style="font-size: 20px; font-weight: 900; color: #fff;">{int(d['Tổng Tiêu Diệt_2']):,}</div>
+                        <div style="font-size: 10px; color: #8b949e; font-weight: 700;">TOTAL KILL</div>
+                        <div style="font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 900; color: #fff;">{int(d['Tổng Tiêu Diệt_2']):,}</div>
                     </div>
                     <div style="background: #233549; border-radius: 8px; padding: 12px; text-align: center; border-bottom: 2px solid #ff4b4b;">
-                        <div style="font-size: 10px; color: #8b949e;">DEAD PT</div>
-                        <div style="font-size: 20px; font-weight: 900; color: #ff4b4b;">{int(d['Điểm Chết_2']):,}</div>
+                        <div style="font-size: 10px; color: #8b949e; font-weight: 700;">DEAD PT</div>
+                        <div style="font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 900; color: #ff4b4b;">{int(d['Điểm Chết_2']):,}</div>
                     </div>
                 </div>
 
-                <div style="background: rgba(26, 42, 58, 0.5); border-radius: 12px; padding: 20px 10px; border: 1px solid rgba(0, 212, 255, 0.1); display: flex; justify-content: space-around; align-items: flex-start;">
-                    
+                <div style="background: rgba(26, 42, 58, 0.5); border-radius: 12px; padding: 25px 10px; border: 1px solid rgba(0, 212, 255, 0.1); display: flex; justify-content: space-around; align-items: flex-start;">
                     <div style="text-align: center;">
                         <svg width="55" height="55" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#00ffff" stroke-width="3" stroke-dasharray="{min(d['KPI_K'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
-                        <div style="color:#00ffff; font-size: 12px; font-weight:bold; margin-top:3px;">{d['KPI_K']}%</div>
-                        
+                        <div style="font-family: 'Orbitron', sans-serif; color:#00ffff; font-size: 12px; font-weight:900; margin-top:4px;">{d['KPI_K']}%</div>
                         <div class="mini-bar-box">
                             <div class="current-label">{cur_k}</div>
                             <div class="mini-progress-container"><div class="mini-fill-k" style="width:{min(d['KPI_K'], 100)}%"></div></div>
-                            <div class="target-label">TARGET: {tar_k}</div>
+                            <div class="target-label">GOAL: {tar_k}</div>
                         </div>
                     </div>
 
                     <div style="text-align: center;">
-                        <svg width="85" height="85" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ffd700" stroke-width="4" stroke-dasharray="{min(d['KPI_T'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
-                        <div style="color:#ffd700; font-size:22px; font-weight:bold;">{d['KPI_T']}%</div>
-                        <div style="font-size:9px; color:#ffd700; font-weight:bold; letter-spacing:1px; margin-top:5px;">TOTAL SCORE</div>
+                        <svg width="90" height="90" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ffd700" stroke-width="4" stroke-dasharray="{min(d['KPI_T'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
+                        <div style="font-family: 'Orbitron', sans-serif; color:#ffd700; font-size:24px; font-weight:900; text-shadow: 0 0 10px rgba(255,215,0,0.4);">{d['KPI_T']}%</div>
+                        <div style="font-family: 'Orbitron', sans-serif; font-size:10px; color:#ffd700; font-weight:bold; letter-spacing:1px; margin-top:5px;">TOTAL KPI</div>
                     </div>
 
                     <div style="text-align: center;">
                         <svg width="55" height="55" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ff4b4b" stroke-width="3" stroke-dasharray="{min(d['KPI_D'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
-                        <div style="color:#ff4b4b; font-size: 12px; font-weight:bold; margin-top:3px;">{d['KPI_D']}%</div>
-                        
+                        <div style="font-family: 'Orbitron', sans-serif; color:#ff4b4b; font-size: 12px; font-weight:900; margin-top:4px;">{d['KPI_D']}%</div>
                         <div class="mini-bar-box">
                             <div class="current-label">{cur_d}</div>
                             <div class="mini-progress-container"><div class="mini-fill-d" style="width:{min(d['KPI_D'], 100)}%"></div></div>
-                            <div class="target-label">TARGET: {tar_d}</div>
+                            <div class="target-label">GOAL: {tar_d}</div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
         """
-        components.html(html_card, height=520)
+        components.html(html_card, height=540)
 
     # --- 6. TABLE ---
     df_sorted = df.sort_values(by='Rank')
@@ -178,18 +182,18 @@ if df is not None:
     for _, r in df_sorted.iterrows():
         rows_list.append(f"""
         <tr>
-            <td><span style="background:linear-gradient(135deg, #ffd700, #b8860b); color:#000; padding:4px 10px; border-radius:6px; font-weight:900;">#{int(r['Rank'])}</span></td>
-            <td><b style="color:#fff">{r['Tên_2']}</b><br><small style="color:#8b949e">ID: {r['ID']}</small></td>
-            <td style="text-align:right">{int(r['Sức Mạnh_2']):,}</td>
-            <td style="text-align:right; color:#00ffcc">{int(r['Tổng Tiêu Diệt_2']):,}</td>
-            <td style="text-align:right; color:#ff4b4b">{int(r['Điểm Chết_2']):,}</td>
-            <td style="text-align:right; color:#00d4ff">+{int(r['KI']):,}</td>
-            <td style="text-align:right; color:#ff4b4b">+{int(r['DI']):,}</td>
+            <td style="font-family: 'Orbitron', sans-serif;"><span style="background:linear-gradient(135deg, #ffd700, #b8860b); color:#000; padding:4px 10px; border-radius:6px; font-weight:900;">#{int(r['Rank'])}</span></td>
+            <td><b style="color:#fff; font-size: 14px;">{r['Tên_2']}</b><br><small style="color:#8b949e; font-weight:600;">ID: {r['ID']}</small></td>
+            <td style="text-align:right; font-family: 'Orbitron', sans-serif; font-size:12px;">{int(r['Sức Mạnh_2']):,}</td>
+            <td style="text-align:right; color:#00ffcc; font-family: 'Orbitron', sans-serif;">{int(r['Tổng Tiêu Diệt_2']):,}</td>
+            <td style="text-align:right; color:#ff4b4b; font-family: 'Orbitron', sans-serif;">{int(r['Điểm Chết_2']):,}</td>
+            <td style="text-align:right; color:#00d4ff; font-weight:bold;">+{int(r['KI']):,}</td>
+            <td style="text-align:right; color:#ff4b4b; font-weight:bold;">+{int(r['DI']):,}</td>
             <td>
                 <div style="width: 80px; background: #1a2a3a; height: 6px; border-radius: 4px; display: inline-block; margin-right: 8px;">
                     <div style="height: 100%; border-radius: 4px; background: linear-gradient(90deg, #00d4ff, #00ffcc); width:{min(r['KPI_T'], 100)}%"></div>
                 </div>
-                <span style="color:#ffd700; font-weight:bold">{r['KPI_T']}%</span>
+                <span style="font-family: 'Orbitron', sans-serif; color:#ffd700; font-weight:bold;">{r['KPI_T']}%</span>
             </td>
         </tr>""")
 
@@ -204,4 +208,4 @@ if df is not None:
     st.markdown(table_html, unsafe_allow_html=True)
 
     # Footer
-    st.markdown(f'<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999; font-size:12px;">🛡️ Admin Louis | v11.7 | Target Focused</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999; font-size:12px; font-family: Orbitron;">🛡️ Admin Louis | v11.8 | High-Tech Typography</div>', unsafe_allow_html=True)
