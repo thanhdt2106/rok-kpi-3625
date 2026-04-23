@@ -5,12 +5,12 @@ import plotly.graph_objects as go
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide")
 
-# --- 2. GIAO DIỆN (CSS TÁI TẠO PROFILE NBA - FIX LỖI RENDER) ---
+# --- 2. GIAO DIỆN (CSS TÁI TẠO PROFILE NBA) ---
 st.markdown("""
     <style>
     .stApp { background-color: #0e1117; color: #e0e6ed; }
     
-    /* Container chính cho Profile Card */
+    /* Profile Card Container */
     .profile-container {
         background: #1a1c23;
         border-radius: 15px;
@@ -71,17 +71,14 @@ texts = {
 }
 L = texts[lang]
 
-# --- 4. HÀM VẼ VÒNG TRÒN KPI 3 LỚP (GIỮ NGUYÊN LOGIC) ---
+# --- 4. HÀM VẼ BIỂU ĐỒ (GIỮ NGUYÊN) ---
 def draw_kpi_rings(total, kill_val, kill_target, dead_val, dead_target):
     k_pct = (kill_val / kill_target * 100) if kill_target > 0 else 0
     d_pct = (dead_val / dead_target * 100) if dead_target > 0 else 0
     
     fig = go.Figure()
-    # Vòng KPI Tổng
     fig.add_trace(go.Pie(hole=0.85, values=[total, max(0, 100-total)], marker=dict(colors=['#ffcc00', '#222']), showlegend=False, hoverinfo='skip', direction='clockwise', sort=False))
-    # Vòng Kill
     fig.add_trace(go.Pie(hole=0.75, values=[k_pct, max(0, 100-k_pct)], marker=dict(colors=['#00d4ff', 'transparent']), showlegend=False, hoverinfo='skip', direction='clockwise', sort=False))
-    # Vòng Dead
     fig.add_trace(go.Pie(hole=0.65, values=[d_pct, max(0, 100-d_pct)], marker=dict(colors=['#ffffff', 'transparent']), showlegend=False, hoverinfo='skip', direction='clockwise', sort=False))
 
     fig.update_layout(
@@ -90,10 +87,10 @@ def draw_kpi_rings(total, kill_val, kill_target, dead_val, dead_target):
     )
     return fig
 
-# --- 5. XỬ LÝ DỮ LIỆU (GIỮ NGUYÊN 100% GỐC) ---
+# --- 5. XỬ LÝ DỮ LIỆU ---
 SHEET_ID = '1MJQSE3siwFWmQNdJmbbJ6RsilvcoxWTu-r6h-UdHugE'
-URL_T = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=731741617'
-URL_S = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=371969335'
+URL_T = f'https://docs.google.com/spreadsheets/d/{{SHEET_ID}}/export?format=csv&gid=731741617'
+URL_S = f'https://docs.google.com/spreadsheets/d/{{SHEET_ID}}/export?format=csv&gid=371969335'
 
 @st.cache_data(ttl=30)
 def load_data():
@@ -132,7 +129,7 @@ df = load_data()
 
 # --- 6. HIỂN THỊ ---
 if df is not None:
-    st.markdown(f'<div class="main-header">{L["header"]}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="main-header">{{L["header"]}}</div>', unsafe_allow_html=True)
     names = sorted(df['Tên_2'].unique())
     sel = st.selectbox(L["search"], [L["select"]] + names)
     
@@ -141,48 +138,46 @@ if df is not None:
         
         col1, col2 = st.columns([1.6, 1])
         with col1:
-            # FIX: SỬ DỤNG f-string VÀ unsafe_allow_html ĐÚNG CÁCH
+            # SỬA LỖI: Bọc toàn bộ vào f-string và dùng unsafe_allow_html=True
             profile_html = f"""
                 <div class="profile-container">
-                    <div class="player-name-large">{sel}</div>
-                    <div class="id-sub-text">#{d['ID']} | {d['Liên Minh_2']}</div>
+                    <div class="player-name-large">{{sel}}</div>
+                    <div class="id-sub-text">#{{d['ID']}} | {{d['Liên Minh_2']}}</div>
                     
                     <div class="main-stats-row">
                         <div class="stat-block">
-                            <span class="label-nba">{L['pow']}</span>
-                            <span class="value-nba">{int(d['Sức Mạnh_2']):,}</span>
+                            <span class="label-nba">{{L['pow']}}</span>
+                            <span class="value-nba">{{int(d['Sức Mạnh_2']):,}}</span>
                         </div>
                         <div class="stat-block">
-                            <span class="label-nba">{L['tk']}</span>
-                            <span class="value-nba">{int(d['Tổng Tiêu Diệt_2']):,}</span>
+                            <span class="label-nba">{{L['tk']}}</span>
+                            <span class="value-nba">{{int(d['Tổng Tiêu Diệt_2']):,}}</span>
                         </div>
                     </div>
                     
                     <div class="detail-grid">
-                        <span class="detail-label">{L['kt']}:</span><span class="detail-val">{int(d['GK']):,}</span>
-                        <span class="detail-label">{L['dt']}:</span><span class="detail-val">{int(d['GD']):,}</span>
+                        <span class="detail-label">{{L['kt']}}:</span><span class="detail-val">{{int(d['GK']):,}}</span>
+                        <span class="detail-label">{{L['dt']}}:</span><span class="detail-val">{{int(d['GD']):,}}</span>
                         <span class="detail-label">Status:</span><span class="detail-val">Active Command Center</span>
                     </div>
                 </div>
             """
             st.markdown(profile_html, unsafe_allow_html=True)
             
-            # Progress bars phụ bên dưới Card
-            st.write(f"📊 {L['ki']}: {int(d['KI']):,}")
+            st.write(f"📊 {{L['ki']}}: {{int(d['KI']):,}}")
             st.progress(max(0.0, min(float(d['KI']) / d['GK'], 1.0)) if d['GK'] > 0 else 0.0)
-            st.write(f"📊 {L['di']}: {int(d['DI']):,}")
+            st.write(f"📊 {{L['di']}: {{int(d['DI']):,}}")
             st.progress(max(0.0, min(float(d['DI']) / d['GD'], 1.0)) if d['GD'] > 0 else 0.0)
 
         with col2:
             fig = draw_kpi_rings(d['KPI'], d['KI'], d['GK'], d['DI'], d['GD'])
-            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+            st.plotly_chart(fig, use_container_width=True, config={{'displayModeBar': False}})
 
-    # 7. BẢNG TỔNG HỢP (GIỮ NGUYÊN)
     st.divider()
     st.subheader(L["table"])
     v_df = df[['Tên_2', 'ID', 'Liên Minh_2', 'Sức Mạnh_2', 'Tổng Tiêu Diệt_2', 'KI', 'DI', 'KPI']].copy()
     v_df.columns = L["cols"]
     st.dataframe(v_df.style.format({
-        L["cols"][3]: '{:,.0f}', L["cols"][4]: '{:,.0f}', 
-        L["cols"][5]: '{:,.0f}', L["cols"][6]: '{:,.0f}', L["cols"][7]: '{:.1f}%'
+        L["cols"][3]: '{{:,.0f}}', L["cols"][4]: '{{:,.0f}}', 
+        L["cols"][5]: '{{:,.0f}}', L["cols"][6]: '{{:,.0f}}', L["cols"][7]: '{{:.1f}%}}'
     }), use_container_width=True, height=450)
