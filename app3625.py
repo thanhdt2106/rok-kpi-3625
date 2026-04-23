@@ -5,7 +5,7 @@ import streamlit.components.v1 as components
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide")
 
-# --- 2. SIÊU CSS & JS (GIỮ NGUYÊN STYLE NHƯNG FIX VỊ TRÍ) ---
+# --- 2. SIÊU CSS & JS ---
 st.markdown("""
     <style>
     .stApp { background-color: #050a0e; color: #e0e6ed; }
@@ -17,13 +17,15 @@ st.markdown("""
         font-weight: 900; 
         font-size: 20px; 
         text-align: center; 
-        margin-bottom: 30px;
+        margin-top: 10px;
+        margin-bottom: 20px;
         text-shadow: 0 0 10px #00d4ff;
+        font-family: 'Segoe UI', sans-serif;
     }
 
     .main .block-container {
         max-width: 98% !important;
-        padding-top: 1rem !important; 
+        padding-top: 1.5rem !important; 
         margin: auto !important;
     }
 
@@ -43,12 +45,12 @@ st.markdown("""
     .kpi-bar-container { width: 100px; background: #1a2a3a; height: 8px; border-radius: 4px; display: inline-block; margin-right: 8px; }
     .kpi-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #00d4ff, #00ffcc); }
     
-    /* Ẩn các nút mặc định của Streamlit ở góc phải để tự làm nút mới */
+    /* Ẩn header mặc định */
     header { visibility: hidden; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. DATA LOGIC (GIỮ NGUYÊN 100%) ---
+# --- 3. DATA LOGIC (GIỮ NGUYÊN) ---
 SHEET_ID = '1MJQSE3siwFWmQNdJmbbJ6RsilvcoxWTu-r6h-UdHugE'
 URL_T = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=731741617'
 URL_S = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=371969335'
@@ -81,10 +83,9 @@ def load_data():
 
 df = load_data()
 
-# --- 4. CẤU TRÚC GIAO DIỆN MỚI ---
+# --- 4. GIAO DIỆN ---
 if df is not None:
-    # --- THANH PHẢI TRÊN CÙNG (NGÔN NGỮ & USER) ---
-    # Tạo một row ở trên cùng trang chủ để chứa nút chức năng
+    # --- THANH TOP BAR (CHỈ ĐỂ NGÔN NGỮ & USER) ---
     top_col1, top_col2 = st.columns([8, 2])
     with top_col2:
         c_lang, c_user = st.columns([1, 1])
@@ -93,22 +94,33 @@ if df is not None:
         with c_user:
             st.button("👤", use_container_width=True)
 
-    # --- SIDEBAR (THIẾT KẾ LẠI) ---
+    # --- SIDEBAR (ĐÃ KHÔI PHỤC) ---
     with st.sidebar:
         st.markdown('<div class="sidebar-brand">FIGHT TO DEAD 3625</div>', unsafe_allow_html=True)
         st.divider()
-        search_placeholder = "👤 Tìm thành viên..." if lang == "VN" else "👤 Search member..."
-        sel = st.selectbox("SEARCH", sorted(df['Tên_2'].dropna().unique()), index=None, placeholder=search_placeholder, label_visibility="collapsed")
+        
+        # Thanh tìm kiếm đặt trong Sidebar
+        search_label = "👤 Tìm kiếm thành viên" if lang == "VN" else "👤 Search Member"
+        search_ph = "Nhập tên..." if lang == "VN" else "Enter name..."
+        sel = st.selectbox(search_label, sorted(df['Tên_2'].dropna().unique()), index=None, placeholder=search_ph)
+        
         st.divider()
-        st.info("Admin: Louis" if lang == "VN" else "Managed by Louis")
+        if lang == "VN":
+            st.markdown("### 🛠️ QUẢN TRỊ")
+            st.write("Phiên bản: **v11.0**")
+            st.write("Admin: **Louis**")
+        else:
+            st.markdown("### 🛠️ MANAGEMENT")
+            st.write("Version: **v11.0**")
+            st.write("Admin: **Louis**")
 
-    # Texts cho bảng (Giữ nguyên)
+    # Cấu hình text
     t = {
         "VN": {"rank": "HẠNG", "pow": "SỨC MẠNH", "kill": "TỔNG KILL", "dead": "ĐIỂM CHẾT", "target": "Mục tiêu", "headers": ['Hạng', 'Thành viên', 'Sức mạnh', 'Tổng Kill', 'Điểm Chết', 'Kill +', 'Dead +', 'KPI %']},
         "EN": {"rank": "RANK", "pow": "POWER", "kill": "TOTAL KILL", "dead": "DEAD POINT", "target": "Target", "headers": ['Rank', 'Member', 'Power', 'Total Kill', 'Dead Pt', 'Kill +', 'Dead +', 'KPI %']}
     }[lang]
 
-    # --- 5. HIỂN THỊ (GIỮ NGUYÊN FORM CARD VÀ TABLE) ---
+    # --- 5. HIỂN THỊ CHÍNH ---
     if sel:
         d = df[df['Tên_2'] == sel].iloc[0]
         html_card = f"""
@@ -150,7 +162,7 @@ if df is not None:
         """
         components.html(html_card, height=530)
 
-    # --- BẢNG TABLE (GIỮ NGUYÊN) ---
+    # --- BẢNG TABLE ---
     df_sorted = df.sort_values(by='Rank')
     rows_list = []
     for _, r in df_sorted.iterrows():
@@ -181,6 +193,3 @@ if df is not None:
 
     # Footer cố định
     st.markdown(f'<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999;">🛡️ Admin Louis | v11.0 | Zalo: 0373274600</div>', unsafe_allow_html=True)
-
-else:
-    st.error("⚠️ Không thể tải dữ liệu. Vui lòng kiểm tra lại Google Sheets.")
