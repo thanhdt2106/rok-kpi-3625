@@ -3,32 +3,52 @@ import pandas as pd
 import streamlit.components.v1 as components
 
 # --- 1. CẤU HÌNH TRANG ---
-st.set_page_config(page_title="FTD KPI | ELITE COMMAND", layout="wide")
+st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide")
 
 # Link các ảnh
 LOGO_MAIN = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo1.png?raw=true" 
 LOGO_PROFILE = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true"
 
-# --- 2. SIÊU CSS (GIAO DIỆN ELITE) ---
+# --- 2. SIÊU CSS (Giữ gốc + Thêm CSS Bảng Elite) ---
 st.markdown("""
     <style>
     .stApp { background-color: #050a0e; color: #e0e6ed; }
     .block-container { padding-top: 0.5rem !important; max-width: 98% !important; }
     header { visibility: hidden; height: 0px !important; }
 
-    [data-testid="stSidebar"] { background-color: #0d1b2a; border-right: 1px solid #00d4ff; }
-    
-    .header-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 25px; }
-    .logo-img { width: 220px; filter: drop-shadow(0px 0px 10px rgba(0, 212, 255, 0.4)); }
-    .slogan { color: #00d4ff; font-size: 16px; font-weight: bold; margin-top: 8px; text-transform: uppercase; letter-spacing: 1.5px; text-shadow: 0 0 10px rgba(0, 212, 255, 0.5); }
+    /* Logo & Slogan */
+    .logo-container {
+        display: flex; flex-direction: column; align-items: center;
+        justify-content: center; margin-top: 10px; margin-bottom: 20px;
+    }
+    .logo-img { width: 250px; filter: drop-shadow(0px 0px 10px rgba(0, 212, 255, 0.4)); }
+    .slogan {
+        color: #00d4ff; font-size: 16px; font-weight: bold; margin-top: 8px;
+        text-transform: uppercase; letter-spacing: 1px;
+    }
 
-    div[data-testid="stSelectbox"] { max-width: 350px !important; margin-bottom: -15px; }
+    /* Searchbox sát trái */
+    div[data-testid="stSelectbox"] { max-width: 350px !important; margin-bottom: -10px; }
 
-    /* BẢNG ELITE */
-    .elite-table-container { background: rgba(13, 27, 42, 0.9); border: 1px solid #1e3a5a; border-radius: 12px; padding: 5px; margin-top: 10px; overflow-x: auto; }
-    table.elite-table { width: 100%; border-collapse: collapse; font-family: 'Segoe UI', sans-serif; min-width: 1000px; }
-    .elite-table thead { background: linear-gradient(90deg, #162a3e 0%, #1c3d5a 100%); border-bottom: 2px solid #00d4ff; }
-    .elite-table th { padding: 12px; text-align: left; font-size: 11px; color: #00d4ff; text-transform: uppercase; }
+    /* THIẾT KẾ BẢNG ELITE */
+    .elite-table-container {
+        background: rgba(13, 27, 42, 0.9);
+        border: 1px solid #1e3a5a;
+        border-radius: 12px;
+        padding: 5px;
+        margin-top: 10px;
+        overflow-x: auto;
+    }
+    table.elite-table {
+        width: 100%; border-collapse: collapse; font-family: 'Segoe UI', sans-serif; min-width: 1000px;
+    }
+    .elite-table thead {
+        background: linear-gradient(90deg, #162a3e 0%, #1c3d5a 100%);
+        border-bottom: 2px solid #00d4ff;
+    }
+    .elite-table th {
+        padding: 12px; text-align: left; font-size: 11px; color: #00d4ff; text-transform: uppercase;
+    }
     .elite-table tr { border-bottom: 1px solid #1a2a3a; transition: 0.2s; }
     .elite-table tr:hover { background: rgba(0, 212, 255, 0.08); }
     .elite-table td { padding: 12px; font-size: 14px; }
@@ -36,107 +56,188 @@ st.markdown("""
     .val-power { color: #ffffff; font-weight: bold; }
     .val-kill { color: #00ffcc; font-weight: bold; }
     .val-dead { color: #ff4b4b; font-weight: bold; }
-    .badge-rank { background: #ffd700; color: #000; padding: 2px 8px; border-radius: 4px; font-weight: 900; font-size: 12px; }
+    .badge-rank {
+        background: #ffd700; color: #000; padding: 2px 8px;
+        border-radius: 4px; font-weight: 900; font-size: 12px;
+    }
 
-    .kpi-bar-bg { width: 60px; height: 6px; background: #1a2a3a; border-radius: 3px; display: inline-block; vertical-align: middle; margin-right: 8px; }
-    .kpi-bar-fill { height: 100%; background: linear-gradient(90deg, #00d4ff, #00ffcc); box-shadow: 0 0 8px #00d4ff; border-radius: 3px; }
+    /* Thanh KPI năng lượng */
+    .kpi-bar-bg {
+        width: 60px; height: 6px; background: #1a2a3a; border-radius: 3px;
+        display: inline-block; vertical-align: middle; margin-right: 8px;
+    }
+    .kpi-bar-fill {
+        height: 100%; background: linear-gradient(90deg, #00d4ff, #00ffcc);
+        box-shadow: 0 0 8px #00d4ff; border-radius: 3px;
+    }
 
-    .footer { position: fixed; left: 0; bottom: 0; width: 100%; background-color: rgba(5, 10, 14, 0.95); color: #8b949e; padding: 8px; font-size: 12px; text-align: center; border-top: 1px solid #1a2a3a; z-index: 999; }
+    .footer {
+        position: fixed; left: 0; bottom: 0; width: 100%;
+        background-color: rgba(5, 10, 14, 0.95); color: #8b949e;
+        padding: 8px; font-size: 12px; text-align: center;
+        border-top: 1px solid #1a2a3a; z-index: 999;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. SIDEBAR ---
-with st.sidebar:
-    st.markdown("<h3 style='color:#ffd700; text-align:center;'>BẢNG ĐIỀU KHIỂN</h3>", unsafe_allow_html=True)
-    lang = st.radio("NGÔN NGỮ", ["VN", "EN"], horizontal=True)
-    st.divider()
+# --- 3. ĐIỀU KHIỂN NGÔN NGỮ ---
+col_space, col_lang = st.columns([8, 1])
+with col_lang:
+    lang = st.radio("", ["VN", "EN"], horizontal=True, label_visibility="collapsed")
 
-# --- 4. DATA PROCESSING (SỬA LỖI TRUY XUẤT) ---
+# --- 4. DỮ LIỆU (GIỮ NGUYÊN 100% LOGIC GỐC) ---
 texts = {
-    "VN": { "search": "🔍 Tìm chiến binh...", "slogan": "Hệ thống quản trị KPI 3625", "h": ["Hạng", "Chiến binh", "Sức mạnh", "Tổng Kill", "Điểm chết", "KPI Kill", "KPI Dead", "Tổng KPI"] },
-    "EN": { "search": "🔍 Search warrior...", "slogan": "3625 KPI Command Center", "h": ["Rank", "Warrior", "Power", "Total Kill", "Dead Points", "KPI Kill", "KPI Dead", "Total KPI"] }
+    "VN": {
+        "search": "👤 Tìm kiếm thành viên...",
+        "pow": "SỨC MẠNH", "tk": "TỔNG TIÊU DIỆT", "td": "ĐIỂM CHẾT", "rank": "HẠNG",
+        "slogan": "Chào mừng đến trang web quản lý KPI 3625",
+        "cols": ['Hạng', 'Thành viên', 'Sức mạnh', 'Tổng Kill', 'Điểm Chết', 'Kill+', 'Dead+', 'Tổng KPI']
+    },
+    "EN": {
+        "search": "👤 Search member name...",
+        "pow": "POWER", "tk": "TOTAL KILL", "td": "TOTAL DEAD", "rank": "RANK",
+        "slogan": "Welcome to the 3625 KPI Management Website",
+        "cols": ['Rank', 'Member', 'Power', 'Total Kill', 'Total Dead', 'Kill+', 'Dead+', 'Total KPI']
+    }
 }
 L = texts[lang]
 
 SHEET_ID = '1MJQSE3siwFWmQNdJmbbJ6RsilvcoxWTu-r6h-UdHugE'
-URL_T = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=731741617'
-URL_S = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=371969335'
+URL_T = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/export?format=csv&gid=731741617'
+URL_S = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/export?format=csv&gid=371969335'
 
 @st.cache_data(ttl=30)
-def load_and_clean_data():
+def load_data():
     try:
-        # Load data
-        dt = pd.read_csv(URL_T)
-        ds = pd.read_csv(URL_S)
-        
-        # Chuẩn hóa tên cột ngay lập tức để tránh lỗi KeyError
-        dt.columns = dt.columns.str.strip()
-        ds.columns = ds.columns.str.strip()
-
-        # Merge dữ liệu dựa trên ID
-        df = pd.merge(dt, ds, on='ID', suffixes=('_1', '_2'))
-        
-        # Ép kiểu dữ liệu số an toàn (Loại bỏ dấu phẩy, khoảng trắng)
-        cols_to_fix = ['Sức Mạnh_2', 'Tổng Tiêu Diệt_2', 'Điểm Chết_2', 'Tổng Tiêu Diệt_1', 'Điểm Chết_1']
-        for col in cols_to_fix:
-            df[col] = pd.to_numeric(df[col].astype(str).str.replace(r'[^\d.]', '', regex=True), errors='coerce').fillna(0)
-        
-        # Tính toán KPI
+        dt = pd.read_csv(URL_T).rename(columns=lambda x: x.strip())
+        ds = pd.read_csv(URL_S).rename(columns=lambda x: x.strip())
+        for d in [dt, ds]:
+            d['ID'] = d['ID'].astype(str).str.replace('.0', '', regex=False).str.strip()
+            d['Tên'] = d['Tên'].fillna('Unknown').astype(str).str.strip()
+        df = pd.merge(dt.drop_duplicates('ID'), ds.drop_duplicates('ID'), on='ID', suffixes=('_1', '_2'))
+        for c in ['Sức Mạnh_2', 'Tổng Tiêu Diệt_2', 'Điểm Chết_2', 'Tổng Tiêu Diệt_1', 'Điểm Chết_1']:
+            df[c] = pd.to_numeric(df[c].astype(str).str.replace(r'[^\d.]', '', regex=True), errors='coerce').fillna(0)
         df['KI'] = df['Tổng Tiêu Diệt_2'] - df['Tổng Tiêu Diệt_1']
         df['DI'] = df['Điểm Chết_2'] - df['Điểm Chết_1']
-        df['Rank_Num'] = df['Tổng Tiêu Diệt_2'].rank(ascending=False, method='min').astype(int)
+        df['KillRank'] = df['Tổng Tiêu Diệt_2'].rank(ascending=False, method='min').astype(int)
         
-        def calc_kpi(row):
-            p = row['Sức Mạnh_2']
-            target_k = 300e6 if p >= 45e6 else 250e6 if p >= 40e6 else 200e6
-            target_d = 400e3 if p >= 30e6 else 300e3 if p >= 20e6 else 200e3
-            k_k = round(max(0.0, float(row['KI']) / target_k) * 100, 1) if target_k > 0 else 0.0
-            k_d = round(max(0.0, float(row['DI']) / target_d) * 100, 1) if target_d > 0 else 0.0
-            return pd.Series([k_k, k_d, round((k_k + k_d) / 2, 1)])
+        def get_metrics(r):
+            p = r['Sức Mạnh_2']
+            gk = 300e6 if p >= 45e6 else 250e6 if p >= 40e6 else 200e6
+            gd = 400e3 if p >= 30e6 else 300e3 if p >= 20e6 else 200e3
+            pk = max(0.0, float(r['KI']) / gk) if gk > 0 else 0.0
+            pdv = max(0.0, float(r['DI']) / gd) if gd > 0 else 0.0
+            return pd.Series([round(pk * 100, 1), round(pdv * 100, 1), round(((pk + pdv) / 2) * 100, 1), gk, gd])
             
-        df[['KPI_K', 'KPI_D', 'KPI_T']] = df.apply(calc_kpi, axis=1)
-        return df.sort_values(by='Rank_Num')
-    except Exception as e:
-        st.error(f"Lỗi dữ liệu: {e}")
-        return None
+        df[['KPI_K', 'KPI_D', 'KPI_T', 'Target_K', 'Target_D']] = df.apply(get_metrics, axis=1)
+        return df
+    except: return None
 
-df = load_and_clean_data()
+df = load_data()
 
-# --- 5. HIỂN THỊ ---
+# --- 5. GIAO DIỆN CHÍNH ---
 if df is not None:
-    st.markdown(f'<div class="header-container"><img src="{LOGO_MAIN}" class="logo-img"><div class="slogan">{L["slogan"]}</div></div>', unsafe_allow_html=True)
+    # Logo & Slogan
+    st.markdown(f"""
+        <div class="logo-container">
+            <img src="{LOGO_MAIN}" class="logo-img">
+            <div class="slogan">{L['slogan']}</div>
+        </div>
+    """, unsafe_allow_html=True)
 
-    # Search (Tìm kiếm theo Tên_2)
-    names = sorted(df['Tên_2'].dropna().unique())
-    sel = st.selectbox("", names, index=None, placeholder=L['search'], label_visibility="collapsed")
+    # Search
+    sel = st.selectbox("", sorted(df['Tên_2'].unique()), index=None, placeholder=L['search'], label_visibility="collapsed")
 
-    # Bảng Elite
-    h = L['h']
+    # Hiển thị Card (Giữ nguyên code cũ)
+    if sel:
+        d = df[df['Tên_2'] == sel].iloc[0]
+        html_card = f"""
+        <div style="position: relative; width: 100%; margin: 60px auto 10px; font-family: 'Segoe UI', sans-serif;">
+            <div style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); background: #1c2e3e; border: 2px solid #00d4ff; border-radius: 12px; padding: 12px 40px; z-index: 10; text-align: center; border-bottom: 4px solid #ffd700; box-shadow: 0 8px 25px rgba(0,0,0,0.8); min-width: 450px;">
+                <div style="color: #00d4ff; font-size: 11px; font-weight: 900; letter-spacing: 2px; margin-bottom: 5px;">PROFILE MEMBER</div>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
+                    <img src="{LOGO_PROFILE}" style="width: 50px; height: 50px; object-fit: contain;">
+                    <div style="color: #ffffff; font-size: 28px; font-weight: bold; text-shadow: 0 0 10px #00d4ff;">{sel}</div>
+                </div>
+                <div style="font-size: 13px; margin-top: 8px;">
+                    <b style="color: #ffd700;">ID:</b> <span style="color: #fff;">{d['ID']}</span> | 
+                    <b style="color: #00ffcc;">ALLIANCE:</b> <span style="color: #fff;">{d['Liên Minh_2']}</span>
+                </div>
+            </div>
+            <div style="background: rgba(13, 25, 47, 0.98); border: 2px solid #00d4ff; border-radius: 15px; padding: 85px 20px 20px 20px;">
+                <div style="display: flex; justify-content: space-between; gap: 15px; margin-bottom: 25px;">
+                    <div style="background: #233549; border-radius: 10px; padding: 15px; flex: 1; text-align: center; border-bottom: 3.5px solid #00d4ff;">
+                        <div style="font-size: 10px; color: #8b949e; font-weight: bold;">{L['pow']}</div>
+                        <div style="font-size: 22px; font-weight: 900; color: #fff;">{int(d['Sức Mạnh_2']):,}</div>
+                    </div>
+                    <div style="background: #233549; border-radius: 10px; padding: 15px; flex: 1; text-align: center; border-bottom: 3.5px solid #00ffcc;">
+                        <div style="font-size: 10px; color: #8b949e; font-weight: bold;">{L['tk']}</div>
+                        <div style="font-size: 22px; font-weight: 900; color: #fff;">{int(d['Tổng Tiêu Diệt_2']):,}</div>
+                    </div>
+                    <div style="background: #233549; border-radius: 10px; padding: 15px; flex: 1; text-align: center; border-bottom: 3.5px solid #ff4b4b;">
+                        <div style="font-size: 10px; color: #ff4b4b; font-weight: bold;">{L['td']}</div>
+                        <div style="font-size: 22px; font-weight: 900; color: #ff4b4b;">{int(d['Điểm Chết_2']):,}</div>
+                    </div>
+                    <div style="background: #233549; border-radius: 10px; padding: 15px; flex: 0.6; text-align: center; border-bottom: 3.5px solid #ffd700;">
+                        <div style="font-size: 10px; color: #ffd700; font-weight: bold;">{L['rank']}</div>
+                        <div style="font-size: 22px; font-weight: 900; color: #ffd700;">#{d['KillRank']}</div>
+                    </div>
+                </div>
+                <div style="background: #1a2a3a; border-radius: 15px; padding: 30px; border-bottom: 5px solid #ffd700; display: flex; justify-content: space-around; align-items: center;">
+                    <div style="text-align: center;">
+                        <div style="position: relative; width: 90px; height: 90px; margin: 0 auto;">
+                            <svg viewBox="0 0 36 36" style="width: 90px; height: 90px; transform: rotate(-90deg);">
+                                <circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="4"></circle>
+                                <circle cx="18" cy="18" r="16" fill="none" stroke="#00ffff" stroke-width="3.5" stroke-dasharray="{min(d['KPI_K'], 100)}, 100" stroke-linecap="round"></circle>
+                            </svg>
+                            <div style="position: absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:16px; font-weight:bold; color: #00ffff;">{d['KPI_K']}%</div>
+                        </div>
+                        <div style="font-size: 11px; color: #00ffff; font-weight: bold; margin-top: 10px;">KPI KILL</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="position: relative; width: 130px; height: 130px; margin: 0 auto;">
+                            <svg viewBox="0 0 36 36" style="width: 130px; height: 130px; transform: rotate(-90deg);">
+                                <circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="4"></circle>
+                                <circle cx="18" cy="18" r="16" fill="none" stroke="#ffd700" stroke-width="4" stroke-dasharray="{min(d['KPI_T'], 100)}, 100" stroke-linecap="round"></circle>
+                            </svg>
+                            <div style="position: absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:24px; font-weight:900; color:#ffd700;">{d['KPI_T']}%</div>
+                        </div>
+                        <div style="font-size: 15px; color: #ffd700; font-weight: bold; margin-top: 10px;">TOTAL KPI</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="position: relative; width: 90px; height: 90px; margin: 0 auto;">
+                            <svg viewBox="0 0 36 36" style="width: 90px; height: 90px; transform: rotate(-90deg);">
+                                <circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="4"></circle>
+                                <circle cx="18" cy="18" r="16" fill="none" stroke="#ff4b4b" stroke-width="3.5" stroke-dasharray="{min(d['KPI_D'], 100)}, 100" stroke-linecap="round"></circle>
+                            </svg>
+                            <div style="position: absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:16px; font-weight:bold; color: #ff4b4b;">{d['KPI_D']}%</div>
+                        </div>
+                        <div style="font-size: 11px; color: #ff4b4b; font-weight: bold; margin-top: 10px;">KPI DEAD</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        """
+        components.html(html_card, height=580)
+
+    # --- THAY THẾ BẢNG ST.DATAFRAME BẰNG BẢNG ELITE HTML ---
+    h = L['cols']
+    sorted_df = df.sort_values(by='KillRank')
+    
     rows_html = ""
-    for _, r in df.iterrows():
-        # Chuẩn bị dữ liệu hiển thị an toàn
-        name = str(r['Tên_2'])
-        uid = str(r['ID']).split('.')[0]
-        power = f"{int(r['Sức Mạnh_2']):,}"
-        tkill = f"{int(r['Tổng Tiêu Diệt_2']):,}"
-        tdead = f"{int(r['Điểm Chết_2']):,}"
-        k_k = f"{r['KPI_K']}%"
-        k_d = f"{r['KPI_D']}%"
-        k_t = f"{r['KPI_T']}%"
-        rank = int(r['Rank_Num'])
-        
+    for _, r in sorted_df.iterrows():
         rows_html += f"""
             <tr>
-                <td><span class="badge-rank">#{rank}</span></td>
-                <td><b>{name}</b><br><small style="color:#8b949e">ID: {uid}</small></td>
-                <td class="val-power">{power}</td>
-                <td class="val-kill">{tkill}</td>
-                <td class="val-dead">{tdead}</td>
-                <td style="color:#00ffff">{k_k}</td>
-                <td style="color:#ff4b4b">{k_d}</td>
+                <td><span class="badge-rank">#{int(r['KillRank'])}</span></td>
+                <td><b>{r['Tên_2']}</b><br><small style="color:#8b949e">ID: {r['ID']}</small></td>
+                <td class="val-power">{int(r['Sức Mạnh_2']):,}</td>
+                <td class="val-kill">{int(r['Tổng Tiêu Diệt_2']):,}</td>
+                <td class="val-dead">{int(r['Điểm Chết_2']):,}</td>
+                <td style="color:#00ffff">{r['KPI_K']}%</td>
+                <td style="color:#ff4b4b">{r['KPI_D']}%</td>
                 <td>
                     <div class="kpi-bar-bg"><div class="kpi-bar-fill" style="width: {min(float(r['KPI_T']), 100)}%;"></div></div>
-                    <span style="color:#00ffcc; font-weight:bold;">{k_t}</span>
+                    <span style="color:#00ffcc; font-weight:bold;">{r['KPI_T']}%</span>
                 </td>
             </tr>
         """
@@ -144,7 +245,10 @@ if df is not None:
     full_table = f"""
     <div class="elite-table-container">
         <table class="elite-table">
-            <thead><tr><th>{h[0]}</th><th>{h[1]}</th><th>{h[2]}</th><th>{h[3]}</th><th>{h[4]}</th><th>{h[5]}</th><th>{h[6]}</th><th>{h[7]}</th></tr></thead>
+            <thead><tr>
+                <th>{h[0]}</th><th>{h[1]}</th><th>{h[2]}</th><th>{h[3]}</th>
+                <th>{h[4]}</th><th>{h[5]}</th><th>{h[6]}</th><th>{h[7]}</th>
+            </tr></thead>
             <tbody>{rows_html}</tbody>
         </table>
     </div>
@@ -152,3 +256,5 @@ if df is not None:
     st.markdown(full_table, unsafe_allow_html=True)
 
     st.markdown(f'<div class="footer">🛡️ Discord: <b>louiss.nee</b> | Zalo: <b>0.3.7.3.2.7.4.6.0.0</b></div>', unsafe_allow_html=True)
+else:
+    st.error("⚠️ Không thể tải dữ liệu.")
