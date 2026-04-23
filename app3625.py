@@ -180,4 +180,26 @@ if df is not None:
                 <td><b style="color:#fff">{r['Tên_2']}</b><br><small style="color:#8b949e">ID: {r['ID']}</small></td>
                 <td style="text-align:right">{int(r['Sức Mạnh_2']):,}</td>
                 <td style="text-align:right; color:#00ffcc">{int(r['Tổng Tiêu Diệt_2']):,}</td>
-                <td style="text-align:right; color:#ff4
+                <td style="text-align:right; color:#ff4b4b">{int(r['Điểm Chết_2']):,}</td>
+                <td style="text-align:right; color:#00d4ff">+{int(r['KI']):,}</td>
+                <td style="text-align:right; color:#ff4b4b">+{int(r['DI']):,}</td>
+                <td>
+                    <div class="kpi-bar-container"><div class="kpi-bar-fill" style="width:{min(r['KPI_T'], 100)}%"></div></div>
+                    <span style="color:#ffd700; font-weight:bold">{r['KPI_T']}%</span>
+                </td>
+            </tr>""")
+
+        table_headers = ['Hạng', 'Thành viên', 'Sức mạnh', 'Tổng Kill', 'Điểm Chết', 'Kill +', 'Dead +', 'KPI %']
+        table_html = f"""
+        <div class="table-wrapper">
+            <table class="elite-table">
+                <thead><tr>{"".join([f"<th>{h}</th>" for h in table_headers])}</tr></thead>
+                <tbody>{"".join(rows_list)}</tbody>
+            </table>
+        </div>
+        """
+        st.markdown(table_html, unsafe_allow_html=True)
+
+    st.markdown('<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999;">🛡️ Admin Louis | v10.9 | Zalo: 0373274600</div>', unsafe_allow_html=True)
+else:
+    st.error("⚠️ Không thể kết nối dữ liệu! Louis hãy kiểm tra lại file Google Sheets nhé.")
