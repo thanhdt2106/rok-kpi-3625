@@ -8,53 +8,52 @@ st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide")
 # Link ảnh của bạn
 LOGO_URL = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true"
 
-# --- 2. SIÊU CSS ---
-st.markdown(f"""
+# --- 2. SIÊU CSS (Đã fix lỗi dấu ngoặc nhọn) ---
+st.markdown("""
     <style>
-    .stApp {{ background-color: #050a0e; color: #e0e6ed; }}
-    .block-container {{ 
+    .stApp { background-color: #050a0e; color: #e0e6ed; }
+    .block-container { 
         padding-top: 1rem !important; 
         padding-bottom: 4rem !important; 
         padding-left: 1.5rem !important; 
         padding-right: 1.5rem !important;
         max-width: 100% !important;
-    }}
-    header {{ visibility: hidden; height: 0px !important; }}
-    div[data-testid="stSelectbox"] label {{ display: none; }}
-    div[data-testid="stSelectbox"] {{ margin-top: -10px; }}
+    }
+    header { visibility: hidden; height: 0px !important; }
+    div[data-testid="stSelectbox"] label { display: none; }
+    div[data-testid="stSelectbox"] { margin-top: -10px; }
 
-    /* Layout cho Header chứa Logo */
-    .header-container {{
+    .header-container {
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 20px;
         margin-bottom: 15px;
-    }}
+    }
     
-    .main-title {{
+    .main-title {
         color: #00d4ff;
         font-size: 32px !important;
         font-weight: bold;
         text-shadow: 0px 0px 15px rgba(0,212,255,0.6);
         margin: 0;
-    }}
+    }
 
-    .hr-line {{
+    .hr-line {
         border: 0; height: 1px;
         background-image: linear-gradient(to right, rgba(0, 212, 255, 0), rgba(0, 212, 255, 0.75), rgba(0, 212, 255, 0));
         margin: 20px 0;
-    }}
+    }
 
-    .footer {{
+    .footer {
         position: fixed; left: 0; bottom: 0; width: 100%;
         background-color: rgba(5, 10, 14, 0.9);
         color: #8b949e; text-align: center;
         padding: 10px; font-size: 13px;
         border-top: 1px solid #1a2a3a; z-index: 999;
-    }}
-    .footer b {{ color: #00d4ff; }}
-    [data-testid="stDataFrame"] {{ background: #1a2a3a; border-radius: 10px; border: 1px solid #00d4ff; }}
+    }
+    .footer b { color: #00d4ff; }
+    [data-testid="stDataFrame"] { background: #1a2a3a; border-radius: 10px; border: 1px solid #00d4ff; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -74,10 +73,10 @@ texts = {
     }
 }
 
-# --- 4. TẢI DỮ LIỆU ---
+# --- 4. TẢI DỮ LIỆU (Đã fix lỗi URL) ---
 SHEET_ID = '1MJQSE3siwFWmQNdJmbbJ6RsilvcoxWTu-r6h-UdHugE'
-URL_T = f'https://docs.google.com/spreadsheets/d/{{SHEET_ID}}/export?format=csv&gid=731741617'
-URL_S = f'https://docs.google.com/spreadsheets/d/{{SHEET_ID}}/export?format=csv&gid=371969335'
+URL_T = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/export?format=csv&gid=731741617'
+URL_S = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/export?format=csv&gid=371969335'
 
 @st.cache_data(ttl=30)
 def load_data():
@@ -115,7 +114,7 @@ if df is not None:
         lang = st.radio("LANG:", ["VN", "EN"], horizontal=True, label_visibility="collapsed")
     L = texts[lang]
 
-    # Header với Logo
+    # Header
     st.markdown(f"""
         <div class="header-container">
             <img src="{LOGO_URL}" width="60">
@@ -134,19 +133,16 @@ if df is not None:
         tk_str = f"{int(d['Target_K']/1e6)}M" if d['Target_K'] >= 1e6 else f"{int(d['Target_K']/1e3)}K"
         td_str = f"{int(d['Target_D']/1e3)}K"
 
+        # Tách HTML Card để tránh lỗi ngoặc nhọn
         html_card = f"""
         <div style="position: relative; width: 100%; margin: 55px auto 5px; font-family: 'Segoe UI', sans-serif;">
             <img src="{LOGO_URL}" style="position: absolute; top: -35px; right: 10px; width: 50px; opacity: 0.8; z-index: 11;">
-            
-            <div style="position: absolute; top: -45px; left: 50%; transform: translateX(-50%); 
-                        background: #1c2e3e; border: 2px solid #00d4ff; border-radius: 12px; 
-                        padding: 10px 70px; z-index: 10; text-align: center;
-                        border-bottom: 4px solid #ffd700; box-shadow: 0 8px 20px rgba(0,0,0,0.9);">
+            <div style="position: absolute; top: -45px; left: 50%; transform: translateX(-50%); background: #1c2e3e; border: 2px solid #00d4ff; border-radius: 12px; padding: 10px 70px; z-index: 10; text-align: center; border-bottom: 4px solid #ffd700; box-shadow: 0 8px 20px rgba(0,0,0,0.9);">
                 <div style="color: #00d4ff; font-size: 13px; font-weight: 900; letter-spacing: 2px;">PROFILE MEMBER</div>
                 <div style="color: #ffffff; font-size: 30px; font-weight: bold; text-shadow: 0 0 10px #00d4ff;">{sel}</div>
                 <div style="font-size: 13px; margin-top: 5px;">
-                    <span style="color: #ffd700; font-weight: bold;">ID:</span> <span style="color: #fff;">{d['ID']}</span> | 
-                    <span style="color: #00ffcc; font-weight: bold;">ALLIANCE:</span> <span style="color: #fff;">{d['Liên Minh_2']}</span>
+                    <b style="color: #ffd700;">ID:</b> <span style="color: #fff;">{d['ID']}</span> | 
+                    <b style="color: #00ffcc;">ALLIANCE:</b> <span style="color: #fff;">{d['Liên Minh_2']}</span>
                 </div>
             </div>
             <div style="background: rgba(13, 25, 47, 0.98); border: 2px solid #00d4ff; border-radius: 15px; padding: 75px 20px 20px 20px;">
@@ -180,7 +176,6 @@ if df is not None:
                         <div style="font-size: 11px; color: #00ffff; font-weight: bold; margin-top: 10px;">KPI KILL</div>
                         <div style="font-size: 9px; color: #8b949e;">(Target: {tk_str})</div>
                     </div>
-                    
                     <div style="text-align: center;">
                         <div style="position: relative; width: 130px; height: 130px; margin: 0 auto; background: #121e2a; border-radius: 50%;">
                             <svg viewBox="0 0 36 36" style="width: 130px; height: 130px; transform: rotate(-90deg);">
@@ -191,7 +186,6 @@ if df is not None:
                         </div>
                         <div style="font-size: 15px; color: #ffd700; font-weight: bold; margin-top: 10px;">TOTAL KPI</div>
                     </div>
-
                     <div style="text-align: center;">
                         <div style="position: relative; width: 90px; height: 90px; margin: 0 auto; background: #121e2a; border-radius: 50%;">
                             <svg viewBox="0 0 36 36" style="width: 90px; height: 90px; transform: rotate(-90deg);">
@@ -218,8 +212,10 @@ if df is not None:
 
     st.dataframe(display_df.sort_values(by=L['cols'][3]), use_container_width=True, hide_index=True, height=650)
 
-    st.markdown("""
+    st.markdown(f"""
         <div class="footer">
             🛡️ Liên hệ hỗ trợ: Discord: <b>louiss.nee</b> | Zalo: <b>0.3.7.3.2.7.4.6.0.0</b>
         </div>
         """, unsafe_allow_html=True)
+else:
+    st.error("⚠️ Không thể tải dữ liệu. Hãy kiểm tra SHEET_ID hoặc kết nối mạng.")
