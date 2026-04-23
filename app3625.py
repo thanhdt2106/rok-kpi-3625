@@ -1,31 +1,31 @@
 import streamlit as st
-import pd as pd
+import pandas as pd  # Đã sửa lại lỗi import pd ở đây
 import streamlit.components.v1 as components
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide")
 
-# --- 2. SIÊU CSS (ĐẨY CAO, CĂN GIỮA, MÀU VÀNG TIÊU ĐỀ) ---
+# --- 2. CSS: ĐẨY CAO, CĂN GIỮA Ô & TIÊU ĐỀ VÀNG ---
 st.markdown("""
     <style>
     .stApp { background-color: #050a0e; color: #e0e6ed; }
     [data-testid="stSidebar"] { background-color: #0d1b2a; border-right: 1px solid #00d4ff; }
     
-    /* ĐẨY SÁT LÊN TRÊN & CĂN GIỮA NỘI DUNG */
+    /* ĐẨY SÁT LÊN TRÊN & CĂN GIỮA */
     .main .block-container {
         max-width: 1250px !important;
-        padding-top: 0.2rem !important; /* Đẩy sát taskbar nhất có thể */
+        padding-top: 0.1rem !important; /* Đẩy sát kịch trần */
         margin: auto !important;
     }
 
     /* LOGO CĂN GIỮA */
-    .logo-container { display: flex; justify-content: center; width: 100%; margin-bottom: 15px; }
-    .logo-img { width: 280px; filter: drop-shadow(0 0 10px rgba(0,212,255,0.4)); }
+    .logo-container { display: flex; justify-content: center; width: 100%; margin-bottom: 10px; }
+    .logo-img { width: 280px; filter: drop-shadow(0 0 10px rgba(0,212,255,0.3)); }
 
-    /* BẢNG DỮ LIỆU CĂN GIỮA Ô & MÀU VÀNG */
+    /* BẢNG DỮ LIỆU: CĂN GIỮA Ô & MÀU VÀNG */
     .table-wrapper { 
         background: rgba(13, 27, 42, 0.6); border: 1px solid #1e3a5a; 
-        border-radius: 12px; padding: 15px; margin: 20px auto; 
+        border-radius: 12px; padding: 15px; margin: 10px auto; 
     }
     .elite-table { width: 100%; border-collapse: collapse; font-family: 'Segoe UI', sans-serif; }
     
@@ -36,7 +36,7 @@ st.markdown("""
         border-bottom: 3px solid #00d4ff;
     }
 
-    /* Nội dung bảng căn giữa & màu vàng cho các cột yêu cầu */
+    /* Nội dung ô căn giữa & màu vàng các cột ID, Power, Kill, Dead */
     .elite-table td { 
         padding: 12px 8px; font-size: 14px; color: #e0e6ed; 
         border-bottom: 1px solid #1a2a3a; text-align: center; 
@@ -62,7 +62,7 @@ with st.sidebar:
         "VN": {
             "menu": ["📊 Bảng KPI", "👤 Tài khoản"],
             "search": "👤 Tìm kiếm thành viên...",
-            "headers": ['Hạng', 'Thành viên', 'ID', 'Power', 'Total Kill', 'Dead Pt', 'Kill +', 'Dead +', 'KPI %']
+            "headers": ['Hạng', 'Thành viên', 'ID', 'Sức mạnh', 'Tổng Kill', 'Điểm Chết', 'Kill +', 'Dead +', 'KPI %']
         },
         "EN": {
             "menu": ["📊 KPI Leaderboard", "👤 Profile"],
@@ -73,7 +73,7 @@ with st.sidebar:
     t = texts[lang]
     menu = st.radio("Menu", t["menu"])
 
-# --- 4. DATA LOGIC (SỬA LỖI MERGE ID) ---
+# --- 4. DATA LOGIC (FIX LỖI MERGE ID & FLOAT) ---
 SHEET_ID = '1MJQSE3siwFWmQNdJmbbJ6RsilvcoxWTu-r6h-UdHugE'
 URL_T = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=731741617'
 URL_S = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=371969335'
@@ -84,12 +84,13 @@ def load_data():
         dt = pd.read_csv(URL_T).rename(columns=lambda x: x.strip())
         ds = pd.read_csv(URL_S).rename(columns=lambda x: x.strip())
         
-        # Đảm bảo ID luôn là String để không bị lỗi 0.0%
+        # Chuyển ID về chuỗi để không bị lỗi merge float/str
         dt['ID'] = dt['ID'].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
         ds['ID'] = ds['ID'].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
         
         df = pd.merge(dt.drop_duplicates('ID'), ds.drop_duplicates('ID'), on='ID', suffixes=('_1', '_2'))
         
+        # Xử lý số liệu
         for c in ['Sức Mạnh_2', 'Tổng Tiêu Diệt_2', 'Điểm Chết_2', 'Tổng Tiêu Diệt_1', 'Điểm Chết_1']:
             df[c] = pd.to_numeric(df[c].astype(str).str.replace(r'[^\d.]', '', regex=True), errors='coerce').fillna(0)
         
@@ -107,43 +108,46 @@ def load_data():
         df[['KPI_K', 'KPI_D', 'KPI_T']] = df.apply(calc_kpi, axis=1)
         df['Rank'] = df['Tổng Tiêu Diệt_2'].rank(ascending=False, method='min').astype(int)
         return df
-    except: return None
+    except Exception as e:
+        st.error(f"Lỗi tải dữ liệu: {e}")
+        return None
 
 df = load_data()
 
 # --- 5. HIỂN THỊ ---
 if df is not None:
-    # Logo căn giữa sát trên
+    # Logo
     st.markdown('<div class="logo-container"><img src="https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo1.png?raw=true" class="logo-img"></div>', unsafe_allow_html=True)
     
+    # Thanh tìm kiếm
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         sel = st.selectbox("", sorted(df['Tên_2'].dropna().unique()), index=None, placeholder=t["search"], label_visibility="collapsed")
     
     if sel:
         d = df[df['Tên_2'] == sel].iloc[0]
-        # FORM PROFILE CHI TIẾT GỐC CỦA LOUIS
+        # TRẢ VỀ FORM PROFILE GỐC CỦA BẠN (image_16d9c2.png)
         html_card = f"""
-        <div style="position: relative; width: 100%; max-width: 900px; margin: 55px auto 10px; font-family: 'Segoe UI', sans-serif;">
-            <div style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); background: #1c2e3e; border: 2px solid #00d4ff; border-radius: 12px; padding: 10px 35px; z-index: 10; text-align: center; border-bottom: 4px solid #ffd700; box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);">
+        <div style="position: relative; width: 100%; max-width: 900px; margin: 45px auto 10px; font-family: 'Segoe UI', sans-serif;">
+            <div style="position: absolute; top: -40px; left: 50%; transform: translateX(-50%); background: #1c2e3e; border: 2px solid #00d4ff; border-radius: 10px; padding: 8px 30px; z-index: 10; text-align: center; box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);">
                 <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-                    <img src="https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true" style="width: 35px;">
-                    <div style="color: #ffffff; font-size: 24px; font-weight: bold;">{sel}</div>
+                    <img src="https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true" style="width: 30px;">
+                    <div style="color: #ffffff; font-size: 22px; font-weight: bold;">{sel}</div>
                 </div>
-                <div style="font-size: 11px; color: #e0e6ed; opacity: 0.8;">ID: {d['ID']} | {d['Liên Minh_2']}</div>
+                <div style="font-size: 10px; color: #00d4ff; opacity: 0.8;">ID: {d['ID']} | {d['Liên Minh_2']}</div>
             </div>
-            <div style="background: rgba(13, 25, 47, 0.98); border: 2px solid #00d4ff; border-radius: 15px; padding: 75px 20px 20px 20px; box-shadow: inset 0 0 20px rgba(0, 212, 255, 0.1);">
-                <div style="display: flex; justify-content: space-around; align-items: center; border: 1px solid rgba(0, 212, 255, 0.2); padding: 25px; border-radius: 12px;">
-                    <div style="text-align: center;"><div style="color:#00ffff; font-size: 18px; font-weight:bold;">{d['KPI_K']}%</div><div style="font-size:10px; color:#00ffff;">KILL KPI</div></div>
-                    <div style="text-align: center;"><div style="color:#ffd700; font-size:32px; font-weight:bold; text-shadow: 0 0 10px #ffd700;">{d['KPI_T']}%</div><div style="font-size:12px; color:#ffd700; font-weight:bold;">TOTAL KPI</div></div>
-                    <div style="text-align: center;"><div style="color:#ff4b4b; font-size: 18px; font-weight:bold;">{d['KPI_D']}%</div><div style="font-size:10px; color:#ff4b4b;">DEAD KPI</div></div>
+            <div style="background: rgba(13, 25, 47, 0.98); border: 2px solid #00d4ff; border-radius: 12px; padding: 60px 20px 20px 20px;">
+                <div style="display: flex; justify-content: space-around; align-items: center; border: 1px solid rgba(0, 212, 255, 0.1); padding: 30px; border-radius: 10px;">
+                    <div style="text-align: center;"><div style="color:#00ffff; font-size: 20px; font-weight:bold;">{d['KPI_K']}%</div><div style="font-size:10px; color:#00ffff; margin-top:5px;">KILL KPI</div></div>
+                    <div style="text-align: center;"><div style="color:#ffd700; font-size:36px; font-weight:bold; text-shadow: 0 0 15px rgba(255,215,0,0.5);">{d['KPI_T']}%</div><div style="font-size:11px; color:#ffd700; font-weight:bold; margin-top:5px;">TOTAL KPI</div></div>
+                    <div style="text-align: center;"><div style="color:#ff4b4b; font-size: 20px; font-weight:bold;">{d['KPI_D']}%</div><div style="font-size:10px; color:#ff4b4b; margin-top:5px;">DEAD KPI</div></div>
                 </div>
             </div>
         </div>
         """
-        components.html(html_card, height=350)
+        components.html(html_card, height=300)
 
-    # --- BẢNG DỮ LIỆU CĂN GIỮA & TIÊU ĐỀ VÀNG ---
+    # --- BẢNG DỮ LIỆU ---
     df_sorted = df.sort_values(by='Rank')
     rows_list = []
     for _, r in df_sorted.iterrows():
@@ -172,4 +176,4 @@ if df is not None:
     </div>
     """
     st.markdown(table_html, unsafe_allow_html=True)
-    st.markdown(f'<div style="text-align: center; color: #8b949e; font-size: 11px; padding: 20px;">🛡️ Admin Louis | v10.9 | Kingdom 3625</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="text-align: center; color: #8b949e; font-size: 11px; padding: 15px;">🛡️ Admin Louis | v10.9 | Kingdom 3625</div>', unsafe_allow_html=True)
