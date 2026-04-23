@@ -3,32 +3,46 @@ import pandas as pd
 import streamlit.components.v1 as components
 
 # --- 1. CẤU HÌNH TRANG ---
-# initial_sidebar_state="collapsed" giúp sidebar đóng ngay từ đầu
 st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide", initial_sidebar_state="collapsed")
 
-# --- 2. SIÊU CSS (XÓA SẠCH SIDEBAR & NÚT ĐIỀU KHIỂN) ---
+# --- 2. SIÊU CSS (CUSTOM HEADER & HIDE SIDEBAR) ---
 st.markdown("""
     <style>
     .stApp { background-color: #050a0e; color: #e0e6ed; }
     
-    /* 1. ẨN HOÀN TOÀN THANH SIDEBAR */
-    [data-testid="stSidebar"] {
-        display: none;
-    }
-    
-    /* 2. ẨN NÚT MŨI TÊN ĐIỀU KHIỂN SIDEBAR (TOP LEFT) */
-    [data-testid="stSidebarCollapseButton"] {
-        display: none !important;
+    /* ẨN SIDEBAR TUYỆT ĐỐI */
+    [data-testid="stSidebar"], [data-testid="stSidebarCollapseButton"] { display: none !important; }
+
+    /* CẤU TRÚC HEADER MỚI */
+    .header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 20px;
+        background: rgba(13, 27, 42, 0.8);
+        border-bottom: 1px solid #00d4ff;
+        margin-bottom: 30px;
+        position: sticky;
+        top: 0;
+        z-index: 999;
     }
 
-    /* 3. TỐI ƯU KHÔNG GIAN KHI KHÔNG CÓ SIDEBAR */
+    .header-center {
+        color: #00d4ff;
+        font-weight: 900;
+        font-size: 24px;
+        text-shadow: 0 0 15px #00d4ff;
+        font-family: 'Segoe UI', sans-serif;
+        letter-spacing: 2px;
+    }
+
     .main .block-container {
         max-width: 98% !important;
-        padding-top: 1rem !important; 
+        padding-top: 0rem !important; 
         margin: auto !important;
     }
 
-    /* TABLE STYLE */
+    /* TABLE STYLE (GIỮ NGUYÊN) */
     .table-wrapper { background: rgba(13, 27, 42, 0.6); border: 1px solid #1e3a5a; border-radius: 12px; padding: 20px; margin-top: 20px; }
     .elite-table { width: 100%; border-collapse: collapse; font-family: 'Segoe UI', sans-serif; }
     .elite-table thead th { 
@@ -44,7 +58,6 @@ st.markdown("""
     .kpi-bar-container { width: 100px; background: #1a2a3a; height: 8px; border-radius: 4px; display: inline-block; margin-right: 8px; }
     .kpi-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #00d4ff, #00ffcc); }
     
-    /* Ẩn header mặc định của Streamlit */
     header { visibility: hidden; }
     </style>
     """, unsafe_allow_html=True)
@@ -82,11 +95,34 @@ def load_data():
 
 df = load_data()
 
-# --- 4. HIỂN THỊ CHÍNH ---
+# --- 4. GIAO DIỆN HEADER ---
 if df is not None:
-    # Thanh tìm kiếm nằm ngay trang chủ vì đã bỏ sidebar
-    sel = st.selectbox("", sorted(df['Tên_2'].dropna().unique()), index=None, placeholder="👤 Tìm kiếm thành viên...", label_visibility="collapsed")
-    
+    # Chia Header làm 3 phần
+    head_left, head_mid, head_right = st.columns([2.5, 5, 2.5])
+
+    with head_left:
+        # Tìm kiếm ở góc trái
+        sel = st.selectbox("", sorted(df['Tên_2'].dropna().unique()), index=None, placeholder="👤 Tìm kiếm thành viên...", label_visibility="collapsed")
+
+    with head_mid:
+        # Dòng chữ ở giữa
+        st.markdown('<div class="header-center" style="text-align:center;">FIGHT TO DEAD 3625</div>', unsafe_allow_html=True)
+
+    with head_right:
+        # Nút chuyển ngôn ngữ và User ở góc phải
+        r_col1, r_col2 = st.columns([2, 1])
+        with r_col1:
+            lang = st.selectbox("", ["VN", "EN"], label_visibility="collapsed")
+        with r_col2:
+            st.button("👤", use_container_width=True)
+
+    # Cấu hình text theo ngôn ngữ
+    t = {
+        "VN": {"rank": "HẠNG", "pow": "SỨC MẠNH", "kill": "TỔNG KILL", "dead": "ĐIỂM CHẾT", "target": "Mục tiêu", "headers": ['Hạng', 'Thành viên', 'Sức mạnh', 'Tổng Kill', 'Điểm Chết', 'Kill +', 'Dead +', 'KPI %']},
+        "EN": {"rank": "RANK", "pow": "POWER", "kill": "TOTAL KILL", "dead": "DEAD POINT", "target": "Target", "headers": ['Rank', 'Member', 'Power', 'Total Kill', 'Dead Pt', 'Kill +', 'Dead +', 'KPI %']}
+    }[lang]
+
+    # --- 5. PROFILE CHI TIẾT (GIỮ NGUYÊN) ---
     if sel:
         d = df[df['Tên_2'] == sel].iloc[0]
         html_card = f"""
@@ -102,12 +138,12 @@ if df is not None:
             <div style="background: rgba(13, 25, 47, 0.98); border: 2px solid #00d4ff; border-radius: 15px; padding: 85px 20px 25px 20px; box-shadow: inset 0 0 30px rgba(0, 212, 255, 0.1);">
                 <div style="display: flex; justify-content: space-between; gap: 10px; margin-bottom: 25px;">
                     <div style="background: #233549; border-radius: 8px; padding: 12px; flex: 1; text-align: center; border-bottom: 3px solid #ffd700; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-                        <div style="font-size: 10px; color: #8b949e;">HẠNG</div>
+                        <div style="font-size: 10px; color: #8b949e;">{t['rank']}</div>
                         <div style="font-size: 20px; font-weight: 900; color: #ffd700;">#{int(d['Rank'])}</div>
                     </div>
-                    <div style="background: #233549; border-radius: 8px; padding: 12px; flex: 1.5; text-align: center; border-bottom: 3px solid #00d4ff;"><div style="font-size: 10px; color: #8b949e;">SỨC MẠNH</div><div style="font-size: 20px; font-weight: 900; color: #fff;">{int(d['Sức Mạnh_2']):,}</div></div>
-                    <div style="background: #233549; border-radius: 8px; padding: 12px; flex: 1.5; text-align: center; border-bottom: 3px solid #00ffcc;"><div style="font-size: 10px; color: #8b949e;">TỔNG KILL</div><div style="font-size: 20px; font-weight: 900; color: #fff;">{int(d['Tổng Tiêu Diệt_2']):,}</div></div>
-                    <div style="background: #233549; border-radius: 8px; padding: 12px; flex: 1.5; text-align: center; border-bottom: 3px solid #ff4b4b;"><div style="font-size: 10px; color: #8b949e;">ĐIỂM CHẾT</div><div style="font-size: 20px; font-weight: 900; color: #ff4b4b;">{int(d['Điểm Chết_2']):,}</div></div>
+                    <div style="background: #233549; border-radius: 8px; padding: 12px; flex: 1.5; text-align: center; border-bottom: 3px solid #00d4ff;"><div style="font-size: 10px; color: #8b949e;">{t['pow']}</div><div style="font-size: 20px; font-weight: 900; color: #fff;">{int(d['Sức Mạnh_2']):,}</div></div>
+                    <div style="background: #233549; border-radius: 8px; padding: 12px; flex: 1.5; text-align: center; border-bottom: 3px solid #00ffcc;"><div style="font-size: 10px; color: #8b949e;">{t['kill']}</div><div style="font-size: 20px; font-weight: 900; color: #fff;">{int(d['Tổng Tiêu Diệt_2']):,}</div></div>
+                    <div style="background: #233549; border-radius: 8px; padding: 12px; flex: 1.5; text-align: center; border-bottom: 3px solid #ff4b4b;"><div style="font-size: 10px; color: #8b949e;">{t['dead']}</div><div style="font-size: 20px; font-weight: 900; color: #ff4b4b;">{int(d['Điểm Chết_2']):,}</div></div>
                 </div>
                 <div style="background: rgba(26, 42, 58, 0.5); border-radius: 15px; padding: 25px 5px; display: flex; justify-content: space-around; align-items: center; border: 1px solid rgba(0, 212, 255, 0.2);">
                     <div style="text-align: center;">
@@ -128,7 +164,7 @@ if df is not None:
         """
         components.html(html_card, height=530)
 
-    # --- BẢNG TABLE ---
+    # --- 6. BẢNG TABLE (GIỮ NGUYÊN) ---
     df_sorted = df.sort_values(by='Rank')
     rows_list = []
     for _, r in df_sorted.iterrows():
@@ -150,7 +186,7 @@ if df is not None:
     table_html = f"""
     <div class="table-wrapper">
         <table class="elite-table">
-            <thead><tr><th>Hạng</th><th>Thành viên</th><th>Sức mạnh</th><th>Tổng Kill</th><th>Điểm Chết</th><th>Kill +</th><th>Dead +</th><th>KPI %</th></tr></thead>
+            <thead><tr>{"".join([f"<th>{h}</th>" for h in t["headers"]])}</tr></thead>
             <tbody>{"".join(rows_list)}</tbody>
         </table>
     </div>
