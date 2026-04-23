@@ -19,7 +19,7 @@ st.markdown("""
         padding: 10px 20px;
         background: rgba(13, 27, 42, 0.8);
         border-bottom: 1px solid #00d4ff;
-        margin-bottom: 30px;
+        margin-bottom: 0px;
         position: sticky;
         top: 0;
         z-index: 999;
