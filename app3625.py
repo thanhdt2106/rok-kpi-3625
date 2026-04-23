@@ -5,31 +5,19 @@ import streamlit.components.v1 as components
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide")
 
-# --- 2. CSS CĂN GIỮA & GIAO DIỆN TỐI ---
+# --- 2. CSS RESET NỀN ---
 st.markdown("""
     <style>
     .stApp { background-color: #050a0e; color: #e0e6ed; }
     .main-header {
         color: #00d4ff; text-align: center; font-size: 32px;
-        font-weight: bold; padding: 15px; text-transform: uppercase;
-        text-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+        font-weight: bold; padding: 10px; text-transform: uppercase;
     }
-    /* Căn giữa ô tìm kiếm */
     .stSelectbox { max-width: 500px; margin: 0 auto; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. QUẢN LÝ NGÔN NGỮ ---
-_, col_l = st.columns([4, 1])
-with col_l:
-    lang = st.radio("LANG:", ["VN", "EN"], horizontal=True, label_visibility="collapsed")
-
-L = {
-    "VN": {"header": "🛡️ QUẢN LÝ KPI 3625", "search": "🔍 CHỌN CHIẾN BINH:", "select": "--- Chọn tên ---", "target": "Mục tiêu:"},
-    "EN": {"header": "🛡️ KPI MANAGEMENT 3625", "search": "🔍 SELECT WARRIOR:", "select": "--- Select name ---", "target": "Target:"}
-}[lang]
-
-# --- 4. TẢI DỮ LIỆU ---
+# --- 3. TẢI DỮ LIỆU ---
 SHEET_ID = '1MJQSE3siwFWmQNdJmbbJ6RsilvcoxWTu-r6h-UdHugE'
 URL_T = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=731741617'
 URL_S = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=371969335'
@@ -49,12 +37,11 @@ def load_data():
 
         def get_metrics(r):
             p = r['Sức Mạnh_2']
-            # KPI định mức (Louis có thể chỉnh lại số này cho chuẩn KvK)
             gk = 300e6 if p >= 45e6 else 250e6 if p >= 40e6 else 200e6
             gd = 400e3 if p >= 30e6 else 300e3 if p >= 20e6 else 200e3
-            pk = max(0.0, float(r['KI']) / gk) if gk > 0 else 0.0
-            pdv = max(0.0, float(r['DI']) / gd) if gd > 0 else 0.0
-            return pd.Series([round(pk * 100, 1), round(pdv * 100, 1), round(((pk + pdv) / 2) * 100, 1), f"{gk/1e6:,.0f}M", f"{gd/1e3:,.0f}K"])
+            pk = round(max(0.0, float(r['KI']) / gk) * 100, 1) if gk > 0 else 0.0
+            pdv = round(max(0.0, float(r['DI']) / gd) * 100, 1) if gd > 0 else 0.0
+            return pd.Series([pk, pdv, round((pk + pdv) / 2, 1), f"{gk/1e6:,.0f}M", f"{gd/1e3:,.0f}K"])
         
         df[['KPI_K', 'KPI_D', 'KPI_T', 'T_K', 'T_D']] = df.apply(get_metrics, axis=1)
         return df
@@ -62,88 +49,87 @@ def load_data():
 
 df = load_data()
 
-# --- 5. HIỂN THỊ ---
+# --- 4. HIỂN THỊ ---
 if df is not None:
-    st.markdown(f'<div class="main-header">{L["header"]}</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-header">🛡️ COMMAND CENTER 3625</div>', unsafe_allow_html=True)
     
     _, col_search, _ = st.columns([1, 2, 1])
     with col_search:
-        sel = st.selectbox(L["search"], [L["select"]] + sorted(df['Tên_2'].unique()), label_visibility="collapsed")
+        sel = st.selectbox("CHỌN THỐNG ĐỐC:", [ "--- Chọn tên ---"] + sorted(df['Tên_2'].unique()))
     
-    if sel != L["select"]:
+    if sel != "--- Chọn tên ---":
         d = df[df['Tên_2'] == sel].iloc[0]
         
-        # ÉP KHUNG VÀO GIỮA
         _, col_mid, _ = st.columns([1, 2, 1])
-        
         with col_mid:
+            # HTML CARD: Sáng hơn, chữ to, chia 2 hàng
             html_card = f"""
-            <div style="background: #0d1117; border: 2px solid #00d4ff; border-radius: 15px; padding: 25px; color: white; font-family: sans-serif; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <div>
-                        <div style="font-size: 28px; font-weight: 800; color: #00d4ff;">{sel}</div>
-                        <div style="font-size: 13px; color: #8b949e;">ID: {d['ID']} | {d['Liên Minh_2']}</div>
+            <div style="background: linear-gradient(180deg, #16213e 0%, #0f3460 100%); 
+                        border: 2px solid #4ecca3; border-radius: 20px; padding: 25px; 
+                        color: #e9ecef; font-family: 'Segoe UI', sans-serif; 
+                        box-shadow: 0 15px 35px rgba(0,0,0,0.6); text-align: center;">
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px;">
+                    <div style="text-align: left;">
+                        <div style="font-size: 26px; font-weight: 900; color: #4ecca3; text-transform: uppercase;">{sel}</div>
+                        <div style="font-size: 13px; color: #94a3b8;">ID: {d['ID']} | {d['Liên Minh_2']}</div>
                     </div>
-                    <div style="background: #ffd700; color: #000; padding: 5px 15px; border-radius: 8px; font-weight: bold; font-size: 18px;">
-                        #{d['KillRank']}
+                    <div style="background: #ffd700; color: #1a1a1a; padding: 8px 15px; border-radius: 10px; font-weight: 900; font-size: 18px;">
+                        RANK {d['KillRank']}
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-                    <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; text-align: center;">
-                        <div style="font-size: 10px; color: #8b949e;">SỨC MẠNH</div>
-                        <div style="font-size: 18px; font-weight: bold;">{int(d['Sức Mạnh_2']):,}</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 25px;">
+                    <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border: 1px solid rgba(78,204,163,0.2);">
+                        <div style="font-size: 10px; color: #94a3b8; font-weight: bold;">SỨC MẠNH</div>
+                        <div style="font-size: 18px; font-weight: bold; color: white;">{int(d['Sức Mạnh_2']):,}</div>
                     </div>
-                    <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; text-align: center;">
-                        <div style="font-size: 10px; color: #ffd700;">TỔNG KILL</div>
+                    <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border: 1px solid rgba(78,204,163,0.2);">
+                        <div style="font-size: 10px; color: #ffd700; font-weight: bold;">TỔNG KILL</div>
                         <div style="font-size: 18px; font-weight: bold; color: #ffd700;">{int(d['Tổng Tiêu Diệt_2']):,}</div>
                     </div>
-                    <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; text-align: center;">
-                        <div style="font-size: 10px; color: #ff4b4b;">ĐIỂM CHẾT</div>
+                    <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border: 1px solid rgba(78,204,163,0.2);">
+                        <div style="font-size: 10px; color: #ff4b4b; font-weight: bold;">ĐIỂM CHẾT</div>
                         <div style="font-size: 18px; font-weight: bold; color: #ff4b4b;">{int(d['Điểm Chết_2']):,}</div>
                     </div>
                 </div>
 
-                <div style="display: flex; justify-content: space-around; align-items: center; background: rgba(0,212,255,0.03); padding: 20px; border-radius: 12px; border: 1px dashed rgba(0,212,255,0.2);">
+                <div style="display: flex; justify-content: space-around; align-items: flex-end;">
                     <div style="text-align: center;">
-                        <div style="position: relative; width: 80px; height: 80px; margin: 0 auto 10px;">
-                            <svg viewBox="0 0 36 36" style="width: 80px; height: 80px; transform: rotate(-90deg);">
-                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#222" stroke-width="3"/>
-                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#00ffff" stroke-width="3" stroke-dasharray="{min(d['KPI_K'], 100)}, 100"/>
-                            </svg>
-                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 14px; font-weight: bold;">{d['KPI_K']}%</div>
-                        </div>
-                        <div style="font-size: 9px; color: #00ffff; font-weight: bold;">KPI KILL</div>
-                        <div style="font-size: 9px; color: #8b949e;">{L['target']}: {d['T_K']}</div>
+                        <svg width="80" height="80" viewBox="0 0 36 36">
+                            <circle cx="18" cy="18" r="16" fill="none" stroke="#2d3436" stroke-width="3"></circle>
+                            <circle cx="18" cy="18" r="16" fill="none" stroke="#4ecca3" stroke-width="3" 
+                                    stroke-dasharray="{min(d['KPI_K'], 100)}, 100" stroke-linecap="round" transform="rotate(-90 18 18)"></circle>
+                            <text x="18" y="20.5" text-anchor="middle" font-size="8" font-weight="bold" fill="white">{d['KPI_K']}%</text>
+                        </svg>
+                        <div style="font-size: 9px; margin-top: 8px; font-weight: bold;">KPI KILL</div>
+                        <div style="font-size: 8px; color: #94a3b8;">Mục tiêu: {d['T_K']}</div>
                     </div>
 
                     <div style="text-align: center;">
-                        <div style="position: relative; width: 80px; height: 80px; margin: 0 auto 10px;">
-                            <svg viewBox="0 0 36 36" style="width: 80px; height: 80px; transform: rotate(-90deg);">
-                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#222" stroke-width="3"/>
-                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#ff4b4b" stroke-width="3" stroke-dasharray="{min(d['KPI_D'], 100)}, 100"/>
-                            </svg>
-                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 14px; font-weight: bold;">{d['KPI_D']}%</div>
-                        </div>
-                        <div style="font-size: 9px; color: #ff4b4b; font-weight: bold;">KPI DEAD</div>
-                        <div style="font-size: 9px; color: #8b949e;">{L['target']}: {d['T_D']}</div>
+                        <svg width="100" height="100" viewBox="0 0 36 36">
+                            <circle cx="18" cy="18" r="16" fill="none" stroke="#2d3436" stroke-width="2.5"></circle>
+                            <circle cx="18" cy="18" r="16" fill="none" stroke="#ffd700" stroke-width="3" 
+                                    stroke-dasharray="{min(d['KPI_T'], 100)}, 100" stroke-linecap="round" transform="rotate(-90 18 18)"></circle>
+                            <text x="18" y="21" text-anchor="middle" font-size="9" font-weight="900" fill="#ffd700">{d['KPI_T']}%</text>
+                        </svg>
+                        <div style="font-size: 11px; margin-top: 5px; font-weight: bold; color: #ffd700;">TOTAL KPI</div>
                     </div>
 
                     <div style="text-align: center;">
-                        <div style="position: relative; width: 100px; height: 100px; margin: 0 auto 5px;">
-                            <svg viewBox="0 0 36 36" style="width: 100px; height: 100px; transform: rotate(-90deg);">
-                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#222" stroke-width="2"/>
-                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#ffd700" stroke-width="3" stroke-dasharray="{min(d['KPI_T'], 100)}, 100"/>
-                            </svg>
-                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 20px; font-weight: 900; color: #ffd700;">{d['KPI_T']}%</div>
-                        </div>
-                        <div style="font-size: 10px; color: #ffd700; font-weight: bold;">TOTAL KPI</div>
+                        <svg width="80" height="80" viewBox="0 0 36 36">
+                            <circle cx="18" cy="18" r="16" fill="none" stroke="#2d3436" stroke-width="3"></circle>
+                            <circle cx="18" cy="18" r="16" fill="none" stroke="#ff4b4b" stroke-width="3" 
+                                    stroke-dasharray="{min(d['KPI_D'], 100)}, 100" stroke-linecap="round" transform="rotate(-90 18 18)"></circle>
+                            <text x="18" y="20.5" text-anchor="middle" font-size="8" font-weight="bold" fill="white">{d['KPI_D']}%</text>
+                        </svg>
+                        <div style="font-size: 9px; margin-top: 8px; font-weight: bold;">KPI DEAD</div>
+                        <div style="font-size: 8px; color: #94a3b8;">Mục tiêu: {d['T_D']}</div>
                     </div>
                 </div>
             </div>
             """
-            components.html(html_card, height=450)
+            components.html(html_card, height=500)
 
-    # Dữ liệu bảng phía dưới
     st.divider()
-    st.dataframe(df[['Tên_2', 'ID', 'Sức Mạnh_2', 'Tổng Tiêu Diệt_2', 'Điểm Chết_2', 'KPI_T']].sort_values(by='Tổng Tiêu Diệt_2', ascending=False), use_container_width=True)
+    st.dataframe(df[['Tên_2', 'ID', 'Sức Mạnh_2', 'Tổng Tiêu Diệt_2', 'Điểm Chết_2', 'KPI_T']].sort_values(by='KPI_T', ascending=False), use_container_width=True)
