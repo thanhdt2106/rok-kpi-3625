@@ -5,17 +5,18 @@ import streamlit.components.v1 as components
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide")
 
-# Link ảnh Logo
-LOGO_URL = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true"
+# Link các ảnh của bạn
+LOGO_MAIN = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo1.png?raw=true" # Logo mới thay tiêu đề
+LOGO_PROFILE = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true" # Logo cũ cho profile
 
-# --- 2. SIÊU CSS (Chỉnh Header và Profile Card) ---
+# --- 2. SIÊU CSS ---
 st.markdown("""
     <style>
     .stApp { background-color: #050a0e; color: #e0e6ed; }
     .block-container { padding-top: 1rem !important; max-width: 100% !important; }
     header { visibility: hidden; height: 0px !important; }
     
-    /* Header chính */
+    /* Header chính: Thay tiêu đề bằng Logo mới */
     .header-wrapper {
         display: flex;
         flex-direction: column;
@@ -23,10 +24,9 @@ st.markdown("""
         margin-top: -10px;
         margin-bottom: 20px;
     }
-    .logo-main { width: 120px; filter: drop-shadow(0px 0px 10px rgba(0, 212, 255, 0.5)); }
-    .main-title {
-        color: #00d4ff; font-size: 32px !important; font-weight: bold;
-        text-shadow: 0px 0px 15px rgba(0,212,255,0.6); margin: 5px 0;
+    .logo-header { 
+        width: 450px; /* Chỉnh kích thước logo mới cho vừa tầm tiêu đề */
+        filter: drop-shadow(0px 0px 15px rgba(0, 212, 255, 0.4)); 
     }
 
     .hr-line {
@@ -48,20 +48,18 @@ st.markdown("""
 # --- 3. QUẢN LÝ NGÔN NGỮ ---
 texts = {
     "VN": {
-        "header": "HỆ THỐNG QUẢN TRỊ 3625", 
         "placeholder": "👤 Điền tên của bạn để tìm kiếm 🔍",
         "pow": "SỨC MẠNH", "tk": "TỔNG TIÊU DIỆT", "td": "ĐIỂM CHẾT", "rank": "HẠNG",
         "cols": ['Tên', 'ID', 'Liên minh', 'Hạng', 'Sức mạnh', 'Tổng Kill', 'Điểm Chết', 'Kill +', 'Dead +', 'KPI %']
     },
     "EN": {
-        "header": "COMMAND CENTER 3625", 
         "placeholder": "👤 Enter member name to search 🔍",
         "pow": "POWER", "tk": "TOTAL KILL", "td": "TOTAL DEAD", "rank": "RANK",
         "cols": ['Name', 'ID', 'Alliance', 'Rank', 'Power', 'Total Kill', 'Total Dead', 'Kill Inc', 'Dead Inc', 'KPI %']
     }
 }
 
-# --- 4. GIỮ NGUYÊN BẮT DỮ LIỆU TỪ DATA (GOOGLE SHEETS) ---
+# --- 4. GIỮ NGUYÊN BẮT DỮ LIỆU TỪ DATA ---
 SHEET_ID = '1MJQSE3siwFWmQNdJmbbJ6RsilvcoxWTu-r6h-UdHugE'
 URL_T = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/export?format=csv&gid=731741617'
 URL_S = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/export?format=csv&gid=371969335'
@@ -102,11 +100,10 @@ if df is not None:
         lang = st.radio("LANG:", ["VN", "EN"], horizontal=True, label_visibility="collapsed")
     L = texts[lang]
 
-    # Header chính (Logo to lên trên)
+    # Header: Logo1 thay thế tiêu đề
     st.markdown(f"""
         <div class="header-wrapper">
-            <img src="{LOGO_URL}" class="logo-main">
-            <p class="main-title">{L['header']}</p>
+            <img src="{LOGO_MAIN}" class="logo-header">
         </div>
     """, unsafe_allow_html=True)
 
@@ -121,13 +118,13 @@ if df is not None:
         tk_str = f"{int(d['Target_K']/1e6)}M" if d['Target_K'] >= 1e6 else f"{int(d['Target_K']/1e3)}K"
         td_str = f"{int(d['Target_D']/1e3)}K"
 
-        # Phần Profile Card với Ava nhỏ nằm bên trái tên (ngang hàng chữ)
+        # Khung Profile Card: Đã xóa viền xanh ở Logo
         html_card = f"""
         <div style="position: relative; width: 100%; margin: 60px auto 10px; font-family: 'Segoe UI', sans-serif;">
             <div style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); background: #1c2e3e; border: 2px solid #00d4ff; border-radius: 12px; padding: 12px 40px; z-index: 10; text-align: center; border-bottom: 4px solid #ffd700; box-shadow: 0 8px 25px rgba(0,0,0,0.8); min-width: 450px;">
                 <div style="color: #00d4ff; font-size: 11px; font-weight: 900; letter-spacing: 2px; margin-bottom: 5px;">PROFILE MEMBER</div>
                 <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
-                    <img src="{LOGO_URL}" style="width: 45px; height: 45px; border-radius: 5px; border: 1px solid #00d4ff;">
+                    <img src="{LOGO_PROFILE}" style="width: 50px; height: 50px; object-fit: contain;">
                     <div style="color: #ffffff; font-size: 28px; font-weight: bold; text-shadow: 0 0 10px #00d4ff;">{sel}</div>
                 </div>
                 <div style="font-size: 13px; margin-top: 8px;">
