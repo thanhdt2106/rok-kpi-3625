@@ -2,115 +2,170 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 
-# 1. Cấu hình trang cơ bản
-st.set_page_config(page_title="ROK KPI", layout="wide")
+# --- 1. CONFIGURATION ---
+st.set_page_config(page_title="ROK PROFILE COMMAND CENTER", layout="wide")
 
-# CSS để có màu nền tối và khung viền đơn giản
+# --- 2. ADVANCED ROK-STYLE CSS (FIX LỖI F-STRING VÀ BỐ CỤC TUYỆT ĐỐI) ---
+# Tách CSS sang một khối markdown riêng để đảm bảo tính ổn định
 st.markdown("""
     <style>
-    .stApp { background-color: #0b1015; color: white; }
-    .kpi-card {
-        background-color: #135d88;
-        padding: 20px;
-        border-radius: 10px;
-        border: 1px solid #3eb5e5;
+    /* Tổng thể nền tối */
+    .stApp { background-color: #0d1117; color: white; }
+    
+    /* Container chính màu xanh hồ sơ ROK với viền sáng */
+    .rok-profile-card {
+        background: linear-gradient(180deg, #1d82b5 0%, #135d88 100%);
+        border-radius: 8px;
+        padding: 30px;
+        border: 2px solid #3eb5e5;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.7);
+        font-family: 'sans-serif';
     }
-    .box {
-        background: rgba(0,0,0,0.3);
-        padding: 10px;
-        border-radius: 5px;
+
+    /* Vị trí Tên và ID (Góc trên bên trái) */
+    .p-header { font-size: 38px; font-weight: 800; text-transform: uppercase; margin: 0; line-height: 1.1; }
+    .p-id-label { font-size: 14px; color: #b0d4e3; margin-top: -5px; }
+
+    /* Layout Liên minh, Nền văn minh... (Chia cột dưới Tên) */
+    .p-sub-layout { display: flex; gap: 40px; margin-top: 10px; font-size: 15px; color: #ffffff; }
+    .p-sub-label { color: #b0d4e3; font-weight: bold; margin-right: 8px; }
+
+    /* Lưới các ô vuông thông số chính (Góc trên bên phải) */
+    .p-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; }
+    .p-stat-item {
+        background: rgba(0, 0, 0, 0.2);
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .stat-label-nba { color: #b0d4e3; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value-nba { font-size: 26px; font-weight: 700; color: #ffffff; }
+
+    /* Hàng chứa 3 vòng tròn KPI (Thay thế vị trí huy hiệu KvK) */
+    .kpi-container {
+        margin-top: 40px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+    }
+    .badge-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 20px;
         text-align: center;
         border: 1px solid rgba(255,255,255,0.1);
     }
+    .badge-title { font-size: 12px; font-weight: 800; color: #e0e0e0; margin-bottom: 5px; text-transform: uppercase; }
     </style>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
-# 2. Hàm vẽ biểu đồ (Dùng Try-Except để không bao giờ làm sập App)
-def draw_kpi(value, color, title):
+# --- 3. HÀM VẼ BIỂU ĐỒ (NEON STYLE CHUẨN KVK) ---
+def create_neon_gauge(pct, color):
     try:
-        val = float(value)
+        val = float(pct)
     except:
         val = 0.0
+    display_val = min(max(val, 0.0), 100.0)
+    
     fig = go.Figure(go.Pie(
-        hole=0.7, values=[val, max(0, 100-val)],
-        marker=dict(colors=[color, "#222"]),
+        hole=0.72, values=[display_val, max(0, 100-display_val)],
+        marker=dict(colors=[color, "rgba(255,255,255,0.08)"]),
         showlegend=False, hoverinfo='skip'
     ))
+    
     fig.update_layout(
-        title={'text': title, 'x':0.5, 'font': {'color': 'white', 'size': 14}},
-        paper_bgcolor='rgba(0,0,0,0)', margin=dict(t=30, b=0, l=0, r=0), height=150,
-        annotations=[dict(text=f"{val}%", x=0.5, y=0.5, showarrow=False, font=dict(color='white', size=16))]
+        paper_bgcolor='rgba(0,0,0,0)', margin=dict(t=0, b=0, l=0, r=0), height=140,
+        annotations=[dict(text=f"<b style='color:white; font-size:18px'>{pct}%</b>", x=0.5, y=0.5, showarrow=False)]
     )
     return fig
 
-# 3. Tải và làm sạch dữ liệu (Sửa lỗi 'strip' và lỗi so sánh)
-@st.cache_data(ttl=60)
-def get_data():
+# --- 4. DATA LOGIC (ÉP KIỂU ĐỂ TRÁNH LỖI MERGE) ---
+SHEET_ID = '1MJQSE3siwFWmQNdJmbbJ6RsilvcoxWTu-r6h-UdHugE'
+URL_T = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=731741617'
+URL_S = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=371969335'
+
+@st.cache_data(ttl=30)
+def load_data():
     try:
-        sid = '1MJQSE3siwFWmQNdJmbbJ6RsilvcoxWTu-r6h-UdHugE'
-        df1 = pd.read_csv(f'https://docs.google.com/spreadsheets/d/{sid}/export?format=csv&gid=731741617')
-        df2 = pd.read_csv(f'https://docs.google.com/spreadsheets/d/{sid}/export?format=csv&gid=371969335')
-
-        # Cách sửa lỗi 'Series' has no attribute 'strip': dùng .str.strip()
-        df1['ID'] = df1['ID'].astype(str).str.replace('.0', '', regex=False).str.strip()
-        df2['ID'] = df2['ID'].astype(str).str.replace('.0', '', regex=False).str.strip()
-
-        df = pd.merge(df1, df2, on='ID', suffixes=('_1', '_2'))
-
-        # Ép kiểu số toàn bộ cột cần tính
-        cols = ['Sức Mạnh_2', 'Tổng Tiêu Diệt_2', 'Điểm Chết_2', 'Tổng Tiêu Diệt_1', 'Điểm Chết_1']
-        for c in cols:
+        dt = pd.read_csv(URL_T).rename(columns=lambda x: x.strip())
+        ds = pd.read_csv(URL_S).rename(columns=lambda x: x.strip())
+        # Ép ID về string để tránh lỗi merge
+        dt['ID'] = dt['ID'].astype(str).str.replace('.0', '', regex=False).str.strip()
+        ds['ID'] = ds['ID'].astype(str).str.replace('.0', '', regex=False).str.strip()
+        df = pd.merge(dt, ds, on='ID', suffixes=('_1', '_2'))
+        
+        # Chuyển đổi các cột số
+        cols_to_fix = ['Sức Mạnh_2', 'Tổng Tiêu Diệt_2', 'Điểm Chết_2', 'Tổng Tiêu Diệt_1', 'Điểm Chết_1']
+        for c in cols_to_fix:
             df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0)
 
-        # Tính KPI
-        def calc(r):
+        df['KI'] = df['Tổng Tiêu Diệt_2'] - df['Tổng Tiêu Diệt_1']
+        df['DI'] = df['Điểm Chết_2'] - df['Điểm Chết_1']
+        
+        def calculate_kpi(r):
             p = r['Sức Mạnh_2']
-            tk = 300e6 if p >= 45e6 else 220e6 if p >= 35e6 else 130e6 if p >= 25e6 else 80e6
-            td = 400e3 if p >= 30e6 else 200e3
-            ki = max(0, r['Tổng Tiêu Diệt_2'] - r['Tổng Tiêu Diệt_1'])
-            di = max(0, r['Điểm Chết_2'] - r['Điểm Chết_1'])
-            pk = round((ki/tk*100), 1) if tk > 0 else 0
-            pd_v = round((di/td*100), 1) if td > 0 else 0
-            return pd.Series([pk, pd_v, round((pk+pd_v)/2, 1)])
-
-        df[['K_KILL', 'K_DEAD', 'K_TOTAL']] = df.apply(calc, axis=1)
+            gk = 300e6 if p >= 45e6 else 220e6 if p >= 35e6 else 130e6 if p >= 25e6 else 80e6
+            gd = 400e3 if p >= 30e6 else 200e3
+            pk = round((r['KI'] / gk * 100), 1) if gk > 0 else 0
+            pd_v = round((r['DI'] / gd * 100), 1) if gd > 0 else 0
+            return pd.Series([round((pk + pd_v) / 2, 1), pk, pd_v, gk, gd])
+        
+        df[['KPI_Total', 'KPI_K', 'KPI_D', 'GK', 'GD']] = df.apply(calculate_kpi, axis=1)
         return df
-    except Exception as e:
-        st.error(f"Lỗi tải dữ liệu: {e}")
-        return None
+    except: return None
 
-df = get_data()
+df = load_data()
 
-# 4. Hiển thị giao diện
+# --- 5. GIAO DIỆN HIỂN THỊ ---
 if df is not None:
-    # Sửa lỗi 'sorted' bằng cách ép kiểu về string cho tên
-    names = sorted(df['Tên_2'].dropna().astype(str).unique())
-    sel = st.selectbox("🔍 TRA CỨU CHIẾN BINH:", ["---"] + names)
-
-    if sel != "---":
-        d = df[df['Tên_2'] == sel].iloc[0]
-
-        # Khung chính
-        st.markdown('<div class="kpi-card">', unsafe_allow_html=True)
+    names = sorted(df['Tên_2'].dropna().unique())
+    sel_name = st.selectbox("🔍 CHỌN THỐNG ĐỐC:", ["---"] + names)
+    
+    if sel_name != "---":
+        d = df[df['Tên_2'] == sel_name].iloc[0]
         
-        st.header(f"战士: {sel}")
-        st.write(f"**ID:** {d['ID']} | **Liên minh:** {d['Liên Minh_2']}")
+        # PHẦN 1: BẮT ĐẦU CARD HỒ SƠ ROK
+        # layout Flex để phân chia Tên (Trái) và Chỉ số (Phải)
+        st.markdown(f'<div class="rok-profile-card">', unsafe_allow_html=True)
         
-        st.divider()
+        # Tạo 2 cột chính trong header
+        col_name, col_stats = st.columns([1.2, 1])
+        
+        # Cột Trái: Tên, ID, Liên minh
+        with col_name:
+            st.markdown(f"""
+                <div class="p-header">{sel_name}</div>
+                <div class="p-id-label">Thống đốc(ID: {d['ID']})</div>
+                <div class="p-sub-layout">
+                    <div><span class="p-sub-label">Liên minh:</span>[{d['Liên Minh_2']}]</div>
+                    <div><span class="p-sub-label">Văn minh:</span>⚜️ Pháp</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+        # Cột Phải: Sức mạnh & Tiêu diệt (Lưới các ô vuông)
+        with col_stats:
+            st.markdown('<div class="p-stats-grid">', unsafe_allow_html=True)
+            st.markdown(f'<div class="p-stat-item"><div class="stat-label-nba">Điểm Tiêu Diệt</div><div class="stat-value-nba">{int(d["Tổng Tiêu Diệt_2"]):,}</div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="p-stat-item"><div class="stat-label-nba">Sức mạnh</div><div class="stat-value-nba">{int(d["Sức Mạnh_2"]):,}</div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="p-stat-item"><div class="stat-label-nba">Điểm Chiến Công</div><div class="stat-value-nba">0</div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="p-stat-item"><div class="stat-label-nba">Chiến công cao nhất</div><div class="stat-value-nba">---</div></div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
-        # Hàng chỉ số
-        c1, c2, c3, c4 = st.columns(4)
-        with c1: st.markdown(f'<div class="box"><small>TIÊU DIỆT</small><br><b>{int(d["Tổng Tiêu Diệt_2"]):,}</b></div>', unsafe_allow_html=True)
-        with c2: st.markdown(f'<div class="box"><small>SỨC MẠNH</small><br><b>{int(d["Sức Mạnh_2"]):,}</b></div>', unsafe_allow_html=True)
-        with c3: st.markdown(f'<div class="box"><small>ĐIỂM CHẾT</small><br><b>{int(d["Điểm Chết_2"]):,}</b></div>', unsafe_allow_html=True)
-        with c4: st.markdown(f'<div class="box"><small>XẾP HẠNG</small><br><b>S-Rank</b></div>', unsafe_allow_html=True)
+        # PHẦN 2: 3 VÒNG TRÒN KPI (Thay thế vị trí huy hiệu KvK)
+        st.markdown('<div class="kpi-container">', unsafe_allow_html=True)
+        
+        c_k, c_d, c_t = st.columns(3)
+        with c_k:
+            st.markdown('<div class="badge-card"><div class="badge-title">KPI TIÊU DIỆT (⚔️)</div>', unsafe_allow_html=True)
+            st.plotly_chart(create_neon_gauge(d['KPI_K'], "#00ffff"), use_container_width=True, config={'displayModeBar': False})
+            st.markdown('</div>', unsafe_allow_html=True)
+        with c_d:
+            st.markdown('<div class="badge-card"><div class="badge-title">KPI ĐIỂM CHẾT (💀)</div>', unsafe_allow_html=True)
+            st.plotly_chart(create_neon_gauge(d['KPI_D'], "#ff4b4b"), use_container_width=True, config={'displayModeBar': False})
+            st.markdown('</div>', unsafe_allow_html=True)
+        with c_t:
+            st.markdown('<div class="badge-card"><div class="badge-title">TỔNG KPI (🏆)</div>', unsafe_allow_html=True)
+            st.plotly_chart(create_neon_gauge(d['KPI_Total'], "#ffd700"), use_container_width=True, config={'displayModeBar': False})
+            st.markdown('</div>', unsafe_allow_html=True)
 
-        st.write("")
-
-        # Hàng biểu đồ
-        k1, k2, k3 = st.columns(3)
-        with k1: st.plotly_chart(draw_kpi(d['K_KILL'], "#00ffff", "KPI KILL"), use_container_width=True)
-        with k2: st.plotly_chart(draw_kpi(d['K_DEAD'], "#ff4b4b", "KPI DEAD"), use_container_width=True)
-        with k3: st.plotly_chart(draw_kpi(d['K_TOTAL'], "#ffd700", "TOTAL KPI"), use_container_width=True)
-
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('</div></div>', unsafe_allow_html=True) # Đóng toàn bộ card
