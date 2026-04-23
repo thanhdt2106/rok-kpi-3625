@@ -9,9 +9,7 @@ st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide", initial
 st.markdown("""
     <style>
     .stApp { background-color: #050a0e; color: #e0e6ed; }
-    
-    /* ẨN SIDEBAR TUYỆT ĐỐI */
-    [data-testid="stSidebar"], [data-testid="stSidebarCollapseButton"] { display: none !important; }
+
 
     /* CẤU TRÚC HEADER MỚI */
     .header-container {
