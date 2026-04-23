@@ -3,56 +3,102 @@ import pandas as pd
 import plotly.graph_objects as go
 
 # --- 1. CẤU HÌNH TRANG ---
-st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide")
+st.set_page_config(page_title="ROK KPI SYSTEM", layout="wide")
 
-# --- 2. CSS FIX LỖI HIỂN THỊ & GIAO DIỆN NỔI BẬT ---
+# --- 2. CSS CUSTOM (PHONG CÁCH HUY HIỆU ROK) ---
 st.markdown("""
     <style>
     .stApp { background-color: #0b0e14; color: #e0e6ed; }
     
-    /* Khung bao toàn bộ Profile */
-    .profile-card {
-        background: linear-gradient(135deg, #1e212d 0%, #0f121a 100%);
-        border-radius: 20px;
+    /* Khung Profile chính */
+    .rok-card {
+        background: linear-gradient(135deg, rgba(20, 25, 35, 0.9), rgba(10, 12, 18, 0.95));
+        border-radius: 15px;
         padding: 30px;
-        border: 1px solid #00d4ff4d;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        border: 1px solid #3d4455;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         margin-bottom: 20px;
     }
 
-    .p-name { color: white; font-size: 50px; font-weight: 900; text-transform: uppercase; margin: 0; }
-    .p-id { color: #00d4ff; background: #00d4ff1a; padding: 3px 10px; border-radius: 5px; font-size: 14px; display: inline-block; margin: 10px 0 25px 0; }
-    
-    .s-row { display: flex; gap: 40px; margin-bottom: 25px; }
-    .s-item { border-left: 3px solid #ffcc00; padding-left: 15px; }
-    .s-label { color: #8899a6; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
-    .s-val { color: white; font-size: 28px; font-weight: 800; display: block; }
+    /* Container chứa 3 huy hiệu */
+    .badge-container {
+        display: flex;
+        justify-content: space-around;
+        gap: 20px;
+        margin-top: 20px;
+    }
 
-    .d-grid { font-size: 15px; line-height: 1.8; }
-    .d-label { color: #5c6c7a; font-weight: bold; text-transform: uppercase; margin-right: 10px; }
-    .d-val { color: #00ff88; font-weight: bold; }
+    /* Style cho từng ô huy hiệu */
+    .badge-box {
+        text-align: center;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 15px;
+        padding: 20px;
+        border: 1px solid rgba(255, 215, 0, 0.1);
+        transition: 0.3s;
+        width: 100%;
+    }
+    .badge-box:hover {
+        background: rgba(255, 215, 0, 0.05);
+        border-color: rgba(255, 215, 0, 0.4);
+        transform: translateY(-5px);
+    }
+
+    .badge-title {
+        color: #a8b2c1;
+        font-size: 14px;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .player-header { font-size: 45px; font-weight: 900; color: #fff; margin: 0; }
+    .player-id { color: #00d4ff; font-size: 16px; margin-bottom: 20px; display: block; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. HÀM VẼ BIỂU ĐỒ (NEON STYLE) ---
-def draw_kpi_rings(total, kill_val, kill_target, dead_val, dead_target):
-    k_pct = (kill_val / kill_target * 100) if kill_target > 0 else 0
-    d_pct = (dead_val / dead_target * 100) if dead_target > 0 else 0
-    fig = go.Figure()
-    # Vòng KPI Tổng (Vàng)
-    fig.add_trace(go.Pie(hole=0.8, values=[total, max(0, 100-total)], marker=dict(colors=['#ffcc00', '#222']), showlegend=False, hoverinfo='skip'))
-    # Vòng Kill (Cyan)
-    fig.add_trace(go.Pie(hole=0.7, values=[k_pct, max(0, 100-k_pct)], marker=dict(colors=['#00d4ff', 'transparent']), showlegend=False, hoverinfo='skip'))
-    # Vòng Dead (Trắng)
-    fig.add_trace(go.Pie(hole=0.6, values=[d_pct, max(0, 100-d_pct)], marker=dict(colors=['#ffffff', 'transparent']), showlegend=False, hoverinfo='skip'))
+# --- 3. HÀM VẼ VÒNG TRÒN KPI (STYLE HUY HIỆU) ---
+def draw_badge_chart(value, target, color_theme, label):
+    # Tính toán %
+    pct = round((value / target * 100), 1) if target > 0 else 0
+    display_pct = min(pct, 100) # Chỉ hiển thị vòng quay tối đa 100%
     
+    # Màu sắc dựa theo theme
+    if color_theme == "gold": # Total KPI
+        line_color = "#FFD700"
+        glow_color = "rgba(255, 215, 0, 0.6)"
+    elif color_theme == "cyan": # Kill KPI
+        line_color = "#00D4FF"
+        glow_color = "rgba(0, 212, 255, 0.6)"
+    else: # Dead KPI (Red/Orange)
+        line_color = "#FF4B4B"
+        glow_color = "rgba(255, 75, 75, 0.6)"
+
+    fig = go.Figure(go.Pie(
+        hole=0.75,
+        values=[display_pct, max(0, 100-display_pct)],
+        marker=dict(colors=[line_color, "rgba(255,255,255,0.05)"]),
+        showlegend=False,
+        hoverinfo='skip'
+    ))
+
     fig.update_layout(
-        paper_bgcolor='rgba(0,0,0,0)', margin=dict(t=0, b=0, l=0, r=0), height=350,
-        annotations=[dict(text=f"<b style='color:white;font-size:35px'>{total}%</b>", x=0.5, y=0.5, showarrow=False)]
+        paper_bgcolor='rgba(0,0,0,0)',
+        margin=dict(t=0, b=0, l=0, r=0),
+        height=180,
+        annotations=[
+            # Phần trăm ở giữa
+            dict(text=f"<b style='color:{line_color}; font-size:24px;'>{pct}%</b>", 
+                 x=0.5, y=0.5, showarrow=False),
+            # Label nhỏ ở dưới số %
+            dict(text=f"<span style='color:#889; font-size:10px;'>{label}</span>", 
+                 x=0.5, y=0.2, showarrow=False)
+        ]
     )
     return fig
 
-# --- 4. TẢI DỮ LIỆU ---
+# --- 4. DATA LOGIC (GIỮ NGUYÊN) ---
 SHEET_ID = '1MJQSE3siwFWmQNdJmbbJ6RsilvcoxWTu-r6h-UdHugE'
 URL_T = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=731741617'
 URL_S = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=371969335'
@@ -62,65 +108,65 @@ def load_data():
     try:
         dt = pd.read_csv(URL_T).rename(columns=lambda x: x.strip())
         ds = pd.read_csv(URL_S).rename(columns=lambda x: x.strip())
-        for d_tmp in [dt, ds]:
-            d_tmp['ID'] = d_tmp['ID'].astype(str).str.replace('.0', '', regex=False).str.strip()
-            d_tmp['Tên'] = d_tmp['Tên'].fillna('Unknown').astype(str).str.strip()
-        df = pd.merge(dt.drop_duplicates('ID'), ds.drop_duplicates('ID'), on='ID', suffixes=('_1', '_2'))
-        for c in ['Sức Mạnh_2', 'Tổng Tiêu Diệt_2', 'Điểm Chết_2', 'Tổng Tiêu Diệt_1', 'Điểm Chết_1']:
-            df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0).astype(float)
-        df['KI'] = df['Tổng Tiêu Diệt_2'] - df['Tổng Tiêu Diệt_1']
-        df['DI'] = df['Điểm Chết_2'] - df['Điểm Chết_1']
+        df = pd.merge(dt, ds, on='ID', suffixes=('_1', '_2'))
         
-        def get_metrics(r):
+        # Tính toán KI, DI
+        df['KI'] = pd.to_numeric(df['Tổng Tiêu Diệt_2'], errors='coerce').fillna(0) - pd.to_numeric(df['Tổng Tiêu Diệt_1'], errors='coerce').fillna(0)
+        df['DI'] = pd.to_numeric(df['Điểm Chết_2'], errors='coerce').fillna(0) - pd.to_numeric(df['Điểm Chết_1'], errors='coerce').fillna(0)
+        
+        def get_targets(r):
             p = r['Sức Mạnh_2']
             gk = 300e6 if p >= 45e6 else 250e6 if p >= 40e6 else 220e6 if p >= 35e6 else 170e6 if p >= 30e6 else 130e6 if p >= 25e6 else 100e6 if p >= 20e6 else 80e6
             gd = 400e3 if p >= 30e6 else 300e3 if p >= 20e6 else 200e3
-            pk = max(0.0, min(float(r['KI']) / gk, 1.0)) if gk > 0 else 0.0
-            pdv = max(0.0, min(float(r['DI']) / gd, 1.0)) if gd > 0 else 0.0
-            return pd.Series([round(((pk + pdv) / 2) * 100, 1), gk, gd])
-        df[['KPI', 'GK', 'GD']] = df.apply(get_metrics, axis=1)
+            k_p = round((r['KI'] / gk * 100), 1) if gk > 0 else 0
+            d_p = round((r['DI'] / gd * 100), 1) if gd > 0 else 0
+            total = round((k_p + d_p) / 2, 1)
+            return pd.Series([total, gk, gd])
+        
+        df[['KPI_Total', 'GK', 'GD']] = df.apply(get_targets, axis=1)
         return df
     except: return None
 
 df = load_data()
 
-# --- 5. HIỂN THỊ CHÍNH ---
+# --- 5. GIAO DIỆN HIỂN THỊ ---
 if df is not None:
-    sel = st.selectbox("🔍 TRA CỨU CHIẾN BINH:", ["--- Chọn tên ---"] + sorted(df['Tên_2'].unique()))
+    st.title("🛡️ ROK GOVERNOR COMMAND CENTER")
+    sel = st.selectbox("🔍 CHỌN THỐNG ĐỐC:", ["---"] + sorted(df['Tên_2'].unique()))
     
-    if sel != "--- Chọn tên ---":
+    if sel != "---":
         d = df[df['Tên_2'] == sel].iloc[0]
         
-        # Bắt đầu bao quanh bằng 1 thẻ div duy nhất cho toàn bộ Profile
-        st.markdown('<div class="profile-card">', unsafe_allow_html=True)
-        
-        # Chia 2 cột bên trong Card
-        col_info, col_chart = st.columns([1.5, 1])
-        
-        with col_info:
-            st.markdown(f"""
-                <div class="p-name">{sel}</div>
-                <div class="p-id">#{d['ID']} | {d['Liên Minh_2']}</div>
-                <div class="s-row">
-                    <div class="s-item"><span class="s-label">Sức Mạnh</span><span class="s-val">{int(d['Sức Mạnh_2']):,}</span></div>
-                    <div class="s-item"><span class="s-label">Tổng Kill</span><span class="s-val">{int(d['Tổng Tiêu Diệt_2']):,}</span></div>
+        # 1. Khung Profile phía trên
+        st.markdown(f"""
+            <div class="rok-card">
+                <span class="player-header">{sel}</span>
+                <span class="player-id">ID: {d['ID']} | {d['Liên Minh_2']}</span>
+                <div style="display: flex; gap: 40px;">
+                    <div><small style="color:#889">SỨC MẠNH</small><br><b style="font-size:20px">{int(d['Sức Mạnh_2']):,}</b></div>
+                    <div><small style="color:#889">TỔNG KILL</small><br><b style="font-size:20px">{int(d['Tổng Tiêu Diệt_2']):,}</b></div>
                 </div>
-                <div class="d-grid">
-                    <span class="d-label">Mục tiêu Kill:</span><span class="d-val" style="color:white">{int(d['GK']):,}</span><br>
-                    <span class="d-label">Mục tiêu Dead:</span><span class="d-val" style="color:white">{int(d['GD']):,}</span><br>
-                    <span class="d-label">Trạng thái:</span><span class="d-val">ONLINE COMMAND</span>
-                </div>
-            """, unsafe_allow_html=True)
+            </div>
+        """, unsafe_allow_html=True)
+        
+        # 2. Hàng 3 huy hiệu KPI (Thay thế 3 ô khoanh đỏ)
+        badge_col1, badge_col2, badge_col3 = st.columns(3)
+        
+        with badge_col1:
+            st.markdown('<div class="badge-box"><span class="badge-title">⚔️ KPI KILL</span>', unsafe_allow_html=True)
+            st.plotly_chart(draw_badge_chart(d['KI'], d['GK'], "cyan", "Tiến độ"), use_container_width=True, config={'displayModeBar': False})
+            st.markdown(f'<small style="color:#5c6c7a">Mục tiêu: {int(d["GK"]):,}</small></div>', unsafe_allow_html=True)
             
-        with col_chart:
-            # Vẽ biểu đồ trực tiếp vào cột bên phải
-            fig = draw_kpi_rings(d['KPI'], d['KI'], d['GK'], d['DI'], d['GD'])
-            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+        with badge_col2:
+            st.markdown('<div class="badge-box"><span class="badge-title">💀 KPI DEAD</span>', unsafe_allow_html=True)
+            st.plotly_chart(draw_badge_chart(d['DI'], d['GD'], "red", "Tiến độ"), use_container_width=True, config={'displayModeBar': False})
+            st.markdown(f'<small style="color:#5c6c7a">Mục tiêu: {int(d["GD"]):,}</small></div>', unsafe_allow_html=True)
             
-        st.markdown('</div>', unsafe_allow_html=True) # Đóng profile-card
+        with badge_col3:
+            st.markdown('<div class="badge-box" style="border-color: rgba(255, 215, 0, 0.3); background: rgba(255, 215, 0, 0.05);">'
+                        '<span class="badge-title" style="color:#FFD700">🏆 TOTAL KPI</span>', unsafe_allow_html=True)
+            st.plotly_chart(draw_badge_chart(d['KPI_Total'], 100, "gold", "Hoàn thành"), use_container_width=True, config={'displayModeBar': False})
+            st.markdown('<small style="color:#FFD700">Xếp hạng: S</small></div>', unsafe_allow_html=True)
 
-        # Thanh tiến độ phụ bên dưới Card
-        st.write(f"📊 **Tiến độ Kill:** {int(d['KI']):,} / {int(d['GK']):,}")
-        st.progress(max(0.0, min(float(d['KI']) / d['GK'], 1.0)) if d['GK'] > 0 else 0.0)
-        st.write(f"📊 **Tiến độ Dead:** {int(d['DI']):,} / {int(d['GD']):,}")
-        st.progress(max(0.0, min(float(d['DI']) / d['GD'], 1.0)) if d['GD'] > 0 else 0.0)
+        st.divider()
+        st.dataframe(df[['Tên_2', 'ID', 'KI', 'DI', 'KPI_Total']].sort_values('KPI_Total', ascending=False), use_container_width=True)
