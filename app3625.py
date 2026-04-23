@@ -9,14 +9,12 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. SIÊU CSS (XÓA SIDEBAR & TỐI ƯU KHOẢNG TRỐNG) ---
+# --- 2. SIÊU CSS (XÓA SIDEBAR & CUSTOM CHECKBOX) ---
 st.markdown("""
     <style>
-    /* ẨN SIDEBAR TUYỆT ĐỐI */
-    [data-testid="stSidebar"], [data-testid="stSidebarCollapseButton"] {
-        display: none !important;
-        width: 0px !important;
-    }
+    /* ẨN SIDEBAR & HEADER MẶC ĐỊNH */
+    [data-testid="stSidebar"], [data-testid="stSidebarCollapseButton"] { display: none !important; width: 0px !important; }
+    header { visibility: hidden; }
 
     .main .block-container {
         max-width: 100% !important;
@@ -35,6 +33,11 @@ st.markdown("""
         letter-spacing: 2px;
     }
 
+    /* GOM CỤM CHECKBOX SÁT NHAU */
+    div[data-testid="stHorizontalBlock"] .stCheckbox {
+        margin-right: -20px;
+    }
+
     /* TABLE STYLE */
     .table-wrapper { background: rgba(13, 27, 42, 0.6); border: 1px solid #1e3a5a; border-radius: 12px; padding: 20px; }
     .elite-table { width: 100%; border-collapse: collapse; font-family: 'Segoe UI', sans-serif; }
@@ -48,15 +51,10 @@ st.markdown("""
         background: linear-gradient(135deg, #ffd700, #b8860b); color: #000; 
         padding: 4px 10px; border-radius: 6px; font-weight: 900;
     }
-    
-    /* CUSTOM CHECKBOX STYLE */
-    .stCheckbox { margin-bottom: -15px; }
-    
-    header { visibility: hidden; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. DATA LOGIC (GIỮ NGUYÊN) ---
+# --- 3. DATA LOGIC ---
 SHEET_ID = '1MJQSE3siwFWmQNdJmbbJ6RsilvcoxWTu-r6h-UdHugE'
 URL_T = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=731741617'
 URL_S = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=371969335'
@@ -89,39 +87,34 @@ def load_data():
 
 df = load_data()
 
-# --- 4. GIAO DIỆN HEADER ---
+# --- 4. GIAO DIỆN HEADER (SEARCH TRÁI - TEXT GIỮA - LANG PHẢI) ---
 if df is not None:
     head_left, head_mid, head_right = st.columns([3, 4, 3])
 
     with head_left:
-        sel = st.selectbox("", sorted(df['Tên_2'].dropna().unique()), index=None, placeholder="👤 Tìm kiếm thành viên...", label_visibility="collapsed")
+        sel = st.selectbox("", sorted(df['Tên_2'].dropna().unique()), index=None, placeholder="👤 Tìm kiếm...", label_visibility="collapsed")
 
     with head_mid:
         st.markdown('<div class="header-center" style="text-align:center;">FIGHT TO DEAD 3625</div>', unsafe_allow_html=True)
 
     with head_right:
-        # LOGIC 2 Ô VUÔNG TÍCH CHỌN NGÔN NGỮ
-        l_col1, l_col2, l_col3 = st.columns([1, 1, 1])
+        # Xóa nút user, đưa VN/EN sát nhau về phía bên phải của cột này
+        _, l_vn, l_en = st.columns([5, 1, 1])
         
-        # Khởi tạo session state cho ngôn ngữ nếu chưa có
         if 'lang' not in st.session_state:
             st.session_state.lang = "VN"
 
-        with l_col1:
+        with l_vn:
             vn_check = st.checkbox("VN", value=(st.session_state.lang == "VN"))
-        with l_col2:
+        with l_en:
             en_check = st.checkbox("EN", value=(st.session_state.lang == "EN"))
         
-        # Cập nhật session state dựa trên ô được tích mới nhất
         if vn_check and st.session_state.lang != "VN":
             st.session_state.lang = "VN"
             st.rerun()
         elif en_check and st.session_state.lang != "EN":
             st.session_state.lang = "EN"
             st.rerun()
-            
-        with l_col3:
-            st.button("👤", use_container_width=True)
 
     lang = st.session_state.lang
     t = {
