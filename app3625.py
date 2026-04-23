@@ -13,10 +13,6 @@ st.set_page_config(
 st.markdown("""
     <style>
     /* 1. ẨN HOÀN TOÀN SIDEBAR VÀ NÚT ĐIỀU KHIỂN */
-    [data-testid="stSidebar"], [data-testid="stSidebarCollapseButton"] {
-        display: none !important;
-        width: 0px !important;
-    }
 
     /* 2. ÉP NỘI DUNG CHÍNH TRÀN RA SÁT LỀ */
     .main .block-container {
