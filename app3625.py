@@ -13,7 +13,7 @@ st.set_page_config(
 LOGO_MAIN = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo1.png?raw=true"
 LOGO_PROFILE = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true"
 
-# --- 2. SIÊU CSS (GIỮ NGUYÊN CODE GỐC + THÊM DRAWER) ---
+# --- 2. SIÊU CSS (BẢO TỒN GIAO DIỆN GỐC + THÊM DRAWER) ---
 st.markdown("""
     <style>
     .stApp { background-color: #050a0e; color: #e0e6ed; }
@@ -27,7 +27,7 @@ st.markdown("""
     [data-testid="stSidebar"] { background-color: #0d1b2a; border-right: 1px solid #00d4ff; }
     .sidebar-header { color: #00d4ff; font-weight: bold; font-size: 18px; text-align: center; margin-bottom: 20px; }
 
-    /* CSS CHO NGĂN KÉO TRƯỢT (DRAWER) */
+    /* HIỆU ỨNG NGĂN KÉO TRƯỢT (CUSTOM DRAWER) */
     .custom-drawer {
         position: fixed;
         top: 0;
@@ -38,13 +38,19 @@ st.markdown("""
         border-right: 2px solid #00d4ff;
         z-index: 10000;
         padding: 80px 25px;
-        transition: transform 0.4s ease-in-out;
+        animation: drawerSlide 0.4s ease-out;
         box-shadow: 15px 0 30px rgba(0,0,0,0.7);
     }
+    
+    @keyframes drawerSlide {
+        from { transform: translateX(-100%); }
+        to { transform: translateX(0); }
+    }
+
     .drawer-title { color: #00d4ff; font-weight: bold; font-size: 16px; border-bottom: 1px solid #1e3a5a; padding-bottom: 10px; margin-bottom: 20px; }
     .drawer-item { padding: 12px 0; color: #e0e6ed; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.05); }
 
-    /* Bảng dữ liệu gốc */
+    /* Bảng dữ liệu nguyên bản */
     .table-wrapper { background: rgba(13, 27, 42, 0.6); border: 1px solid #1e3a5a; border-radius: 12px; padding: 20px; }
     .elite-table { width: 100%; border-collapse: collapse; font-family: 'Segoe UI', sans-serif; }
     .elite-table thead th { 
@@ -61,39 +67,47 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. SIDEBAR (THANH MENU GỐC CỦA LOUIS) ---
+# --- 3. SIDEBAR (KHÔI PHỤC TOÀN BỘ CHỨC NĂNG CŨ) ---
 with st.sidebar:
     st.markdown('<div class="sidebar-header">🛡️ COMMAND CENTER</div>', unsafe_allow_html=True)
     
-    # Nút Cài đặt mới thêm vào
+    # Nút mở Ngăn kéo
     if 'show_drawer' not in st.session_state:
         st.session_state.show_drawer = False
-    if st.button("⚙️ CÀI ĐẶT HỆ THỐNG"):
+    
+    if st.button("⚙️ MỞ CÀI ĐẶT NHANH"):
         st.session_state.show_drawer = not st.session_state.show_drawer
 
     st.divider()
+    
+    # Chức năng Ngôn ngữ cũ của Louis
     st.write("**NGÔN NGỮ / LANGUAGE**")
     lang = st.radio("Chon ngon ngu", ["VN", "EN"], horizontal=True, label_visibility="collapsed")
+    
     st.divider()
+    
+    # Menu chính
     st.write("**MENU**")
     menu = st.radio("Chon menu", ["📊 Bảng KPI", "👤 Tài khoản", "⚙️ Quản lý KPI"], label_visibility="collapsed")
+    
     st.divider()
     st.info("Phiên bản v10.9 - Admin Louis")
 
-# --- HIỂN THỊ NGĂN KÉO KHI CLICK ---
+# --- HIỂN THỊ NGĂN KÉO KHI ĐƯỢC KÍCH HOẠT ---
 if st.session_state.show_drawer:
     st.markdown("""
         <div class="custom-drawer">
-            <div class="drawer-title">📋 THÔNG TIN NHANH</div>
+            <div class="drawer-title">📋 THÔNG TIN HỆ THỐNG</div>
             <div class="drawer-item">⚠️ Tài khoản thiếu KPI</div>
             <div class="drawer-item">🏔️ Top 15 Đèo 4</div>
             <div class="drawer-item">🌋 Top 15 Đèo 7</div>
             <div class="drawer-item">👑 Top 15 Kingland</div>
-            <div class="drawer-item">📊 Dữ liệu: Hoạt động</div>
+            <div class="drawer-item">📊 Trạng thái: Online</div>
+            <p style='font-size:11px; color:#555; margin-top:30px;'>Bấm nút cài đặt lần nữa để đóng</p>
         </div>
     """, unsafe_allow_html=True)
 
-# --- 4. DỮ LIỆU ---
+# --- 4. CẤU TRÚC DỮ LIỆU & LOGIC ---
 texts = {
     "VN": {
         "search": "👤 Tìm kiếm thành viên...", "pow": "SỨC MẠNH", "tk": "TỔNG TIÊU DIỆT", "td": "ĐIỂM CHẾT",
@@ -140,14 +154,14 @@ def load_data():
 
 df = load_data()
 
-# --- 5. HIỂN THỊ (ĐẢM BẢO 100% PROFILE CHI TIẾT) ---
+# --- 5. HIỂN THỊ (GIỮ NGUYÊN PROFILE CHI TIẾT & BẢNG) ---
 if df is not None:
     st.markdown(f'<div class="logo-container"><img src="{LOGO_MAIN}" class="logo-img"></div>', unsafe_allow_html=True)
 
     if menu == "📊 Bảng KPI":
         sel = st.selectbox("", sorted(df['Tên_2'].unique()), index=None, placeholder=L['search'], label_visibility="collapsed")
 
-        # ĐÂY LÀ PHẦN PROFILE CHI TIẾT LOUIS CẦN
+        # KHỐI PROFILE CHI TIẾT NGUYÊN BẢN CỦA LOUIS
         if sel:
             d = df[df['Tên_2'] == sel].iloc[0]
             html_card = f"""
@@ -212,7 +226,7 @@ if df is not None:
             """
             components.html(html_card, height=580)
 
-        # BẢNG DỮ LIỆU GỐC CỦA LOUIS
+        # BẢNG DỮ LIỆU CHUẨN CỦA LOUIS
         df_sorted = df.sort_values(by='KillRank')
         rows_list = []
         for _, r in df_sorted.iterrows():
@@ -242,14 +256,7 @@ if df is not None:
         """
         st.markdown(table_html, unsafe_allow_html=True)
 
-    elif menu == "👤 Tài khoản":
-        st.subheader("Thông tin tài khoản")
-        st.write("Đang cập nhật...")
-
-    elif menu == "⚙️ Quản lý KPI":
-        st.subheader("Quản lý")
-        st.write("Dành cho Admin Louis")
-
     st.markdown(f'<div class="footer">🛡️ Discord: louiss.nee | Zalo: 0.3.7.3.2.7.4.6.0.0</div>', unsafe_allow_html=True)
 else:
-    st.error("Lỗi kết nối dữ liệu Google Sheets.")
+    # HIỂN THỊ LỖI NẾU KHÔNG TẢI ĐƯỢC DỮ LIỆU (NHƯ HÌNH BẠN GỬI)
+    st.error("Lỗi tải dữ liệu. Vui lòng kiểm tra lại kết nối Google Sheets.")
