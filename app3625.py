@@ -5,16 +5,19 @@ import streamlit.components.v1 as components
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide")
 
-# --- 2. SIÊU CSS & JS (KHÔI PHỤC PHÁT SÁNG & NGĂN KÉO) ---
+# --- 2. SIÊU CSS (CĂN GIỮA & PHÁT SÁNG) ---
 st.markdown("""
     <style>
     .stApp { background-color: #050a0e; color: #e0e6ed; }
     [data-testid="stSidebar"] { background-color: #0d1b2a; border-right: 1px solid #00d4ff; }
-    .block-container { padding-top: 1rem !important; max-width: 98% !important; }
-    header { visibility: visible !important; } 
-
-    /* HIỆU ỨNG PHÁT SÁNG CHO LOGO CHÍNH */
-    .logo-img { width: 320px; filter: drop-shadow(0 0 15px rgba(0,212,255,0.6)); }
+    
+    /* CĂN GIỮA TOÀN BỘ NỘI DUNG */
+    .main .block-container {
+        max-width: 1200px !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+        margin: auto !important;
+    }
 
     #myDrawer {
         height: 100%; width: 0; position: fixed; z-index: 1000000;
@@ -28,8 +31,15 @@ st.markdown("""
     }
     #myDrawer .closebtn { position: absolute; top: 10px; right: 25px; font-size: 36px; color: #ff4b4b; }
 
-    /* TABLE STYLE */
-    .table-wrapper { background: rgba(13, 27, 42, 0.6); border: 1px solid #1e3a5a; border-radius: 12px; padding: 20px; margin-top: 20px; }
+    /* LOGO CENTER */
+    .logo-container { display: flex; justify-content: center; width: 100%; margin-bottom: 30px; margin-top: 20px; }
+    .logo-img { width: 350px; filter: drop-shadow(0 0 15px rgba(0,212,255,0.6)); }
+
+    /* TABLE CENTER & STYLE */
+    .table-wrapper { 
+        background: rgba(13, 27, 42, 0.6); border: 1px solid #1e3a5a; 
+        border-radius: 12px; padding: 20px; margin: 30px auto; 
+    }
     .elite-table { width: 100%; border-collapse: collapse; font-family: 'Segoe UI', sans-serif; }
     .elite-table thead th { 
         background: rgba(0, 212, 255, 0.1); color: #00d4ff; text-align: left; 
@@ -87,7 +97,7 @@ with st.sidebar:
     t = texts[lang]
     menu = st.radio("Menu", t["menu"])
 
-# --- 4. DATA LOGIC ---
+# --- 4. DATA LOGIC (FIX LỖI MERGE ID) ---
 SHEET_ID = '1MJQSE3siwFWmQNdJmbbJ6RsilvcoxWTu-r6h-UdHugE'
 URL_T = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=731741617'
 URL_S = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=371969335'
@@ -97,11 +107,16 @@ def load_data():
     try:
         dt = pd.read_csv(URL_T).rename(columns=lambda x: x.strip())
         ds = pd.read_csv(URL_S).rename(columns=lambda x: x.strip())
-        for d in [dt, ds]:
-            d['ID'] = d['ID'].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
+        
+        # ĐỒNG NHẤT KIỂU DỮ LIỆU ID ĐỂ KHÔNG BỊ LỖI MERGE
+        dt['ID'] = dt['ID'].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
+        ds['ID'] = ds['ID'].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
+        
         df = pd.merge(dt.drop_duplicates('ID'), ds.drop_duplicates('ID'), on='ID', suffixes=('_1', '_2'))
+        
         for c in ['Sức Mạnh_2', 'Tổng Tiêu Diệt_2', 'Điểm Chết_2', 'Tổng Tiêu Diệt_1', 'Điểm Chết_1']:
             df[c] = pd.to_numeric(df[c].astype(str).str.replace(r'[^\d.]', '', regex=True), errors='coerce').fillna(0)
+        
         df['KI'] = df['Tổng Tiêu Diệt_2'] - df['Tổng Tiêu Diệt_1']
         df['DI'] = df['Điểm Chết_2'] - df['Điểm Chết_1']
         
@@ -116,23 +131,28 @@ def load_data():
         df[['KPI_K', 'KPI_D', 'KPI_T', 'T_K', 'T_D']] = df.apply(calc_kpi, axis=1)
         df['Rank'] = df['Tổng Tiêu Diệt_2'].rank(ascending=False, method='min').astype(int)
         return df
-    except: return None
+    except Exception as e:
+        st.error(f"Lỗi tải dữ liệu: {e}")
+        return None
 
 df = load_data()
 
 # --- 5. HIỂN THỊ ---
 if df is not None:
+    # LOGO CĂN GIỮA
     st.markdown('<div class="logo-container"><img src="https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo1.png?raw=true" class="logo-img"></div>', unsafe_allow_html=True)
     
     if menu in t["menu"][:2]:
-        sel = st.selectbox("", sorted(df['Tên_2'].dropna().unique()), index=None, placeholder=t["search"], label_visibility="collapsed")
+        # Ô TÌM KIẾM CĂN GIỮA
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            sel = st.selectbox("", sorted(df['Tên_2'].dropna().unique()), index=None, placeholder=t["search"], label_visibility="collapsed")
         
         if sel:
             d = df[df['Tên_2'] == sel].iloc[0]
-            # KHÔI PHỤC LOGO CON VẸT VÀ PHÁT SÁNG NEON
             html_card = f"""
-            <div style="position: relative; width: 100%; margin: 60px auto 20px; font-family: 'Segoe UI', sans-serif;">
-                <div style="position: absolute; top: -55px; left: 50%; transform: translateX(-50%); background: #1c2e3e; border: 2px solid #00d4ff; border-radius: 12px; padding: 12px 40px; z-index: 10; text-align: center; border-bottom: 4px solid #ffd700; box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);">
+            <div style="position: relative; width: 100%; max-width: 900px; margin: 60px auto 20px; font-family: 'Segoe UI', sans-serif;">
+                <div style="position: absolute; top: -55px; left: 50%; transform: translateX(-50%); background: #1c2e3e; border: 2px solid #00d4ff; border-radius: 12px; padding: 12px 40px; z-index: 10; text-align: center; border-bottom: 4px solid #ffd700; box-shadow: 0 0 20px rgba(0, 212, 255, 0.5); min-width: 300px;">
                     <div style="color: #00d4ff; font-size: 11px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 5px #00d4ff;">MEMBER PROFILE</div>
                     <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 5px;">
                         <img src="https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true" style="width: 40px; filter: drop-shadow(0 0 8px #ffd700);">
@@ -143,41 +163,23 @@ if df is not None:
 
                 <div style="background: rgba(13, 25, 47, 0.98); border: 2px solid #00d4ff; border-radius: 15px; padding: 85px 20px 25px 20px; box-shadow: inset 0 0 30px rgba(0, 212, 255, 0.1);">
                     <div style="display: flex; justify-content: space-between; gap: 10px; margin-bottom: 25px;">
-                        <div style="background: #233549; border-radius: 8px; padding: 12px; flex: 1; text-align: center; border-bottom: 3px solid #ffd700; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-                            <div style="font-size: 10px; color: #8b949e;">{t['rank']}</div>
-                            <div style="font-size: 20px; font-weight: 900; color: #ffd700;">#{int(d['Rank'])}</div>
-                        </div>
-                        <div style="background: #233549; border-radius: 8px; padding: 12px; flex: 1.5; text-align: center; border-bottom: 3px solid #00d4ff;">
-                            <div style="font-size: 10px; color: #8b949e;">{t['pow']}</div>
-                            <div style="font-size: 20px; font-weight: 900; color: #fff;">{int(d['Sức Mạnh_2']):,}</div>
-                        </div>
-                        <div style="background: #233549; border-radius: 8px; padding: 12px; flex: 1.5; text-align: center; border-bottom: 3px solid #00ffcc;">
-                            <div style="font-size: 10px; color: #8b949e;">{t['kill']}</div>
-                            <div style="font-size: 20px; font-weight: 900; color: #fff;">{int(d['Tổng Tiêu Diệt_2']):,}</div>
-                        </div>
-                        <div style="background: #233549; border-radius: 8px; padding: 12px; flex: 1.5; text-align: center; border-bottom: 3px solid #ff4b4b;">
-                            <div style="font-size: 10px; color: #8b949e;">{t['dead']}</div>
-                            <div style="font-size: 20px; font-weight: 900; color: #ff4b4b;">{int(d['Điểm Chết_2']):,}</div>
-                        </div>
+                        <div style="background: #233549; border-radius: 8px; padding: 12px; flex: 1; text-align: center; border-bottom: 3px solid #ffd700;"><div style="font-size: 10px; color: #8b949e;">{t['rank']}</div><div style="font-size: 20px; font-weight: 900; color: #ffd700;">#{int(d['Rank'])}</div></div>
+                        <div style="background: #233549; border-radius: 8px; padding: 12px; flex: 1.5; text-align: center; border-bottom: 3px solid #00d4ff;"><div style="font-size: 10px; color: #8b949e;">{t['pow']}</div><div style="font-size: 20px; font-weight: 900; color: #fff;">{int(d['Sức Mạnh_2']):,}</div></div>
+                        <div style="background: #233549; border-radius: 8px; padding: 12px; flex: 1.5; text-align: center; border-bottom: 3px solid #00ffcc;"><div style="font-size: 10px; color: #8b949e;">{t['kill']}</div><div style="font-size: 20px; font-weight: 900; color: #fff;">{int(d['Tổng Tiêu Diệt_2']):,}</div></div>
+                        <div style="background: #233549; border-radius: 8px; padding: 12px; flex: 1.5; text-align: center; border-bottom: 3px solid #ff4b4b;"><div style="font-size: 10px; color: #8b949e;">{t['dead']}</div><div style="font-size: 20px; font-weight: 900; color: #ff4b4b;">{int(d['Điểm Chết_2']):,}</div></div>
                     </div>
-
                     <div style="background: rgba(26, 42, 58, 0.5); border-radius: 15px; padding: 25px 5px; display: flex; justify-content: space-around; align-items: center; border: 1px solid rgba(0, 212, 255, 0.2);">
                         <div style="text-align: center;">
                             <svg width="80" height="80" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#00ffff" stroke-width="3" stroke-dasharray="{min(d['KPI_K'], 100)}, 100" stroke-linecap="round" transform="rotate(-90 18 18)"/></svg>
-                            <div style="color:#00ffff; font-size: 18px; font-weight:bold;">{d['KPI_K']}%</div>
-                            <div style="font-size:10px; color:#00ffff; font-weight:bold;">KILL KPI</div>
-                            <div style="font-size:9px; color:#8b949e; margin-top:5px;">{t['target']}: {int(d['T_K']):,}</div>
+                            <div style="color:#00ffff; font-size: 18px; font-weight:bold;">{d['KPI_K']}%</div><div style="font-size:10px; color:#00ffff;">KILL KPI</div>
                         </div>
                         <div style="text-align: center;">
                             <svg width="110" height="110" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ffd700" stroke-width="3" stroke-dasharray="{min(d['KPI_T'], 100)}, 100" stroke-linecap="round" transform="rotate(-90 18 18)"/></svg>
-                            <div style="color:#ffd700; font-size:26px; font-weight:bold; text-shadow: 0 0 10px #ffd700;">{d['KPI_T']}%</div>
-                            <div style="font-size:12px; color:#ffd700; font-weight:bold;">TOTAL KPI</div>
+                            <div style="color:#ffd700; font-size:26px; font-weight:bold; text-shadow: 0 0 10px #ffd700;">{d['KPI_T']}%</div><div style="font-size:12px; color:#ffd700;">TOTAL KPI</div>
                         </div>
                         <div style="text-align: center;">
                             <svg width="80" height="80" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ff4b4b" stroke-width="3" stroke-dasharray="{min(d['KPI_D'], 100)}, 100" stroke-linecap="round" transform="rotate(-90 18 18)"/></svg>
-                            <div style="color:#ff4b4b; font-size: 18px; font-weight:bold;">{d['KPI_D']}%</div>
-                            <div style="font-size:10px; color:#ff4b4b; font-weight:bold;">DEAD KPI</div>
-                            <div style="font-size:9px; color:#8b949e; margin-top:5px;">{t['target']}: {int(d['T_D']):,}</div>
+                            <div style="color:#ff4b4b; font-size: 18px; font-weight:bold;">{d['KPI_D']}%</div><div style="font-size:10px; color:#ff4b4b;">DEAD KPI</div>
                         </div>
                     </div>
                 </div>
