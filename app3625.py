@@ -5,34 +5,45 @@ import streamlit.components.v1 as components
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide")
 
-# Link các ảnh của bạn
-LOGO_MAIN = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo1.png?raw=true" # Logo mới thay tiêu đề
-LOGO_PROFILE = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true" # Logo cũ cho profile
+# Link các ảnh
+LOGO_MAIN = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo1.png?raw=true" 
+LOGO_PROFILE = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true"
 
-# --- 2. SIÊU CSS ---
+# --- 2. SIÊU CSS (Chỉnh Logo cao ngang VN/EN và to hơn) ---
 st.markdown("""
     <style>
     .stApp { background-color: #050a0e; color: #e0e6ed; }
-    .block-container { padding-top: 1rem !important; max-width: 100% !important; }
+    .block-container { padding-top: 0.5rem !important; max-width: 100% !important; }
     header { visibility: hidden; height: 0px !important; }
     
-    /* Header chính: Thay tiêu đề bằng Logo mới */
-    .header-wrapper {
+    /* Container chứa cả Logo và Lang Switcher để nằm ngang hàng */
+    .top-header-container {
         display: flex;
-        flex-direction: column;
+        justify-content: center; /* Căn giữa logo */
         align-items: center;
-        margin-top: -10px;
-        margin-bottom: 20px;
+        position: relative;
+        width: 100%;
+        margin-bottom: 10px;
+        padding-top: 10px;
     }
+
     .logo-header { 
-        width: 450px; /* Chỉnh kích thước logo mới cho vừa tầm tiêu đề */
-        filter: drop-shadow(0px 0px 15px rgba(0, 212, 255, 0.4)); 
+        width: 550px; /* Tăng kích thước Logo 1 to hơn một chút */
+        filter: drop-shadow(0px 0px 20px rgba(0, 212, 255, 0.4)); 
+        margin-top: -15px; /* Đẩy cao lên ngang tầm VN/EN */
+    }
+
+    /* Đưa bộ chọn ngôn ngữ về góc phải trong container */
+    .lang-wrapper {
+        position: absolute;
+        right: 0;
+        top: 10px;
     }
 
     .hr-line {
         border: 0; height: 1px;
         background-image: linear-gradient(to right, rgba(0, 212, 255, 0), rgba(0, 212, 255, 0.75), rgba(0, 212, 255, 0));
-        margin: 15px 0;
+        margin: 10px 0;
     }
 
     .footer {
@@ -41,7 +52,11 @@ st.markdown("""
         padding: 10px; font-size: 13px; text-align: center;
         border-top: 1px solid #1a2a3a; z-index: 999;
     }
+    
     [data-testid="stDataFrame"] { background: #1a2a3a; border-radius: 10px; border: 1px solid #00d4ff; }
+    
+    /* Giao diện Selectbox */
+    div[data-testid="stSelectbox"] { margin-top: -5px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -95,18 +110,20 @@ df = load_data()
 
 # --- 5. HIỂN THỊ ---
 if df is not None:
-    _, col_lang = st.columns([6, 1])
-    with col_lang:
+    # Layout Header mới
+    st.markdown('<div class="top-header-container">', unsafe_allow_html=True)
+    st.markdown(f'<img src="{LOGO_MAIN}" class="logo-header">', unsafe_allow_html=True)
+    
+    # Lang switcher nằm bên phải, cao ngang logo
+    with st.container():
+        st.markdown('<div class="lang-wrapper">', unsafe_allow_html=True)
         lang = st.radio("LANG:", ["VN", "EN"], horizontal=True, label_visibility="collapsed")
+        st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
     L = texts[lang]
 
-    # Header: Logo1 thay thế tiêu đề
-    st.markdown(f"""
-        <div class="header-wrapper">
-            <img src="{LOGO_MAIN}" class="logo-header">
-        </div>
-    """, unsafe_allow_html=True)
-
+    # Thanh tìm kiếm
     col_l, col_search, col_r = st.columns([1.5, 3, 1.5])
     with col_search:
         sel = st.selectbox("", sorted(df['Tên_2'].unique()), index=None, placeholder=L["placeholder"])
@@ -118,7 +135,7 @@ if df is not None:
         tk_str = f"{int(d['Target_K']/1e6)}M" if d['Target_K'] >= 1e6 else f"{int(d['Target_K']/1e3)}K"
         td_str = f"{int(d['Target_D']/1e3)}K"
 
-        # Khung Profile Card: Đã xóa viền xanh ở Logo
+        # Khung Profile Card
         html_card = f"""
         <div style="position: relative; width: 100%; margin: 60px auto 10px; font-family: 'Segoe UI', sans-serif;">
             <div style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); background: #1c2e3e; border: 2px solid #00d4ff; border-radius: 12px; padding: 12px 40px; z-index: 10; text-align: center; border-bottom: 4px solid #ffd700; box-shadow: 0 8px 25px rgba(0,0,0,0.8); min-width: 450px;">
