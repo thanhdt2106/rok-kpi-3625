@@ -5,46 +5,53 @@ import streamlit.components.v1 as components
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide")
 
-# Link ảnh của bạn
+# Link ảnh Logo từ GitHub của bạn
 LOGO_URL = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true"
 
-# --- 2. SIÊU CSS (Đã fix lỗi dấu ngoặc nhọn) ---
+# --- 2. SIÊU CSS (Đã chỉnh Avatar to và cao hơn) ---
 st.markdown("""
     <style>
     .stApp { background-color: #050a0e; color: #e0e6ed; }
     .block-container { 
         padding-top: 1rem !important; 
-        padding-bottom: 4rem !important; 
-        padding-left: 1.5rem !important; 
-        padding-right: 1.5rem !important;
         max-width: 100% !important;
     }
     header { visibility: hidden; height: 0px !important; }
-    div[data-testid="stSelectbox"] label { display: none; }
-    div[data-testid="stSelectbox"] { margin-top: -10px; }
-
-    .header-container {
+    
+    /* Layout cho Header: Logo to và Tiêu đề cao */
+    .header-wrapper {
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 20px;
-        margin-bottom: 15px;
+        margin-top: -20px; /* Đẩy cao lên trên */
+        margin-bottom: 20px;
     }
     
+    .logo-img {
+        width: 150px; /* Tăng kích thước logo */
+        filter: drop-shadow(0px 0px 15px rgba(0, 212, 255, 0.5));
+        margin-bottom: 10px;
+    }
+
     .main-title {
         color: #00d4ff;
-        font-size: 32px !important;
+        font-size: 36px !important; /* Chữ to hơn */
         font-weight: bold;
-        text-shadow: 0px 0px 15px rgba(0,212,255,0.6);
+        text-align: center;
+        text-shadow: 0px 0px 20px rgba(0,212,255,0.8);
         margin: 0;
     }
 
     .hr-line {
         border: 0; height: 1px;
         background-image: linear-gradient(to right, rgba(0, 212, 255, 0), rgba(0, 212, 255, 0.75), rgba(0, 212, 255, 0));
-        margin: 20px 0;
+        margin: 15px 0;
     }
 
+    /* Tùy chỉnh thanh Search */
+    div[data-testid="stSelectbox"] { margin-top: -10px; }
+    
     .footer {
         position: fixed; left: 0; bottom: 0; width: 100%;
         background-color: rgba(5, 10, 14, 0.9);
@@ -73,7 +80,7 @@ texts = {
     }
 }
 
-# --- 4. TẢI DỮ LIỆU (Đã fix lỗi URL) ---
+# --- 4. GIỮ NGUYÊN LOGIC TẢI DỮ LIỆU TỪ GOOGLE SHEETS ---
 SHEET_ID = '1MJQSE3siwFWmQNdJmbbJ6RsilvcoxWTu-r6h-UdHugE'
 URL_T = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/export?format=csv&gid=731741617'
 URL_S = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/export?format=csv&gid=371969335'
@@ -114,10 +121,10 @@ if df is not None:
         lang = st.radio("LANG:", ["VN", "EN"], horizontal=True, label_visibility="collapsed")
     L = texts[lang]
 
-    # Header
+    # Header hiển thị Logo to và Tiêu đề cao
     st.markdown(f"""
-        <div class="header-container">
-            <img src="{LOGO_URL}" width="60">
+        <div class="header-wrapper">
+            <img src="{LOGO_URL}" class="logo-img">
             <p class="main-title">{L['header']}</p>
         </div>
     """, unsafe_allow_html=True)
@@ -133,10 +140,8 @@ if df is not None:
         tk_str = f"{int(d['Target_K']/1e6)}M" if d['Target_K'] >= 1e6 else f"{int(d['Target_K']/1e3)}K"
         td_str = f"{int(d['Target_D']/1e3)}K"
 
-        # Tách HTML Card để tránh lỗi ngoặc nhọn
         html_card = f"""
         <div style="position: relative; width: 100%; margin: 55px auto 5px; font-family: 'Segoe UI', sans-serif;">
-            <img src="{LOGO_URL}" style="position: absolute; top: -35px; right: 10px; width: 50px; opacity: 0.8; z-index: 11;">
             <div style="position: absolute; top: -45px; left: 50%; transform: translateX(-50%); background: #1c2e3e; border: 2px solid #00d4ff; border-radius: 12px; padding: 10px 70px; z-index: 10; text-align: center; border-bottom: 4px solid #ffd700; box-shadow: 0 8px 20px rgba(0,0,0,0.9);">
                 <div style="color: #00d4ff; font-size: 13px; font-weight: 900; letter-spacing: 2px;">PROFILE MEMBER</div>
                 <div style="color: #ffffff; font-size: 30px; font-weight: bold; text-shadow: 0 0 10px #00d4ff;">{sel}</div>
@@ -218,4 +223,4 @@ if df is not None:
         </div>
         """, unsafe_allow_html=True)
 else:
-    st.error("⚠️ Không thể tải dữ liệu. Hãy kiểm tra SHEET_ID hoặc kết nối mạng.")
+    st.error("⚠️ Không thể tải dữ liệu từ Google Sheets.")
