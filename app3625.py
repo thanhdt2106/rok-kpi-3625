@@ -9,10 +9,10 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. SIÊU CSS (XÓA SIDEBAR & CUSTOM CHECKBOX) ---
+# --- 2. SIÊU CSS (TỐI ƯU VỊ TRÍ HEADER) ---
 st.markdown("""
     <style>
-    /* ẨN SIDEBAR & HEADER MẶC ĐỊNH */
+    /* ẨN SIDEBAR TUYỆT ĐỐI */
     [data-testid="stSidebar"], [data-testid="stSidebarCollapseButton"] { display: none !important; width: 0px !important; }
     header { visibility: hidden; }
 
@@ -24,22 +24,29 @@ st.markdown("""
 
     .stApp { background-color: #050a0e; color: #e0e6ed; }
     
-    .header-center {
+    /* CHỮ GÓC TRÁI */
+    .header-left-text {
         color: #00d4ff;
         font-weight: 900;
-        font-size: 26px;
-        text-shadow: 0 0 15px #00d4ff;
+        font-size: 22px;
+        text-shadow: 0 0 10px #00d4ff;
         font-family: 'Segoe UI', sans-serif;
-        letter-spacing: 2px;
+        letter-spacing: 1px;
+        line-height: 1.5;
     }
 
-    /* GOM CỤM CHECKBOX SÁT NHAU */
+    /* ĐIỀU CHỈNH SEARCH BOX Ở GIỮA */
+    .stSelectbox {
+        margin-top: -5px;
+    }
+
+    /* GOM CỤM CHECKBOX */
     div[data-testid="stHorizontalBlock"] .stCheckbox {
         margin-right: -20px;
     }
 
     /* TABLE STYLE */
-    .table-wrapper { background: rgba(13, 27, 42, 0.6); border: 1px solid #1e3a5a; border-radius: 12px; padding: 20px; }
+    .table-wrapper { background: rgba(13, 27, 42, 0.6); border: 1px solid #1e3a5a; border-radius: 12px; padding: 20px; margin-top: 10px; }
     .elite-table { width: 100%; border-collapse: collapse; font-family: 'Segoe UI', sans-serif; }
     .elite-table thead th { 
         background: rgba(0, 212, 255, 0.1); color: #00d4ff; 
@@ -51,6 +58,8 @@ st.markdown("""
         background: linear-gradient(135deg, #ffd700, #b8860b); color: #000; 
         padding: 4px 10px; border-radius: 6px; font-weight: 900;
     }
+    .kpi-bar-container { width: 100px; background: #1a2a3a; height: 8px; border-radius: 4px; display: inline-block; margin-right: 8px; }
+    .kpi-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #00d4ff, #00ffcc); }
     </style>
     """, unsafe_allow_html=True)
 
@@ -87,18 +96,21 @@ def load_data():
 
 df = load_data()
 
-# --- 4. GIAO DIỆN HEADER (SEARCH TRÁI - TEXT GIỮA - LANG PHẢI) ---
+# --- 4. GIAO DIỆN HEADER (TEXT TRÁI - SEARCH GIỮA - LANG PHẢI) ---
 if df is not None:
+    # Chia tỷ lệ cột: Trái (3), Giữa (4), Phải (3)
     head_left, head_mid, head_right = st.columns([3, 4, 3])
 
     with head_left:
-        sel = st.selectbox("", sorted(df['Tên_2'].dropna().unique()), index=None, placeholder="👤 Tìm kiếm...", label_visibility="collapsed")
+        # Chữ ở góc trái màn hình
+        st.markdown('<div class="header-left-text">FIGHT TO DEAD 3625</div>', unsafe_allow_html=True)
 
     with head_mid:
-        st.markdown('<div class="header-center" style="text-align:center;">FIGHT TO DEAD 3625</div>', unsafe_allow_html=True)
+        # Thanh tìm kiếm ở chính giữa
+        sel = st.selectbox("", sorted(df['Tên_2'].dropna().unique()), index=None, placeholder="🔍 Tìm kiếm thành viên...", label_visibility="collapsed")
 
     with head_right:
-        # Xóa nút user, đưa VN/EN sát nhau về phía bên phải của cột này
+        # Cụm EN/VN sát nhau ở góc phải
         _, l_vn, l_en = st.columns([5, 1, 1])
         
         if 'lang' not in st.session_state:
