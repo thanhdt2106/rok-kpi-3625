@@ -9,70 +9,71 @@ st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide")
 LOGO_MAIN = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo1.png?raw=true" 
 LOGO_PROFILE = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true"
 
-# --- 2. SIÊU CSS (Fix lỗi thẳng hàng và chỉnh vị trí) ---
+# --- 2. SIÊU CSS (FIX CĂN THẲNG HÀNG TUYỆT ĐỐI) ---
 st.markdown("""
     <style>
+    /* Tổng thể */
     .stApp { background-color: #050a0e; color: #e0e6ed; }
-    .block-container { padding-top: 1.5rem !important; max-width: 100% !important; }
+    .block-container { padding-top: 1rem !important; max-width: 95% !important; }
     header { visibility: hidden; height: 0px !important; }
-    
-    /* Căn chỉnh Logo bên trái */
-    .logo-container {
+
+    /* Tạo Header Flexbox để ép 3 phần thẳng hàng */
+    .custom-header {
         display: flex;
-        justify-content: flex-start;
+        justify-content: space-between;
         align-items: center;
+        width: 100%;
+        margin-bottom: 20px;
+        padding: 0 10px;
     }
+
+    /* Phần Logo trái */
+    .header-left { flex: 1; display: flex; justify-content: flex-start; }
     .logo-header { 
-        width: 650px; /* Tăng size Logo 1 thêm chút nữa */
-        filter: drop-shadow(0px 0px 20px rgba(0, 212, 255, 0.3));
-        margin-top: -25px; /* Điều chỉnh độ cao để cân với thanh tìm kiếm */
+        width: 480px; /* Chỉnh lại size để không lấn át thanh tìm kiếm */
+        filter: drop-shadow(0px 0px 15px rgba(0, 212, 255, 0.4));
     }
 
-    /* Căn chỉnh cụm Ngôn ngữ bên phải */
-    .lang-container {
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        margin-top: 10px;
-    }
+    /* Phần Tìm kiếm giữa */
+    .header-mid { flex: 1.5; display: flex; justify-content: center; }
+    div[data-testid="stSelectbox"] { width: 100% !important; max-width: 500px; }
 
+    /* Phần Lang phải */
+    .header-right { flex: 1; display: flex; justify-content: flex-end; margin-top: -15px; }
+
+    /* Đường kẻ phân cách */
     .hr-line {
         border: 0; height: 1px;
-        background-image: linear-gradient(to right, rgba(0, 212, 255, 0), rgba(0, 212, 255, 0.75), rgba(0, 212, 255, 0));
-        margin: 15px 0;
+        background-image: linear-gradient(to right, rgba(0, 212, 255, 0), rgba(0, 212, 255, 0.7), rgba(0, 212, 255, 0));
+        margin: 10px 0 20px 0;
     }
 
+    /* Bảng dữ liệu */
+    [data-testid="stDataFrame"] { background: #1a2a3a; border-radius: 10px; border: 1px solid #00d4ff; }
+    
     .footer {
         position: fixed; left: 0; bottom: 0; width: 100%;
         background-color: rgba(5, 10, 14, 0.9); color: #8b949e;
-        padding: 10px; font-size: 13px; text-align: center;
+        padding: 8px; font-size: 12px; text-align: center;
         border-top: 1px solid #1a2a3a; z-index: 999;
-    }
-    
-    [data-testid="stDataFrame"] { background: #1a2a3a; border-radius: 10px; border: 1px solid #00d4ff; }
-    
-    /* Ép Selectbox căn giữa hoàn hảo */
-    div[data-testid="stSelectbox"] {
-        margin-top: 15px;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. QUẢN LÝ NGÔN NGỮ ---
+# --- 3. DỮ LIỆU ---
 texts = {
     "VN": {
-        "placeholder": "👤 Điền tên của bạn để tìm kiếm 🔍",
+        "search": "👤 Tìm kiếm thành viên...",
         "pow": "SỨC MẠNH", "tk": "TỔNG TIÊU DIỆT", "td": "ĐIỂM CHẾT", "rank": "HẠNG",
         "cols": ['Tên', 'ID', 'Liên minh', 'Hạng', 'Sức mạnh', 'Tổng Kill', 'Điểm Chết', 'Kill +', 'Dead +', 'KPI %']
     },
     "EN": {
-        "placeholder": "👤 Enter member name to search 🔍",
+        "search": "👤 Search member name...",
         "pow": "POWER", "tk": "TOTAL KILL", "td": "TOTAL DEAD", "rank": "RANK",
         "cols": ['Name', 'ID', 'Alliance', 'Rank', 'Power', 'Total Kill', 'Total Dead', 'Kill Inc', 'Dead Inc', 'KPI %']
     }
 }
 
-# --- 4. DATA (GIỮ NGUYÊN) ---
 SHEET_ID = '1MJQSE3siwFWmQNdJmbbJ6RsilvcoxWTu-r6h-UdHugE'
 URL_T = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/export?format=csv&gid=731741617'
 URL_S = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/export?format=csv&gid=371969335'
@@ -106,30 +107,36 @@ def load_data():
 
 df = load_data()
 
-# --- 5. LAYOUT 3 PHẦN THẲNG HÀNG ---
+# --- 4. HIỂN THỊ ---
 if df is not None:
-    # Tạo 3 cột với tỉ lệ: Logo rộng - Tìm kiếm vừa - Lang nhỏ
-    head_left, head_mid, head_right = st.columns([2.5, 3.5, 1.2])
-
-    with head_left:
-        st.markdown(f'<div class="logo-container"><img src="{LOGO_MAIN}" class="logo-header"></div>', unsafe_allow_html=True)
-
-    with head_mid:
-        # Tạm thời chưa biết ngôn ngữ nên dùng mặc định, sẽ cập nhật sau khi chọn lang
-        sel = st.selectbox("", sorted(df['Tên_2'].unique()), index=None, placeholder="👤 Tìm kiếm thành viên...")
-
-    with head_right:
-        st.markdown('<div class="lang-container">', unsafe_allow_html=True)
-        lang = st.radio("LANG:", ["VN", "EN"], horizontal=True, label_visibility="collapsed")
+    # Header Layout
+    st.markdown('<div class="custom-header">', unsafe_allow_html=True)
+    
+    # Cột Trái: Logo
+    st.markdown(f'<div class="header-left"><img src="{LOGO_MAIN}" class="logo-header"></div>', unsafe_allow_html=True)
+    
+    # Cột Giữa: Selectbox
+    # (Dùng container để bao bọc selectbox của streamlit)
+    with st.container():
+        st.markdown('<div class="header-mid">', unsafe_allow_html=True)
+        # Lưu ý: Selectbox được render bởi Streamlit, chúng ta dùng CSS để căn giữa nó
+        sel = st.selectbox("", sorted(df['Tên_2'].unique()), index=None, placeholder="👤 Tìm tên thành viên...", label_visibility="collapsed")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    L = texts[lang]
+    # Cột Phải: Lang radio
+    with st.container():
+        st.markdown('<div class="header-right">', unsafe_allow_html=True)
+        lang = st.radio("LANG:", ["VN", "EN"], horizontal=True, label_visibility="collapsed")
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True) # Kết thúc custom-header
     st.markdown("<div class='hr-line'></div>", unsafe_allow_html=True)
 
+    L = texts[lang]
+
+    # Hiển thị Profile Card khi chọn thành viên
     if sel:
         d = df[df['Tên_2'] == sel].iloc[0]
-        
-        # Profile Card: Xóa viền logo profile
         html_card = f"""
         <div style="position: relative; width: 100%; margin: 60px auto 10px; font-family: 'Segoe UI', sans-serif;">
             <div style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); background: #1c2e3e; border: 2px solid #00d4ff; border-radius: 12px; padding: 12px 40px; z-index: 10; text-align: center; border-bottom: 4px solid #ffd700; box-shadow: 0 8px 25px rgba(0,0,0,0.8); min-width: 450px;">
@@ -201,7 +208,7 @@ if df is not None:
         """
         components.html(html_card, height=580)
 
-    # Bảng dữ liệu (Giữ nguyên)
+    # Bảng dữ liệu chính
     display_df = df[['Tên_2', 'ID', 'Liên Minh_2', 'KillRank', 'Sức Mạnh_2', 'Tổng Tiêu Diệt_2', 'Điểm Chết_2', 'KI', 'DI', 'KPI_T']].copy()
     display_df.columns = L['cols']
     for col in L['cols'][4:9]:
@@ -210,10 +217,6 @@ if df is not None:
 
     st.dataframe(display_df.sort_values(by=L['cols'][3]), use_container_width=True, hide_index=True, height=600)
 
-    st.markdown(f"""
-        <div class="footer">
-            🛡️ Discord: <b>louiss.nee</b> | Zalo: <b>0.3.7.3.2.7.4.6.0.0</b>
-        </div>
-        """, unsafe_allow_html=True)
+    st.markdown(f'<div class="footer">🛡️ Discord: <b>louiss.nee</b> | Zalo: <b>0.3.7.3.2.7.4.6.0.0</b></div>', unsafe_allow_html=True)
 else:
-    st.error("⚠️ Không thể kết nối với dữ liệu Google Sheets.")
+    st.error("⚠️ Không thể kết nối với dữ liệu.")
