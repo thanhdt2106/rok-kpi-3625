@@ -1,57 +1,46 @@
 import streamlit as st
-import pandas as pd
+import pd as pd
 import streamlit.components.v1 as components
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide")
 
-# --- 2. SIÊU CSS (CĂN GIỮA, ĐẨY CAO, MÀU VÀNG TIÊU ĐỀ) ---
+# --- 2. SIÊU CSS (ĐẨY CAO, CĂN GIỮA, MÀU VÀNG TIÊU ĐỀ) ---
 st.markdown("""
     <style>
     .stApp { background-color: #050a0e; color: #e0e6ed; }
     [data-testid="stSidebar"] { background-color: #0d1b2a; border-right: 1px solid #00d4ff; }
     
-    /* ĐẨY SÁT LÊN TRÊN & CĂN GIỮA TOÀN BỘ */
+    /* ĐẨY SÁT LÊN TRÊN & CĂN GIỮA NỘI DUNG */
     .main .block-container {
         max-width: 1250px !important;
-        padding-top: 0.5rem !important;
+        padding-top: 0.2rem !important; /* Đẩy sát taskbar nhất có thể */
         margin: auto !important;
     }
 
-    /* NGĂN KÉO (DRAWER) */
-    #myDrawer {
-        height: 100%; width: 0; position: fixed; z-index: 1000000;
-        top: 0; left: 0; background-color: rgba(13, 27, 42, 0.98);
-        overflow-x: hidden; transition: 0.5s; padding-top: 60px;
-        border-right: 2px solid #00d4ff; box-shadow: 15px 0 30px rgba(0,0,0,0.7);
-    }
-    #myDrawer a {
-        padding: 15px 25px; text-decoration: none; font-size: 15px; color: #e0e6ed;
-        display: block; transition: 0.3s; border-bottom: 1px solid rgba(0,212,255,0.05);
-    }
-    #myDrawer .closebtn { position: absolute; top: 10px; right: 25px; font-size: 36px; color: #ff4b4b; }
-
-    /* LOGO CENTER */
-    .logo-container { display: flex; justify-content: center; width: 100%; margin-bottom: 10px; }
+    /* LOGO CĂN GIỮA */
+    .logo-container { display: flex; justify-content: center; width: 100%; margin-bottom: 15px; }
     .logo-img { width: 280px; filter: drop-shadow(0 0 10px rgba(0,212,255,0.4)); }
 
     /* BẢNG DỮ LIỆU CĂN GIỮA Ô & MÀU VÀNG */
     .table-wrapper { 
         background: rgba(13, 27, 42, 0.6); border: 1px solid #1e3a5a; 
-        border-radius: 12px; padding: 15px; margin: 10px auto; 
+        border-radius: 12px; padding: 15px; margin: 20px auto; 
     }
     .elite-table { width: 100%; border-collapse: collapse; font-family: 'Segoe UI', sans-serif; }
+    
+    /* Tiêu đề bảng căn giữa */
     .elite-table thead th { 
         background: rgba(0, 212, 255, 0.1); color: #00d4ff; 
         text-align: center; padding: 12px; font-size: 13px; 
         border-bottom: 3px solid #00d4ff;
     }
+
+    /* Nội dung bảng căn giữa & màu vàng cho các cột yêu cầu */
     .elite-table td { 
         padding: 12px 8px; font-size: 14px; color: #e0e6ed; 
         border-bottom: 1px solid #1a2a3a; text-align: center; 
     }
-    
-    /* CLASS CHỈ SỐ MÀU VÀNG */
     .val-gold { color: #ffd700 !important; font-weight: bold; }
     
     .rank-badge { 
@@ -62,38 +51,18 @@ st.markdown("""
     .kpi-bar-container { width: 80px; background: #1a2a3a; height: 6px; border-radius: 3px; display: inline-block; margin-right: 5px; }
     .kpi-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #00d4ff, #00ffcc); }
     </style>
-
-    <div id="myDrawer">
-      <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-      <div style="color: #00d4ff; font-weight: bold; padding: 0 25px 20px; font-size: 18px; border-bottom: 1px solid #1e3a5a;">📋 QUICK INFO</div>
-      <a>⚠️ Missing KPI Accounts</a>
-      <a>🏔️ Top 15 Pass 4</a>
-      <a>🌋 Top 15 Pass 7</a>
-      <a>👑 Top 15 Kingland</a>
-    </div>
-
-    <script>
-    function openNav() { document.getElementById("myDrawer").style.width = "320px"; }
-    function closeNav() { document.getElementById("myDrawer").style.width = "0"; }
-    </script>
     """, unsafe_allow_html=True)
 
-# --- 3. SIDEBAR & LANG ---
+# --- 3. SIDEBAR ---
 with st.sidebar:
     st.markdown('<div style="color: #00d4ff; font-weight: bold; font-size: 18px; text-align: center; margin-bottom: 20px;">🛡️ COMMAND CENTER</div>', unsafe_allow_html=True)
-    components.html("""
-        <button onclick="parent.openNav()" style="width: 100%; background: #1a2a3a; color: #00d4ff; border: 1px solid #00d4ff; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; font-family: sans-serif;">
-            ⚙️ SYSTEM SETTINGS
-        </button>
-    """, height=50)
-    st.divider()
     lang = st.radio("Language", ["VN", "EN"], horizontal=True)
     
     texts = {
         "VN": {
             "menu": ["📊 Bảng KPI", "👤 Tài khoản"],
             "search": "👤 Tìm kiếm thành viên...",
-            "headers": ['Hạng', 'Thành viên', 'ID', 'Sức mạnh', 'Tổng Kill', 'Điểm Chết', 'Kill +', 'Dead +', 'KPI %']
+            "headers": ['Hạng', 'Thành viên', 'ID', 'Power', 'Total Kill', 'Dead Pt', 'Kill +', 'Dead +', 'KPI %']
         },
         "EN": {
             "menu": ["📊 KPI Leaderboard", "👤 Profile"],
@@ -104,7 +73,7 @@ with st.sidebar:
     t = texts[lang]
     menu = st.radio("Menu", t["menu"])
 
-# --- 4. DATA LOGIC (FIX LỖI ID) ---
+# --- 4. DATA LOGIC (SỬA LỖI MERGE ID) ---
 SHEET_ID = '1MJQSE3siwFWmQNdJmbbJ6RsilvcoxWTu-r6h-UdHugE'
 URL_T = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=731741617'
 URL_S = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=371969335'
@@ -115,7 +84,7 @@ def load_data():
         dt = pd.read_csv(URL_T).rename(columns=lambda x: x.strip())
         ds = pd.read_csv(URL_S).rename(columns=lambda x: x.strip())
         
-        # Ép kiểu ID về String để merge không bị lỗi 0.0%
+        # Đảm bảo ID luôn là String để không bị lỗi 0.0%
         dt['ID'] = dt['ID'].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
         ds['ID'] = ds['ID'].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
         
@@ -144,6 +113,7 @@ df = load_data()
 
 # --- 5. HIỂN THỊ ---
 if df is not None:
+    # Logo căn giữa sát trên
     st.markdown('<div class="logo-container"><img src="https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo1.png?raw=true" class="logo-img"></div>', unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -152,27 +122,28 @@ if df is not None:
     
     if sel:
         d = df[df['Tên_2'] == sel].iloc[0]
+        # FORM PROFILE CHI TIẾT GỐC CỦA LOUIS
         html_card = f"""
         <div style="position: relative; width: 100%; max-width: 900px; margin: 55px auto 10px; font-family: 'Segoe UI', sans-serif;">
             <div style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); background: #1c2e3e; border: 2px solid #00d4ff; border-radius: 12px; padding: 10px 35px; z-index: 10; text-align: center; border-bottom: 4px solid #ffd700; box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);">
                 <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-                    <img src="https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true" style="width: 35px; filter: drop-shadow(0 0 5px #ffd700);">
+                    <img src="https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true" style="width: 35px;">
                     <div style="color: #ffffff; font-size: 24px; font-weight: bold;">{sel}</div>
                 </div>
                 <div style="font-size: 11px; color: #e0e6ed; opacity: 0.8;">ID: {d['ID']} | {d['Liên Minh_2']}</div>
             </div>
             <div style="background: rgba(13, 25, 47, 0.98); border: 2px solid #00d4ff; border-radius: 15px; padding: 75px 20px 20px 20px; box-shadow: inset 0 0 20px rgba(0, 212, 255, 0.1);">
-                <div style="display: flex; justify-content: space-around; align-items: center; border: 1px solid rgba(0, 212, 255, 0.2); padding: 20px; border-radius: 12px; background: rgba(0,0,0,0.2);">
-                    <div style="text-align: center;"><div style="color:#00ffff; font-size: 16px; font-weight:bold;">{d['KPI_K']}%</div><div style="font-size:10px; color:#00ffff;">KILL KPI</div></div>
-                    <div style="text-align: center;"><div style="color:#ffd700; font-size:30px; font-weight:bold; text-shadow: 0 0 10px #ffd700;">{d['KPI_T']}%</div><div style="font-size:12px; color:#ffd700; font-weight:bold;">TOTAL KPI</div></div>
-                    <div style="text-align: center;"><div style="color:#ff4b4b; font-size: 16px; font-weight:bold;">{d['KPI_D']}%</div><div style="font-size:10px; color:#ff4b4b;">DEAD KPI</div></div>
+                <div style="display: flex; justify-content: space-around; align-items: center; border: 1px solid rgba(0, 212, 255, 0.2); padding: 25px; border-radius: 12px;">
+                    <div style="text-align: center;"><div style="color:#00ffff; font-size: 18px; font-weight:bold;">{d['KPI_K']}%</div><div style="font-size:10px; color:#00ffff;">KILL KPI</div></div>
+                    <div style="text-align: center;"><div style="color:#ffd700; font-size:32px; font-weight:bold; text-shadow: 0 0 10px #ffd700;">{d['KPI_T']}%</div><div style="font-size:12px; color:#ffd700; font-weight:bold;">TOTAL KPI</div></div>
+                    <div style="text-align: center;"><div style="color:#ff4b4b; font-size: 18px; font-weight:bold;">{d['KPI_D']}%</div><div style="font-size:10px; color:#ff4b4b;">DEAD KPI</div></div>
                 </div>
             </div>
         </div>
         """
-        components.html(html_card, height=320)
+        components.html(html_card, height=350)
 
-    # --- BẢNG DỮ LIỆU ---
+    # --- BẢNG DỮ LIỆU CĂN GIỮA & TIÊU ĐỀ VÀNG ---
     df_sorted = df.sort_values(by='Rank')
     rows_list = []
     for _, r in df_sorted.iterrows():
@@ -201,4 +172,4 @@ if df is not None:
     </div>
     """
     st.markdown(table_html, unsafe_allow_html=True)
-    st.markdown(f'<div style="text-align: center; color: #8b949e; font-size: 11px; padding: 15px;">🛡️ Admin Louis | v10.9 | Kingdom 3625 | Zalo: 0373274600</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="text-align: center; color: #8b949e; font-size: 11px; padding: 20px;">🛡️ Admin Louis | v10.9 | Kingdom 3625</div>', unsafe_allow_html=True)
