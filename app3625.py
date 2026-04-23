@@ -9,7 +9,7 @@ st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide")
 LOGO_MAIN = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo1.png?raw=true"
 LOGO_PROFILE = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true"
 
-# --- 2. SIÊU CSS (TĂNG CỠ CHỮ & CĂN CHỈNH) ---
+# --- 2. SIÊU CSS (FIX CHỮ & LAYOUT) ---
 st.markdown("""
     <style>
     .stApp { background-color: #050a0e; color: #e0e6ed; }
@@ -20,6 +20,9 @@ st.markdown("""
     .logo-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 20px; }
     .logo-img { width: 280px; filter: drop-shadow(0px 0px 10px rgba(0, 212, 255, 0.4)); }
     .slogan { color: #00d4ff; font-size: 18px; font-weight: bold; margin-top: 8px; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* Fix nút chọn ngôn ngữ góc phải */
+    .lang-container { display: flex; justify-content: flex-end; margin-bottom: -40px; position: relative; z-index: 100; }
 
     /* BẢNG ELITE - CHỮ TO RÕ */
     .table-wrapper { background: rgba(13, 27, 42, 0.6); border: 1px solid #1e3a5a; border-radius: 12px; padding: 20px; margin-top: 20px; }
@@ -35,17 +38,14 @@ st.markdown("""
     .kpi-bar-container { width: 100px; background: #1a2a3a; height: 8px; border-radius: 4px; display: inline-block; vertical-align: middle; margin-right: 10px; }
     .kpi-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #00d4ff, #00ffcc); }
 
-    /* Sidebar */
-    [data-testid="stSidebar"] { background-color: #0d1b2a; border-right: 1px solid #00d4ff; }
     .footer { position: fixed; left: 0; bottom: 0; width: 100%; background-color: rgba(5, 10, 14, 0.95); color: #8b949e; padding: 10px; font-size: 13px; text-align: center; border-top: 1px solid #1a2a3a; z-index: 999; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. MENU SIDEBAR ---
-with st.sidebar:
-    st.markdown('<div style="color:#ffd700; font-size:18px; font-weight:bold; text-align:center;">BẢNG ĐIỀU KHIỂN</div>', unsafe_allow_html=True)
-    lang = st.radio("NGÔN NGỮ", ["VN", "EN"], horizontal=True)
-    st.divider()
+# --- 3. ĐIỀU KHIỂN NGÔN NGỮ (GÓC PHẢI) ---
+col_sp, col_ln = st.columns([8, 1.2])
+with col_ln:
+    lang = st.radio("", ["VN", "EN"], horizontal=True, label_visibility="collapsed")
 
 # --- 4. DỮ LIỆU ---
 texts = {
@@ -82,8 +82,7 @@ def load_data():
         df['KillRank'] = df['Tổng Tiêu Diệt_2'].rank(ascending=False, method='min').astype(int)
         
         def get_metrics(r):
-            p = r['Sức Mạnh_2']
-            gk = 300e6 if p >= 45e6 else 250e6 if p >= 40e6 else 200e6
+            p = r['Sức Mạnh_2']; gk = 300e6 if p >= 45e6 else 250e6 if p >= 40e6 else 200e6
             gd = 400e3 if p >= 30e6 else 300e3 if p >= 20e6 else 200e3
             pk = max(0.0, float(r['KI']) / gk) if gk > 0 else 0.0
             pdv = max(0.0, float(r['DI']) / gd) if gd > 0 else 0.0
@@ -100,17 +99,19 @@ if df is not None:
     st.markdown(f'<div class="logo-container"><img src="{LOGO_MAIN}" class="logo-img"><div class="slogan">{L["slogan"]}</div></div>', unsafe_allow_html=True)
     sel = st.selectbox("", sorted(df['Tên_2'].unique()), index=None, placeholder=L['search'], label_visibility="collapsed")
 
-    # --- CARD PROFILE VỚI 3 VÒNG TRÒN KPI ---
     if sel:
         d = df[df['Tên_2'] == sel].iloc[0]
         html_card = f"""
         <div style="position: relative; width: 100%; margin: 60px auto 10px; font-family: 'Segoe UI', sans-serif;">
             <div style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); background: #1c2e3e; border: 2px solid #00d4ff; border-radius: 12px; padding: 12px 40px; z-index: 10; text-align: center; border-bottom: 4px solid #ffd700; box-shadow: 0 8px 25px rgba(0,0,0,0.8); min-width: 450px;">
+                <div style="color: #00d4ff; font-size: 11px; font-weight: 900; letter-spacing: 2px; margin-bottom: 5px;">PROFILE MEMBER</div>
                 <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
                     <img src="{LOGO_PROFILE}" style="width: 50px; height: 50px; object-fit: contain;">
-                    <div style="color: #ffffff; font-size: 28px; font-weight: bold;">{sel}</div>
+                    <div style="color: #ffffff; font-size: 28px; font-weight: bold; text-shadow: 0 0 10px #00d4ff;">{sel}</div>
                 </div>
-                <div style="font-size: 13px; margin-top: 8px; color: #fff;">ID: {d['ID']} | {d['Liên Minh_2']}</div>
+                <div style="font-size: 13px; margin-top: 8px; color: #fff;">
+                    <b style="color: #ffd700;">ID:</b> {d['ID']} | <b style="color: #00ffcc;">ALLIANCE:</b> {d['Liên Minh_2']}
+                </div>
             </div>
             
             <div style="background: rgba(13, 25, 47, 0.98); border: 2px solid #00d4ff; border-radius: 15px; padding: 85px 20px 20px 20px;">
@@ -126,6 +127,10 @@ if df is not None:
                     <div style="background: #233549; border-radius: 10px; padding: 15px; flex: 1; text-align: center; border-bottom: 3.5px solid #ff4b4b;">
                         <div style="font-size: 10px; color: #ff4b4b; font-weight: bold;">{L['td']}</div>
                         <div style="font-size: 22px; font-weight: 900; color: #ff4b4b;">{int(d['Điểm Chết_2']):,}</div>
+                    </div>
+                    <div style="background: #233549; border-radius: 10px; padding: 15px; flex: 0.6; text-align: center; border-bottom: 3.5px solid #ffd700;">
+                        <div style="font-size: 10px; color: #ffd700; font-weight: bold;">{L['rank']}</div>
+                        <div style="font-size: 22px; font-weight: 900; color: #ffd700;">#{d['KillRank']}</div>
                     </div>
                 </div>
 
@@ -168,13 +173,11 @@ if df is not None:
         """
         components.html(html_card, height=580)
 
-    # --- BẢNG TRANG CHỦ (CHỮ TO & CHUẨN ELITE) ---
+    # --- BẢNG TRANG CHỦ ---
     df_sorted = df.sort_values(by='KillRank')
     rows_list = []
     for _, r in df_sorted.iterrows():
-        k_val = float(r['KPI_T'])
-        k_bar = min(k_val, 100)
-        row = f"""
+        rows_list.append(f"""
         <tr>
             <td><span class="rank-badge">#{int(r['KillRank'])}</span></td>
             <td><b>{r['Tên_2']}</b><br><small style="color:#8b949e">ID: {r['ID']}</small></td>
@@ -184,11 +187,10 @@ if df is not None:
             <td style="text-align:right; color:#00d4ff">+{int(r['KI']):,}</td>
             <td style="text-align:right; color:#ff4b4b">+{int(r['DI']):,}</td>
             <td>
-                <div class="kpi-bar-container"><div class="kpi-bar-fill" style="width:{k_bar}%"></div></div>
-                <span style="color:#ffd700; font-weight:bold">{k_val}%</span>
+                <div class="kpi-bar-container"><div class="kpi-bar-fill" style="width:{min(r['KPI_T'], 100)}%"></div></div>
+                <span style="color:#ffd700; font-weight:bold">{r['KPI_T']}%</span>
             </td>
-        </tr>"""
-        rows_list.append(row)
+        </tr>""")
 
     h = L['cols']
     table_html = f"""
