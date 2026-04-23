@@ -111,8 +111,7 @@ if df is not None:
         r_col1, r_col2 = st.columns([2.5, 1])
         with r_col1:
             lang = st.selectbox("", ["VN", "EN"], label_visibility="collapsed")
-        with r_col2:
-            st.button("👤", use_container_width=True)
+       
 
     t = {
         "VN": {"rank": "HẠNG", "pow": "SỨC MẠNH", "kill": "TỔNG KILL", "dead": "ĐIỂM CHẾT", "headers": ['Hạng', 'Thành viên', 'Sức mạnh', 'Tổng Kill', 'Điểm Chết', 'Kill +', 'Dead +', 'KPI %']},
