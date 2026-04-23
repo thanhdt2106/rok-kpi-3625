@@ -34,6 +34,14 @@ st.markdown("""
         text-transform: uppercase;
     }
 
+    /* Tối ưu ô nhập liệu - Không gợi ý */
+    .stTextInput input {
+        background-color: rgba(28, 46, 62, 0.8) !important;
+        color: white !important;
+        border: 1px solid #1e3a5a !important;
+        border-radius: 4px !important;
+    }
+
     .table-wrapper { 
         background: rgba(13, 27, 42, 0.4); 
         border: 1px solid #1e3a5a; 
@@ -69,11 +77,8 @@ def load_data():
         for c in ['Sức Mạnh_2', 'Tổng Tiêu Diệt_2', 'Điểm Chết_2', 'Tổng Tiêu Diệt_1', 'Điểm Chết_1']:
             df[c] = pd.to_numeric(df[c].astype(str).str.replace(r'[^\d.]', '', regex=True), errors='coerce').fillna(0)
         
-        # Killpoint và Deathpoint tăng thêm
         df['KI'] = df['Tổng Tiêu Diệt_2'] - df['Tổng Tiêu Diệt_1']
         df['DI'] = df['Điểm Chết_2'] - df['Điểm Chết_1']
-        
-        # Xếp hạng (Rank) dựa trên Killpoint Tăng Thêm (KI)
         df['Rank'] = df['KI'].rank(ascending=False, method='min').astype(int)
         
         def calc_kpi(r):
@@ -90,126 +95,114 @@ def load_data():
 
 df = load_data()
 
-# --- 4. HEADER & SEARCH ---
+# --- 4. HEADER & SEARCH (MODIFIED) ---
 if df is not None:
     h_col1, h_col2 = st.columns([1, 1])
     with h_col1:
         st.markdown('<div class="header-left-text">FIGHT TO DEAD 3625</div>', unsafe_allow_html=True)
     with h_col2:
-        sel = st.selectbox(
+        # Thay Selectbox bằng Text Input để không hiện danh sách gợi ý
+        search_query = st.text_input(
             "", 
-            sorted(df['Tên_2'].dropna().unique()), 
-            index=None, 
-            placeholder="🔍 Enter your Name or ID here...", 
+            placeholder="🔍 Enter exact Name or ID and press Enter...",
             label_visibility="collapsed"
-        )
+        ).strip()
 
-    # --- 5. DETAILED PROFILE CARD ---
-    if sel:
-        d = df[df['Tên_2'] == sel].iloc[0]
-        cur_k = f"{d['KI']/1e6:.1f}M"
-        tar_k = f"{d['T_K']/1e6:.0f}M"
-        cur_d = f"{d['DI']/1e3:.1f}K"
-        tar_d = f"{d['T_D']/1e3:.0f}K"
+    # --- 5. PROFILE CARD LOGIC ---
+    if search_query:
+        # Tìm kiếm theo Tên hoặc ID
+        user_match = df[(df['Tên_2'].str.lower() == search_query.lower()) | (df['ID'] == search_query)]
+        
+        if not user_match.empty:
+            d = user_match.iloc[0]
+            cur_k = f"{d['KI']/1e6:.1f}M"
+            tar_k = f"{d['T_K']/1e6:.0f}M"
+            cur_d = f"{d['DI']/1e3:.1f}K"
+            tar_d = f"{d['T_D']/1e3:.0f}K"
 
-        html_card = f"""
-        <style>
-            @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Saira:wght@400;700&display=swap');
-            .stat-box {{ background: rgba(35, 53, 73, 0.4); border-radius: 8px; padding: 10px; text-align: center; border: 1px solid rgba(0, 212, 255, 0.1); }}
-            .stat-label {{ font-size: 10px; color: #8b949e; font-weight: 700; text-transform: uppercase; margin-bottom: 2px; }}
-            .stat-value {{ font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700; color: #fff; }}
-            .mini-bar-box {{ margin-top: 8px; width: 100px; margin-left: auto; margin-right: auto; }}
-            .mini-progress-container {{ width: 100%; background: #0d151f; height: 5px; border-radius: 3px; overflow: hidden; margin: 4px 0; }}
-            .mini-fill-k {{ height: 100%; background: #00d4ff; }}
-            .mini-fill-d {{ height: 100%; background: #ff4b4b; }}
-            .target-label {{ font-family: 'Saira', sans-serif; font-size: 10px; color: #ffd700; font-weight: 700; text-transform: uppercase; }}
-            .current-label {{ font-family: 'Rajdhani', sans-serif; font-size: 15px; color: #fff; font-weight: 700; }}
-        </style>
+            html_card = f"""
+            <style>
+                @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Saira:wght@400;700&display=swap');
+                .stat-box {{ background: rgba(35, 53, 73, 0.4); border-radius: 8px; padding: 10px; text-align: center; border: 1px solid rgba(0, 212, 255, 0.1); }}
+                .stat-label {{ font-size: 10px; color: #8b949e; font-weight: 700; text-transform: uppercase; margin-bottom: 2px; }}
+                .stat-value {{ font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700; color: #fff; }}
+                .mini-bar-box {{ margin-top: 8px; width: 100px; margin-left: auto; margin-right: auto; }}
+                .mini-progress-container {{ width: 100%; background: #0d151f; height: 5px; border-radius: 3px; overflow: hidden; margin: 4px 0; }}
+                .mini-fill-k {{ height: 100%; background: #00d4ff; }}
+                .mini-fill-d {{ height: 100%; background: #ff4b4b; }}
+                .target-label {{ font-family: 'Saira', sans-serif; font-size: 10px; color: #ffd700; font-weight: 700; text-transform: uppercase; }}
+                .current-label {{ font-family: 'Rajdhani', sans-serif; font-size: 15px; color: #fff; font-weight: 700; }}
+            </style>
 
-        <div style="position: relative; max-width: 800px; margin: 55px auto 15px; font-family: 'Saira', sans-serif;">
-            <div style="position: absolute; top: -40px; left: 50%; transform: translateX(-50%); background: #1c2e3e; border: 1px solid #00d4ff; border-radius: 8px; padding: 10px 25px; z-index: 10; text-align: center; border-bottom: 3px solid #ffd700; width: 340px;">
-                <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
-                    <img src="https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true" style="width: 32px;">
-                    <div style="font-family: 'Rajdhani', sans-serif; color: #ffffff; font-size: 24px; font-weight: 700;">{sel}</div>
+            <div style="position: relative; max-width: 800px; margin: 55px auto 15px; font-family: 'Saira', sans-serif;">
+                <div style="position: absolute; top: -40px; left: 50%; transform: translateX(-50%); background: #1c2e3e; border: 1px solid #00d4ff; border-radius: 8px; padding: 10px 25px; z-index: 10; text-align: center; border-bottom: 3px solid #ffd700; width: 340px;">
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
+                        <img src="https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true" style="width: 32px;">
+                        <div style="font-family: 'Rajdhani', sans-serif; color: #ffffff; font-size: 24px; font-weight: 700;">{d['Tên_2']}</div>
+                    </div>
+                    <div style="font-size: 12px; color: #8b949e; margin-top: 2px;">ID: {d['ID']} | {d['Liên Minh_2']}</div>
                 </div>
-                <div style="font-size: 12px; color: #8b949e; margin-top: 2px;">ID: {d['ID']} | {d['Liên Minh_2']}</div>
-            </div>
-            
-            <div style="background: rgba(13, 25, 47, 0.98); border: 1px solid #00d4ff; border-radius: 12px; padding: 60px 20px 25px 20px;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 12px;">
-                    <div class="stat-box" style="border-left: 4px solid #ffd700;">
-                        <div class="stat-label">RANK (BY KILL+)</div>
-                        <div class="stat-value" style="color: #ffd700;">#{int(d['Rank'])}</div>
-                    </div>
-                    <div class="stat-box" style="border-left: 4px solid #00d4ff;">
-                        <div class="stat-label">POWER</div>
-                        <div class="stat-value">{int(d['Sức Mạnh_2']):,}</div>
-                    </div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                    <div class="stat-box" style="border-left: 4px solid #00ffcc;">
-                        <div class="stat-label">TOTAL KILL</div>
-                        <div class="stat-value" style="color: #00ffcc;">{int(d['Tổng Tiêu Diệt_2']):,}</div>
-                    </div>
-                    <div class="stat-box" style="border-left: 4px solid #ff4b4b;">
-                        <div class="stat-label">DEAD PT</div>
-                        <div class="stat-value" style="color: #ff4b4b;">{int(d['Điểm Chết_2']):,}</div>
-                    </div>
-                </div>
-
-                <div style="background: rgba(26, 42, 58, 0.3); border-radius: 8px; padding: 25px 10px; border: 1px solid rgba(0, 212, 255, 0.1); display: flex; justify-content: space-around; align-items: flex-start;">
-                    <div style="text-align: center;">
-                        <svg width="55" height="55" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#00ffff" stroke-width="3" stroke-dasharray="{min(d['KPI_K'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
-                        <div style="font-family: 'Rajdhani', sans-serif; color:#00ffff; font-size: 16px; font-weight:700; margin-top:4px;">{d['KPI_K']}%</div>
-                        <div class="mini-bar-box">
-                            <div class="current-label">{cur_k}</div>
-                            <div class="mini-progress-container"><div class="mini-fill-k" style="width:{min(d['KPI_K'], 100)}%"></div></div>
-                            <div class="target-label">Target: {tar_k}</div>
+                
+                <div style="background: rgba(13, 25, 47, 0.98); border: 1px solid #00d4ff; border-radius: 12px; padding: 60px 20px 25px 20px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 12px;">
+                        <div class="stat-box" style="border-left: 4px solid #ffd700;">
+                            <div class="stat-label">RANK (BY KILL+)</div>
+                            <div class="stat-value" style="color: #ffd700;">#{int(d['Rank'])}</div>
+                        </div>
+                        <div class="stat-box" style="border-left: 4px solid #00d4ff;">
+                            <div class="stat-label">POWER</div>
+                            <div class="stat-value">{int(d['Sức Mạnh_2']):,}</div>
                         </div>
                     </div>
-                    <div style="text-align: center;">
-                        <svg width="85" height="85" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ffd700" stroke-width="4" stroke-dasharray="{min(d['KPI_T'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
-                        <div style="font-family: 'Rajdhani', sans-serif; color:#ffd700; font-size:28px; font-weight:700;">{d['KPI_T']}%</div>
-                        <div style="font-size:12px; color:#ffd700; font-weight:700; letter-spacing:1px;">TOTAL KPI</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                        <div class="stat-box" style="border-left: 4px solid #00ffcc;">
+                            <div class="stat-label">TOTAL KILL</div>
+                            <div class="stat-value" style="color: #00ffcc;">{int(d['Tổng Tiêu Diệt_2']):,}</div>
+                        </div>
+                        <div class="stat-box" style="border-left: 4px solid #ff4b4b;">
+                            <div class="stat-label">DEAD PT</div>
+                            <div class="stat-value" style="color: #ff4b4b;">{int(d['Điểm Chết_2']):,}</div>
+                        </div>
                     </div>
-                    <div style="text-align: center;">
-                        <svg width="55" height="55" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ff4b4b" stroke-width="3" stroke-dasharray="{min(d['KPI_D'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
-                        <div style="font-family: 'Rajdhani', sans-serif; color:#ff4b4b; font-size: 16px; font-weight:700; margin-top:4px;">{d['KPI_D']}%</div>
-                        <div class="mini-bar-box">
-                            <div class="current-label">{cur_d}</div>
-                            <div class="mini-progress-container"><div class="mini-fill-d" style="width:{min(d['KPI_D'], 100)}%"></div></div>
-                            <div class="target-label">Target: {tar_d}</div>
+
+                    <div style="background: rgba(26, 42, 58, 0.3); border-radius: 8px; padding: 25px 10px; border: 1px solid rgba(0, 212, 255, 0.1); display: flex; justify-content: space-around; align-items: flex-start;">
+                        <div style="text-align: center;">
+                            <svg width="55" height="55" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#00ffff" stroke-width="3" stroke-dasharray="{min(d['KPI_K'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
+                            <div style="font-family: 'Rajdhani', sans-serif; color:#00ffff; font-size: 16px; font-weight:700; margin-top:4px;">{d['KPI_K']}%</div>
+                            <div class="mini-bar-box">
+                                <div class="current-label">{cur_k}</div>
+                                <div class="mini-progress-container"><div class="mini-fill-k" style="width:{min(d['KPI_K'], 100)}%"></div></div>
+                                <div class="target-label">Target: {tar_k}</div>
+                            </div>
+                        </div>
+                        <div style="text-align: center;">
+                            <svg width="85" height="85" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ffd700" stroke-width="4" stroke-dasharray="{min(d['KPI_T'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
+                            <div style="font-family: 'Rajdhani', sans-serif; color:#ffd700; font-size:28px; font-weight:700;">{d['KPI_T']}%</div>
+                            <div style="font-size:12px; color:#ffd700; font-weight:700; letter-spacing:1px;">TOTAL KPI</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <svg width="55" height="55" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ff4b4b" stroke-width="3" stroke-dasharray="{min(d['KPI_D'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
+                            <div style="font-family: 'Rajdhani', sans-serif; color:#ff4b4b; font-size: 16px; font-weight:700; margin-top:4px;">{d['KPI_D']}%</div>
+                            <div class="mini-bar-box">
+                                <div class="current-label">{cur_d}</div>
+                                <div class="mini-progress-container"><div class="mini-fill-d" style="width:{min(d['KPI_D'], 100)}%"></div></div>
+                                <div class="target-label">Target: {tar_d}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        """
-        components.html(html_card, height=600)
+            """
+            components.html(html_card, height=600)
+        else:
+            st.error("⚠️ Member not found. Please check the spelling or ID.")
 
-    # --- 6. TABLE (SORTED BY KILL (+)) ---
+    # --- 6. TABLE ---
     df_sorted = df.sort_values(by='KI', ascending=False)
     headers = ['Rank', 'Member', 'Alliance', 'Power', 'Base Kill', 'Total Kill', 'Kill (+)', 'Base Death', 'Total Death', 'Death (+)', 'KPI %']
     
     rows_list = []
     for _, r in df_sorted.iterrows():
-        # Highlighting the Kill (+) column since it's the sort key
         rows_list.append(f"""
         <tr>
             <td style="font-family: 'Rajdhani', sans-serif; font-weight:700; color:#ffd700; text-align:center;">#{int(r['Rank'])}</td>
-            <td><b style="color:#fff;">{r['Tên_2']}</b></td>
-            <td style="text-align:center; color:#8b949e; font-size:11px;">{r['Liên Minh_2']}</td>
-            <td style="text-align:right; font-family: 'Rajdhani', sans-serif;">{int(r['Sức Mạnh_2']):,}</td>
-            <td style="text-align:right; color:#8b949e; font-size:12px;">{int(r['Tổng Tiêu Diệt_1']):,}</td>
-            <td style="text-align:right; color:#e0e6ed;">{int(r['Tổng Tiêu Diệt_2']):,}</td>
-            <td style="text-align:right; color:#00d4ff; font-weight:bold; background: rgba(0, 212, 255, 0.05);">+{int(r['KI']):,}</td>
-            <td style="text-align:right; color:#8b949e; font-size:12px;">{int(r['Điểm Chết_1']):,}</td>
-            <td style="text-align:right; color:#e0e6ed;">{int(r['Điểm Chết_2']):,}</td>
-            <td style="text-align:right; color:#ff4b4b; font-weight:bold;">+{int(r['DI']):,}</td>
-            <td style="text-align:center;"><span style="font-family: 'Rajdhani', sans-serif; color:#ffd700; font-weight:700;">{r['KPI_T']}%</span></td>
-        </tr>""")
-
-    st.markdown(f'<div class="table-wrapper"><table class="elite-table"><thead><tr>{"".join([f"<th>{h}</th>" for h in headers])}</tr></thead><tbody>{"".join(rows_list)}</tbody></table></div>', unsafe_allow_html=True)
-
-    # Footer
-    st.markdown(f'<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999; font-size:12px; font-family: Rajdhani;">🛡️ ADMIN LOUIS | V12.8 | RANKED BY KILL POINT INCREASE</div>', unsafe_allow_html=True)
