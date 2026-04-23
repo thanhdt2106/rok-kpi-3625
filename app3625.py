@@ -206,3 +206,19 @@ if df is not None:
         rows_list.append(f"""
         <tr>
             <td style="font-family: 'Rajdhani', sans-serif; font-weight:700; color:#ffd700; text-align:center;">#{int(r['Rank'])}</td>
+            <td><b style="color:#fff;">{r['Tên_2']}</b></td>
+            <td style="text-align:center; color:#8b949e; font-size:11px;">{r['Liên Minh_2']}</td>
+            <td style="text-align:right; font-family: 'Rajdhani', sans-serif;">{int(r['Sức Mạnh_2']):,}</td>
+            <td style="text-align:right; color:#8b949e; font-size:12px;">{int(r['Tổng Tiêu Diệt_1']):,}</td>
+            <td style="text-align:right; color:#e0e6ed;">{int(r['Tổng Tiêu Diệt_2']):,}</td>
+            <td style="text-align:right; color:#00d4ff; font-weight:bold; background: rgba(0, 212, 255, 0.05);">+{int(r['KI']):,}</td>
+            <td style="text-align:right; color:#8b949e; font-size:12px;">{int(r['Điểm Chết_1']):,}</td>
+            <td style="text-align:right; color:#e0e6ed;">{int(r['Điểm Chết_2']):,}</td>
+            <td style="text-align:right; color:#ff4b4b; font-weight:bold;">+{int(r['DI']):,}</td>
+            <td style="text-align:center;"><span style="font-family: 'Rajdhani', sans-serif; color:#ffd700; font-weight:700;">{r['KPI_T']}%</span></td>
+        </tr>""")
+
+    st.markdown(f'<div class="table-wrapper"><table class="elite-table"><thead><tr>{"".join([f"<th>{h}</th>" for h in headers])}</tr></thead><tbody>{"".join(rows_list)}</tbody></table></div>', unsafe_allow_html=True)
+
+    # Footer
+    st.markdown(f'<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999; font-size:12px; font-family: Rajdhani;">🛡️ ADMIN LOUIS | V12.9 | PRIVATE SEARCH UI</div>', unsafe_allow_html=True)
