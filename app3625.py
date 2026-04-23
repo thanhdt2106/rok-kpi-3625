@@ -2,24 +2,24 @@ import streamlit as st
 import pandas as pd
 import streamlit.components.v1 as components
 
-# --- 1. CẤU HÌNH TRANG ---
+# --- 1. CẤU HÌNH TRANG (Khôi phục thanh Header) ---
 st.set_page_config(
     page_title="FTD KPI | COMMAND CENTER", 
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# --- 2. SIÊU CSS & JAVASCRIPT (THANH KÉO TRƯỢT & STYLE GỐC) ---
+# --- 2. SIÊU CSS & JS (GIỮ THANH GITHUB + DRAWER) ---
 st.markdown("""
     <style>
+    /* Không ẩn Header nữa để hiện dòng GitHub */
     .stApp { background-color: #050a0e; color: #e0e6ed; }
     [data-testid="stSidebar"] { background-color: #0d1b2a; border-right: 1px solid #00d4ff; }
-    .block-container { padding-top: 0rem !important; max-width: 98% !important; }
-    header { visibility: hidden; }
+    .block-container { padding-top: 2rem !important; max-width: 98% !important; }
 
     /* STYLE CHO THANH KÉO (DRAWER) */
     #myDrawer {
-        height: 100%; width: 0; position: fixed; z-index: 999999;
+        height: 100%; width: 0; position: fixed; z-index: 1000000;
         top: 0; left: 0; background-color: rgba(13, 27, 42, 0.98);
         overflow-x: hidden; transition: 0.5s; padding-top: 60px;
         border-right: 2px solid #00d4ff; box-shadow: 15px 0 30px rgba(0,0,0,0.7);
@@ -32,7 +32,7 @@ st.markdown("""
     #myDrawer .closebtn { position: absolute; top: 10px; right: 25px; font-size: 36px; color: #ff4b4b; }
     .drawer-title { color: #00d4ff; font-weight: bold; padding: 0 25px 20px; font-size: 18px; border-bottom: 1px solid #1e3a5a; }
 
-    /* STYLE BẢNG DỮ LIỆU GỐC */
+    /* STYLE BẢNG DỮ LIỆU */
     .table-wrapper { background: rgba(13, 27, 42, 0.6); border: 1px solid #1e3a5a; border-radius: 12px; padding: 20px; margin-top: 20px; }
     .elite-table { width: 100%; border-collapse: collapse; font-family: 'Segoe UI', sans-serif; }
     .elite-table thead th { 
@@ -61,11 +61,11 @@ st.markdown("""
     </script>
     """, unsafe_allow_html=True)
 
-# --- 3. SIDEBAR (KHÔNG RELOAD - GIỮ NGUYÊN EN/VN) ---
+# --- 3. SIDEBAR (KHÔNG ẨN GÌ NỮA) ---
 with st.sidebar:
     st.markdown('<div style="color: #00d4ff; font-weight: bold; font-size: 18px; text-align: center; margin-bottom: 20px;">🛡️ COMMAND CENTER</div>', unsafe_allow_html=True)
     
-    # Nút mở Drawer bằng JS
+    # Nút bấm mở Ngăn kéo
     components.html("""
         <button onclick="parent.openNav()" style="width: 100%; background: #1a2a3a; color: #00d4ff; border: 1px solid #00d4ff; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; font-family: sans-serif;">
             ⚙️ CÀI ĐẶT HỆ THỐNG
@@ -83,19 +83,7 @@ with st.sidebar:
     st.divider()
     st.info("Phiên bản v10.9 - Admin Louis")
 
-# --- 4. DATA LOGIC (KHÔI PHỤC TOÀN BỘ) ---
-texts = {
-    "VN": {
-        "search": "👤 Tìm kiếm thành viên...", "pow": "SỨC MẠNH", "tk": "TỔNG TIÊU DIỆT", "td": "ĐIỂM CHẾT",
-        "cols": ['Hạng', 'Thành viên', 'Sức mạnh', 'Tổng Kill', 'Điểm Chết', 'Kill +', 'Dead +', 'KPI %']
-    },
-    "EN": {
-        "search": "👤 Search member name...", "pow": "POWER", "tk": "TOTAL KILL", "td": "TOTAL DEAD",
-        "cols": ['Rank', 'Member', 'Power', 'Total Kill', 'Total Dead', 'Kill Inc', 'Dead Inc', 'KPI %']
-    }
-}
-L = texts[lang]
-
+# --- 4. DATA LOGIC ---
 SHEET_ID = '1MJQSE3siwFWmQNdJmbbJ6RsilvcoxWTu-r6h-UdHugE'
 URL_T = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=731741617'
 URL_S = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=371969335'
@@ -128,16 +116,22 @@ def load_data():
 
 df = load_data()
 
-# --- 5. HIỂN THỊ CHÍNH ---
+# --- 5. HIỂN THỊ ---
+texts = {
+    "VN": {"search": "👤 Tìm kiếm thành viên...", "pow": "SỨC MẠNH", "tk": "TỔNG TIÊU DIỆT", "td": "ĐIỂM CHẾT", "cols": ['Hạng', 'Thành viên', 'Sức mạnh', 'Tổng Kill', 'Điểm Chết', 'Kill +', 'Dead +', 'KPI %']},
+    "EN": {"search": "👤 Search member name...", "pow": "POWER", "tk": "TOTAL KILL", "td": "TOTAL DEAD", "cols": ['Rank', 'Member', 'Power', 'Total Kill', 'Total Dead', 'Kill Inc', 'Dead Inc', 'KPI %']}
+}
+L = texts[lang]
+
 if df is not None:
     if menu == "📊 Bảng KPI":
-        st.markdown(f'<div style="text-align:center; margin-top:-20px;"><img src="https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo1.png?raw=true" width="280"></div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="text-align:center; margin-top:10px;"><img src="https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo1.png?raw=true" width="280"></div>', unsafe_allow_html=True)
         
         sel = st.selectbox("", sorted(df['Tên_2'].unique()), index=None, placeholder=L['search'], label_visibility="collapsed")
         
-        # KHÔI PHỤC PROFILE CARD (SVG)
         if sel:
             d = df[df['Tên_2'] == sel].iloc[0]
+            # PROFILE CARD (Giữ nguyên SVG của Louis)
             html_card = f"""
             <div style="position: relative; width: 100%; margin: 60px auto 10px; font-family: 'Segoe UI', sans-serif;">
                 <div style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); background: #1c2e3e; border: 2px solid #00d4ff; border-radius: 12px; padding: 12px 40px; z-index: 10; text-align: center; border-bottom: 4px solid #ffd700; box-shadow: 0 8px 25px rgba(0,0,0,0.8); min-width: 420px;">
@@ -146,72 +140,26 @@ if df is not None:
                         <img src="https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true" style="width: 45px;">
                         <div style="color: #ffffff; font-size: 26px; font-weight: bold;">{sel}</div>
                     </div>
-                    <div style="font-size: 12px; color: #8b949e; margin-top: 5px;">ID: {d['ID']} | {d['Liên Minh_2']}</div>
                 </div>
                 <div style="background: rgba(13, 25, 47, 0.98); border: 2px solid #00d4ff; border-radius: 15px; padding: 80px 20px 20px 20px;">
                     <div style="display: flex; justify-content: space-between; gap: 15px; margin-bottom: 20px;">
-                        <div style="background: #233549; border-radius: 10px; padding: 12px; flex: 1; text-align: center; border-bottom: 3px solid #00d4ff;">
-                            <div style="font-size: 10px; color: #8b949e;">{L['pow']}</div>
-                            <div style="font-size: 20px; font-weight: 900; color: #fff;">{int(d['Sức Mạnh_2']):,}</div>
-                        </div>
-                        <div style="background: #233549; border-radius: 10px; padding: 12px; flex: 1; text-align: center; border-bottom: 3px solid #00ffcc;">
-                            <div style="font-size: 10px; color: #8b949e;">{L['tk']}</div>
-                            <div style="font-size: 20px; font-weight: 900; color: #fff;">{int(d['Tổng Tiêu Diệt_2']):,}</div>
-                        </div>
-                        <div style="background: #233549; border-radius: 10px; padding: 12px; flex: 1; text-align: center; border-bottom: 3px solid #ff4b4b;">
-                            <div style="font-size: 10px; color: #ff4b4b;">{L['td']}</div>
-                            <div style="font-size: 20px; font-weight: 900; color: #ff4b4b;">{int(d['Điểm Chết_2']):,}</div>
-                        </div>
+                        <div style="background: #233549; border-radius: 10px; padding: 12px; flex: 1; text-align: center;"><div style="font-size: 10px; color: #8b949e;">{L['pow']}</div><div style="font-size: 20px; font-weight: 900; color: #fff;">{int(d['Sức Mạnh_2']):,}</div></div>
+                        <div style="background: #233549; border-radius: 10px; padding: 12px; flex: 1; text-align: center;"><div style="font-size: 10px; color: #8b949e;">{L['tk']}</div><div style="font-size: 20px; font-weight: 900; color: #fff;">{int(d['Tổng Tiêu Diệt_2']):,}</div></div>
+                        <div style="background: #233549; border-radius: 10px; padding: 12px; flex: 1; text-align: center;"><div style="font-size: 10px; color: #ff4b4b;">{L['td']}</div><div style="font-size: 20px; font-weight: 900; color: #ff4b4b;">{int(d['Điểm Chết_2']):,}</div></div>
                     </div>
-                    <div style="background: #1a2a3a; border-radius: 15px; padding: 25px; border-bottom: 5px solid #ffd700; display: flex; justify-content: space-around; align-items: center;">
-                        <div style="text-align: center;">
-                            <svg width="80" height="80" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#00ffff" stroke-width="3" stroke-dasharray="{min(d['KPI_K'], 100)}, 100" stroke-linecap="round" transform="rotate(-90 18 18)"/></svg>
-                            <div style="color:#00ffff; font-weight:bold; margin-top:5px;">{d['KPI_K']}%</div><div style="font-size:9px; color:#8b949e;">KILL KPI</div>
-                        </div>
-                        <div style="text-align: center;">
-                            <svg width="110" height="110" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ffd700" stroke-width="3" stroke-dasharray="{min(d['KPI_T'], 100)}, 100" stroke-linecap="round" transform="rotate(-90 18 18)"/></svg>
-                            <div style="color:#ffd700; font-size:22px; font-weight:bold; margin-top:5px;">{d['KPI_T']}%</div><div style="font-size:12px; color:#ffd700; font-weight:bold;">TOTAL KPI</div>
-                        </div>
-                        <div style="text-align: center;">
-                            <svg width="80" height="80" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ff4b4b" stroke-width="3" stroke-dasharray="{min(d['KPI_D'], 100)}, 100" stroke-linecap="round" transform="rotate(-90 18 18)"/></svg>
-                            <div style="color:#ff4b4b; font-weight:bold; margin-top:5px;">{d['KPI_D']}%</div><div style="font-size:9px; color:#8b949e;">DEAD KPI</div>
-                        </div>
+                    <div style="background: #1a2a3a; border-radius: 15px; padding: 25px; border-bottom: 5px solid #ffd700; display: flex; justify-content: space-around;">
+                        <div style="text-align: center;"><svg width="80" height="80" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#00ffff" stroke-width="3" stroke-dasharray="{min(d['KPI_K'], 100)}, 100" stroke-linecap="round" transform="rotate(-90 18 18)"/></svg><div style="color:#00ffff; font-weight:bold;">{d['KPI_K']}%</div></div>
+                        <div style="text-align: center;"><svg width="110" height="110" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ffd700" stroke-width="3" stroke-dasharray="{min(d['KPI_T'], 100)}, 100" stroke-linecap="round" transform="rotate(-90 18 18)"/></svg><div style="color:#ffd700; font-size:22px; font-weight:bold;">{d['KPI_T']}%</div></div>
+                        <div style="text-align: center;"><svg width="80" height="80" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ff4b4b" stroke-width="3" stroke-dasharray="{min(d['KPI_D'], 100)}, 100" stroke-linecap="round" transform="rotate(-90 18 18)"/></svg><div style="color:#ff4b4b; font-weight:bold;">{d['KPI_D']}%</div></div>
                     </div>
                 </div>
             </div>
             """
             components.html(html_card, height=520)
 
-        # KHÔI PHỤC BẢNG DỮ LIỆU CHUẨN
+        # BẢNG DỮ LIỆU
         df_sorted = df.sort_values(by='KillRank')
-        rows_list = []
-        for _, r in df_sorted.iterrows():
-            rows_list.append(f"""
-            <tr>
-                <td><span class="rank-badge">#{int(r['KillRank'])}</span></td>
-                <td><b>{r['Tên_2']}</b><br><small style="color:#8b949e">ID: {r['ID']}</small></td>
-                <td style="text-align:right">{int(r['Sức Mạnh_2']):,}</td>
-                <td style="text-align:right; color:#00ffcc">{int(r['Tổng Tiêu Diệt_2']):,}</td>
-                <td style="text-align:right; color:#ff4b4b">{int(r['Điểm Chết_2']):,}</td>
-                <td style="text-align:right; color:#00d4ff">+{int(r['KI']):,}</td>
-                <td style="text-align:right; color:#ff4b4b">+{int(r['DI']):,}</td>
-                <td>
-                    <div class="kpi-bar-container"><div class="kpi-bar-fill" style="width:{min(r['KPI_T'], 100)}%"></div></div>
-                    <span style="color:#ffd700; font-weight:bold">{r['KPI_T']}%</span>
-                </td>
-            </tr>""")
+        rows = "".join([f"<tr><td><span class='rank-badge'>#{int(r['KillRank'])}</span></td><td><b>{r['Tên_2']}</b></td><td style='text-align:right'>{int(r['Sức Mạnh_2']):,}</td><td style='text-align:right'>{int(r['Tổng Tiêu Diệt_2']):,}</td><td style='text-align:right'>{int(r['Điểm Chết_2']):,}</td><td style='text-align:right'>+{int(r['KI']):,}</td><td style='text-align:right'>+{int(r['DI']):,}</td><td><div class='kpi-bar-container'><div class='kpi-bar-fill' style='width:{min(r['KPI_T'], 100)}%'></div></div> {r['KPI_T']}%</td></tr>" for _, r in df_sorted.iterrows()])
+        st.markdown(f'<div class="table-wrapper"><table class="elite-table"><thead><tr>{"".join([f"<th>{c}</th>" for c in L["cols"]])}</tr></thead><tbody>{rows}</tbody></table></div>', unsafe_allow_html=True)
 
-        h = L['cols']
-        table_html = f"""
-        <div class="table-wrapper">
-            <table class="elite-table">
-                <thead><tr><th>{h[0]}</th><th>{h[1]}</th><th style="text-align:right">{h[2]}</th><th style="text-align:right">{h[3]}</th><th style="text-align:right">{h[4]}</th><th style="text-align:right">{h[5]}</th><th style="text-align:right">{h[6]}</th><th>{h[7]}</th></tr></thead>
-                <tbody>{"".join(rows_list)}</tbody>
-            </table>
-        </div>
-        """
-        st.markdown(table_html, unsafe_allow_html=True)
-
-    st.markdown('<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999;">🛡️ Admin Louis | v10.9 | Zalo: 0373274600</div>', unsafe_allow_html=True)
-else:
-    st.error("Không thể kết nối dữ liệu Google Sheets. Louis hãy kiểm tra link CSV nhé!")
+    st.markdown('<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999;">🛡️ Admin Louis | v10.9</div>', unsafe_allow_html=True)
