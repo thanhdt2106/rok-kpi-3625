@@ -26,16 +26,16 @@ st.markdown("""
 
     /* MINI PROGRESS BAR STYLE */
     .mini-progress-container {
-        width: 70px;
+        width: 75px;
         background: #1a2a3a;
-        height: 4px;
+        height: 5px;
         border-radius: 2px;
         margin: 5px auto;
         overflow: hidden;
     }
     .mini-fill-k { height: 100%; background: #00ffff; box-shadow: 0 0 5px #00ffff; }
     .mini-fill-d { height: 100%; background: #ff4b4b; box-shadow: 0 0 5px #ff4b4b; }
-    .mini-text { font-size: 9px; color: #8b949e; font-family: monospace; }
+    .mini-text { font-size: 10px; color: #8b949e; font-family: monospace; }
 
     /* TABLE STYLE */
     .table-wrapper { 
@@ -93,56 +93,64 @@ if df is not None:
     with h_col2:
         sel = st.selectbox("", sorted(df['Tên_2'].dropna().unique()), index=None, placeholder="🔍 Search member name...", label_visibility="collapsed")
 
-    # --- 5. PROFILE WITH COMPACT PROGRESS BARS ---
+    # --- 5. PROFILE (2 COLUMNS PER ROW LAYOUT) ---
     if sel:
         d = df[df['Tên_2'] == sel].iloc[0]
         
-        # Số liệu rút gọn
         cur_k = f"{d['KI']/1e6:.1f}M"
         tar_k = f"{d['T_K']/1e6:.0f}M"
         cur_d = f"{d['DI']/1e3:.1f}K"
         tar_d = f"{d['T_D']/1e3:.0f}K"
 
         html_card = f"""
-        <div style="position: relative; width: 100%; margin: 60px auto 20px; font-family: 'Segoe UI', sans-serif;">
-            <div style="position: absolute; top: -55px; left: 50%; transform: translateX(-50%); background: #1c2e3e; border: 2px solid #00d4ff; border-radius: 12px; padding: 12px 40px; z-index: 10; text-align: center; border-bottom: 4px solid #ffd700; box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);">
-                <div style="color: #00d4ff; font-size: 11px; font-weight: 900; letter-spacing: 2px;">MEMBER PROFILE</div>
-                <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 5px;">
-                    <img src="https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true" style="width: 40px;">
-                    <div style="color: #ffffff; font-size: 28px; font-weight: bold;">{sel}</div>
+        <div style="position: relative; max-width: 800px; margin: 60px auto 20px; font-family: 'Segoe UI', sans-serif;">
+            <div style="position: absolute; top: -45px; left: 50%; transform: translateX(-50%); background: #1c2e3e; border: 2px solid #00d4ff; border-radius: 12px; padding: 8px 30px; z-index: 10; text-align: center; border-bottom: 4px solid #ffd700; box-shadow: 0 0 15px rgba(0, 212, 255, 0.4); width: 280px;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <img src="https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true" style="width: 32px;">
+                    <div style="color: #ffffff; font-size: 22px; font-weight: bold; white-space: nowrap;">{sel}</div>
                 </div>
-                <div style="font-size: 11px; color: #8b949e;">ID: {d['ID']} | {d['Liên Minh_2']}</div>
+                <div style="font-size: 10px; color: #8b949e;">ID: {d['ID']} | {d['Liên Minh_2']}</div>
             </div>
             
-            <div style="background: rgba(13, 25, 47, 0.98); border: 2px solid #00d4ff; border-radius: 15px; padding: 80px 25px 25px 25px; box-shadow: inset 0 0 30px rgba(0, 212, 255, 0.1);">
-                <div style="display: flex; justify-content: space-between; gap: 10px; margin-bottom: 25px;">
-                    <div style="background: #233549; border-radius: 8px; padding: 10px; flex: 1; text-align: center; border-bottom: 2px solid #ffd700;">
-                        <div style="font-size: 9px; color: #8b949e;">RANK</div>
-                        <div style="font-size: 18px; font-weight: 900; color: #ffd700;">#{int(d['Rank'])}</div>
+            <div style="background: rgba(13, 25, 47, 0.98); border: 2px solid #00d4ff; border-radius: 15px; padding: 60px 20px 20px 20px;">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                    <div style="background: #233549; border-radius: 8px; padding: 12px; text-align: center; border-bottom: 2px solid #ffd700;">
+                        <div style="font-size: 10px; color: #8b949e;">RANK</div>
+                        <div style="font-size: 20px; font-weight: 900; color: #ffd700;">#{int(d['Rank'])}</div>
                     </div>
-                    <div style="background: #233549; border-radius: 8px; padding: 10px; flex: 1.5; text-align: center; border-bottom: 2px solid #00d4ff;"><div style="font-size: 9px; color: #8b949e;">POWER</div><div style="font-size: 18px; font-weight: 900; color: #fff;">{int(d['Sức Mạnh_2']):,}</div></div>
-                    <div style="background: #233549; border-radius: 8px; padding: 10px; flex: 1.5; text-align: center; border-bottom: 2px solid #00ffcc;"><div style="font-size: 9px; color: #8b949e;">TOTAL KILL</div><div style="font-size: 18px; font-weight: 900; color: #fff;">{int(d['Tổng Tiêu Diệt_2']):,}</div></div>
-                    <div style="background: #233549; border-radius: 8px; padding: 10px; flex: 1.5; text-align: center; border-bottom: 2px solid #ff4b4b;"><div style="font-size: 9px; color: #8b949e;">DEAD PT</div><div style="font-size: 18px; font-weight: 900; color: #ff4b4b;">{int(d['Điểm Chết_2']):,}</div></div>
+                    <div style="background: #233549; border-radius: 8px; padding: 12px; text-align: center; border-bottom: 2px solid #00d4ff;">
+                        <div style="font-size: 10px; color: #8b949e;">POWER</div>
+                        <div style="font-size: 20px; font-weight: 900; color: #fff;">{int(d['Sức Mạnh_2']):,}</div>
+                    </div>
+                    <div style="background: #233549; border-radius: 8px; padding: 12px; text-align: center; border-bottom: 2px solid #00ffcc;">
+                        <div style="font-size: 10px; color: #8b949e;">TOTAL KILL</div>
+                        <div style="font-size: 20px; font-weight: 900; color: #fff;">{int(d['Tổng Tiêu Diệt_2']):,}</div>
+                    </div>
+                    <div style="background: #233549; border-radius: 8px; padding: 12px; text-align: center; border-bottom: 2px solid #ff4b4b;">
+                        <div style="font-size: 10px; color: #8b949e;">DEAD PT</div>
+                        <div style="font-size: 20px; font-weight: 900; color: #ff4b4b;">{int(d['Điểm Chết_2']):,}</div>
+                    </div>
                 </div>
 
-                <div style="background: rgba(26, 42, 58, 0.5); border-radius: 12px; padding: 20px; border: 1px solid rgba(0, 212, 255, 0.1); display: flex; justify-content: space-around; align-items: flex-end;">
+                <div style="background: rgba(26, 42, 58, 0.5); border-radius: 12px; padding: 15px; border: 1px solid rgba(0, 212, 255, 0.1); display: flex; justify-content: space-around; align-items: center;">
                     
                     <div style="text-align: center;">
-                        <svg width="60" height="60" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#00ffff" stroke-width="3" stroke-dasharray="{min(d['KPI_K'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
-                        <div style="color:#00ffff; font-size: 13px; font-weight:bold; margin-top:3px;">{d['KPI_K']}%</div>
+                        <svg width="55" height="55" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#00ffff" stroke-width="3" stroke-dasharray="{min(d['KPI_K'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
+                        <div style="color:#00ffff; font-size: 12px; font-weight:bold; margin-top:3px;">{d['KPI_K']}%</div>
                         <div class="mini-progress-container"><div class="mini-fill-k" style="width:{min(d['KPI_K'], 100)}%"></div></div>
                         <div class="mini-text">{cur_k}/{tar_k}</div>
                     </div>
 
-                    <div style="text-align: center; padding-bottom: 10px;">
-                        <svg width="90" height="90" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ffd700" stroke-width="4" stroke-dasharray="{min(d['KPI_T'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
+                    <div style="text-align: center;">
+                        <svg width="85" height="85" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ffd700" stroke-width="4" stroke-dasharray="{min(d['KPI_T'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
                         <div style="color:#ffd700; font-size:22px; font-weight:bold;">{d['KPI_T']}%</div>
-                        <div style="font-size:10px; color:#ffd700; font-weight:bold; letter-spacing:1px;">TOTAL KPI</div>
+                        <div style="font-size:9px; color:#ffd700; font-weight:bold; letter-spacing:1px;">TOTAL KPI</div>
                     </div>
 
                     <div style="text-align: center;">
-                        <svg width="60" height="60" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ff4b4b" stroke-width="3" stroke-dasharray="{min(d['KPI_D'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
-                        <div style="color:#ff4b4b; font-size: 13px; font-weight:bold; margin-top:3px;">{d['KPI_D']}%</div>
+                        <svg width="55" height="55" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ff4b4b" stroke-width="3" stroke-dasharray="{min(d['KPI_D'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
+                        <div style="color:#ff4b4b; font-size: 12px; font-weight:bold; margin-top:3px;">{d['KPI_D']}%</div>
                         <div class="mini-progress-container"><div class="mini-fill-d" style="width:{min(d['KPI_D'], 100)}%"></div></div>
                         <div class="mini-text">{cur_d}/{tar_d}</div>
                     </div>
@@ -150,14 +158,8 @@ if df is not None:
                 </div>
             </div>
         </div>
-        <style>
-            .mini-progress-container {{ width: 70px; background: #1a2a3a; height: 4px; border-radius: 2px; margin: 5px auto; overflow: hidden; }}
-            .mini-fill-k {{ height: 100%; background: #00ffff; }}
-            .mini-fill-d {{ height: 100%; background: #ff4b4b; }}
-            .mini-text {{ font-size: 9px; color: #8b949e; font-family: sans-serif; }}
-        </style>
         """
-        components.html(html_card, height=520)
+        components.html(html_card, height=480)
 
     # --- 6. TABLE ---
     df_sorted = df.sort_values(by='Rank')
@@ -192,4 +194,4 @@ if df is not None:
     st.markdown(table_html, unsafe_allow_html=True)
 
     # Footer
-    st.markdown(f'<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999; font-size:12px;">🛡️ Admin Louis | v11.5 | Compact Mode</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999; font-size:12px;">🛡️ Admin Louis | v11.6 | Optimized Layout</div>', unsafe_allow_html=True)
