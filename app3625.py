@@ -13,7 +13,7 @@ st.set_page_config(
 LOGO_MAIN = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo1.png?raw=true"
 LOGO_PROFILE = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true"
 
-# --- 2. SIÊU CSS ---
+# --- 2. SIÊU CSS (Giữ nguyên và thêm style cho bảng cài đặt) ---
 st.markdown("""
     <style>
     .stApp { background-color: #050a0e; color: #e0e6ed; }
@@ -27,7 +27,20 @@ st.markdown("""
     [data-testid="stSidebar"] { background-color: #0d1b2a; border-right: 1px solid #00d4ff; }
     .sidebar-header { color: #00d4ff; font-weight: bold; font-size: 18px; text-align: center; margin-bottom: 20px; }
 
-    /* Bảng dữ liệu */
+    /* Style cho Bảng Cài Đặt mới */
+    .settings-panel {
+        background: rgba(13, 27, 42, 0.9);
+        border: 1px solid #00d4ff;
+        border-radius: 10px;
+        padding: 15px;
+        position: relative;
+        z-index: 100;
+        margin-bottom: 20px;
+    }
+    .settings-title { color: #00d4ff; font-weight: bold; border-bottom: 1px solid #1e3a5a; padding-bottom: 5px; margin-bottom: 10px; font-size: 14px; }
+    .settings-item { padding: 5px 0; color: #e0e6ed; font-size: 14px; border-bottom: 1px inset rgba(255,255,255,0.05); }
+
+    /* Bảng dữ liệu gốc */
     .table-wrapper { background: rgba(13, 27, 42, 0.6); border: 1px solid #1e3a5a; border-radius: 12px; padding: 20px; }
     .elite-table { width: 100%; border-collapse: collapse; font-family: 'Segoe UI', sans-serif; }
     .elite-table thead th { 
@@ -44,32 +57,18 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. SIDEBAR (THANH MENU BÊN TRÁI) ---
+# --- 3. SIDEBAR (Giữ nguyên) ---
 with st.sidebar:
     st.markdown('<div class="sidebar-header">🛡️ COMMAND CENTER</div>', unsafe_allow_html=True)
-    
-    # Mục chọn ngôn ngữ
     st.write("**NGÔN NGỮ / LANGUAGE**")
     lang = st.radio("Chon ngon ngu", ["VN", "EN"], horizontal=True, label_visibility="collapsed")
-    
     st.divider()
-    
-    # Menu chính - ĐÃ THÊM CÁC MỤC MỚI
-    st.write("**MENU QUẢN LÝ**")
-    menu = st.radio("Chon menu", [
-        "📊 Bảng KPI", 
-        "👤 Tài khoản", 
-        "⚠️ Tài khoản thiếu KPI",
-        "🏔️ Top 15 Đèo 4",
-        "🌋 Top 15 Đèo 7",
-        "👑 Top 15 Kingland",
-        "⚙️ Quản lý KPI"
-    ], label_visibility="collapsed")
-    
+    st.write("**MENU**")
+    menu = st.radio("Chon menu", ["📊 Bảng KPI", "👤 Tài khoản", "⚙️ Quản lý KPI"], label_visibility="collapsed")
     st.divider()
     st.info("Phiên bản v10.9 - Admin Louis")
 
-# --- 4. DỮ LIỆU (Giữ nguyên cấu trúc của bạn) ---
+# --- 4. DỮ LIỆU (Giữ nguyên logic của Louis) ---
 texts = {
     "VN": {
         "search": "👤 Tìm kiếm thành viên...", "pow": "SỨC MẠNH", "tk": "TỔNG TIÊU DIỆT", "td": "ĐIỂM CHẾT",
@@ -118,35 +117,133 @@ df = load_data()
 
 # --- 5. HIỂN THỊ ---
 if df is not None:
+    # Header Logo
     st.markdown(f'<div class="logo-container"><img src="{LOGO_MAIN}" class="logo-img"></div>', unsafe_allow_html=True)
 
-    # 5.1 XỬ LÝ MENU BẢNG KPI TỔNG
+    # --- PHẦN MỚI: NÚT ICON CÀI ĐẶT VÀ BẢNG 5 MỤC ---
+    col_empty, col_btn = st.columns([0.92, 0.08])
+    with col_btn:
+        # Nút icon bánh răng
+        click_settings = st.checkbox("⚙️", help="Cài đặt hệ thống")
+    
+    if click_settings:
+        # Bảng hiện ra gồm 5 dòng chữ "chết" (không click được)
+        st.markdown("""
+            <div class="settings-panel">
+                <div class="settings-title">DANH SÁCH THÔNG TIN</div>
+                <div class="settings-item">⚠️ Tài khoản thiếu KPI</div>
+                <div class="settings-item">🏔️ Top 15 Đèo 4</div>
+                <div class="settings-item">🌋 Top 15 Đèo 7</div>
+                <div class="settings-item">👑 Top 15 Kingland</div>
+                <div class="settings-item">📊 Dữ liệu: Cập nhật tự động</div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    # QUAY LẠI CODE GỐC CỦA LOUIS
     if menu == "📊 Bảng KPI":
-        # (Giữ nguyên code hiển thị Selectbox và Card Profile/Table của bạn)
         sel = st.selectbox("", sorted(df['Tên_2'].unique()), index=None, placeholder=L['search'], label_visibility="collapsed")
-        # ... [Phần render Card và Table giữ nguyên như cũ] ...
-        st.info("Đang hiển thị Bảng KPI Tổng")
 
-    # 5.2 XỬ LÝ TÀI KHOẢN THIẾU KPI (MỚI)
-    elif menu == "⚠️ Tài khoản thiếu KPI":
-        st.subheader("⚠️ Danh sách tài khoản chưa đạt KPI")
-        st.write("Dữ liệu đang được lọc...")
-        # Ở đây sau này Louis chỉ cần lọc df[df['KPI_T'] < mốc] rồi hiện bảng là xong.
+        if sel:
+            d = df[df['Tên_2'] == sel].iloc[0]
+            html_card = f"""
+            <div style="position: relative; width: 100%; margin: 60px auto 10px; font-family: 'Segoe UI', sans-serif;">
+                <div style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); background: #1c2e3e; border: 2px solid #00d4ff; border-radius: 12px; padding: 12px 40px; z-index: 10; text-align: center; border-bottom: 4px solid #ffd700; box-shadow: 0 8px 25px rgba(0,0,0,0.8); min-width: 450px;">
+                    <div style="color: #00d4ff; font-size: 11px; font-weight: 900; letter-spacing: 2px; margin-bottom: 5px;">PROFILE MEMBER</div>
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
+                        <img src="{LOGO_PROFILE}" style="width: 50px; height: 50px; object-fit: contain;">
+                        <div style="color: #ffffff; font-size: 28px; font-weight: bold;">{sel}</div>
+                    </div>
+                    <div style="font-size: 13px; margin-top: 8px; color: #fff;">ID: {d['ID']} | {d['Liên Minh_2']}</div>
+                </div>
+                <div style="background: rgba(13, 25, 47, 0.98); border: 2px solid #00d4ff; border-radius: 15px; padding: 85px 20px 20px 20px;">
+                    <div style="display: flex; justify-content: space-between; gap: 15px; margin-bottom: 25px;">
+                        <div style="background: #233549; border-radius: 10px; padding: 15px; flex: 1; text-align: center; border-bottom: 3.5px solid #00d4ff;">
+                            <div style="font-size: 10px; color: #8b949e; font-weight: bold;">{L['pow']}</div>
+                            <div style="font-size: 22px; font-weight: 900; color: #fff;">{int(d['Sức Mạnh_2']):,}</div>
+                        </div>
+                        <div style="background: #233549; border-radius: 10px; padding: 15px; flex: 1; text-align: center; border-bottom: 3.5px solid #00ffcc;">
+                            <div style="font-size: 10px; color: #8b949e; font-weight: bold;">{L['tk']}</div>
+                            <div style="font-size: 22px; font-weight: 900; color: #fff;">{int(d['Tổng Tiêu Diệt_2']):,}</div>
+                        </div>
+                        <div style="background: #233549; border-radius: 10px; padding: 15px; flex: 1; text-align: center; border-bottom: 3.5px solid #ff4b4b;">
+                            <div style="font-size: 10px; color: #ff4b4b; font-weight: bold;">{L['td']}</div>
+                            <div style="font-size: 22px; font-weight: 900; color: #ff4b4b;">{int(d['Điểm Chết_2']):,}</div>
+                        </div>
+                    </div>
+                    <div style="background: #1a2a3a; border-radius: 15px; padding: 30px; border-bottom: 5px solid #ffd700; display: flex; justify-content: space-around; align-items: center;">
+                        <div style="text-align: center;">
+                            <div style="position: relative; width: 90px; height: 90px; margin: 0 auto;">
+                                <svg viewBox="0 0 36 36" style="width: 90px; height: 90px; transform: rotate(-90deg);">
+                                    <circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="4"></circle>
+                                    <circle cx="18" cy="18" r="16" fill="none" stroke="#00ffff" stroke-width="3.5" stroke-dasharray="{min(d['KPI_K'], 100)}, 100" stroke-linecap="round"></circle>
+                                </svg>
+                                <div style="position: absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:16px; font-weight:bold; color: #00ffff;">{d['KPI_K']}%</div>
+                            </div>
+                            <div style="font-size: 11px; color: #00ffff; font-weight: bold; margin-top: 10px;">KPI KILL</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="position: relative; width: 130px; height: 130px; margin: 0 auto;">
+                                <svg viewBox="0 0 36 36" style="width: 130px; height: 130px; transform: rotate(-90deg);">
+                                    <circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="4"></circle>
+                                    <circle cx="18" cy="18" r="16" fill="none" stroke="#ffd700" stroke-width="4" stroke-dasharray="{min(d['KPI_T'], 100)}, 100" stroke-linecap="round"></circle>
+                                </svg>
+                                <div style="position: absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:24px; font-weight:900; color:#ffd700;">{d['KPI_T']}%</div>
+                            </div>
+                            <div style="font-size: 15px; color: #ffd700; font-weight: bold; margin-top: 10px;">TOTAL KPI</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="position: relative; width: 90px; height: 90px; margin: 0 auto;">
+                                <svg viewBox="0 0 36 36" style="width: 90px; height: 90px; transform: rotate(-90deg);">
+                                    <circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="4"></circle>
+                                    <circle cx="18" cy="18" r="16" fill="none" stroke="#ff4b4b" stroke-width="3.5" stroke-dasharray="{min(d['KPI_D'], 100)}, 100" stroke-linecap="round"></circle>
+                                </svg>
+                                <div style="position: absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:16px; font-weight:bold; color: #ff4b4b;">{d['KPI_D']}%</div>
+                            </div>
+                            <div style="font-size: 11px; color: #ff4b4b; font-weight: bold; margin-top: 10px;">KPI DEAD</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            """
+            components.html(html_card, height=580)
 
-    # 5.3 XỬ LÝ CÁC MỤC TOP 15 (MỚI)
-    elif "Top 15" in menu:
-        st.subheader(f"🏆 {menu}")
-        st.write("Bảng vinh danh 15 chiến binh xuất sắc nhất.")
-        # Louis sẽ lọc df.nlargest(15, 'Cột_Điểm_Tương_Ứng') tại đây.
+        # Bảng dữ liệu gốc
+        df_sorted = df.sort_values(by='KillRank')
+        rows_list = []
+        for _, r in df_sorted.iterrows():
+            rows_list.append(f"""
+            <tr>
+                <td><span class="rank-badge">#{int(r['KillRank'])}</span></td>
+                <td><b>{r['Tên_2']}</b><br><small style="color:#8b949e">ID: {r['ID']}</small></td>
+                <td style="text-align:right">{int(r['Sức Mạnh_2']):,}</td>
+                <td style="text-align:right; color:#00ffcc">{int(r['Tổng Tiêu Diệt_2']):,}</td>
+                <td style="text-align:right; color:#ff4b4b">{int(r['Điểm Chết_2']):,}</td>
+                <td style="text-align:right; color:#00d4ff">+{int(r['KI']):,}</td>
+                <td style="text-align:right; color:#ff4b4b">+{int(r['DI']):,}</td>
+                <td>
+                    <div class="kpi-bar-container"><div class="kpi-bar-fill" style="width:{min(r['KPI_T'], 100)}%"></div></div>
+                    <span style="color:#ffd700; font-weight:bold">{r['KPI_T']}%</span>
+                </td>
+            </tr>""")
 
-    # 5.4 CÁC MỤC CÒN LẠI
+        h = L['cols']
+        table_html = f"""
+        <div class="table-wrapper">
+            <table class="elite-table">
+                <thead><tr><th>{h[0]}</th><th>{h[1]}</th><th style="text-align:right">{h[2]}</th><th style="text-align:right">{h[3]}</th><th style="text-align:right">{h[4]}</th><th style="text-align:right">{h[5]}</th><th style="text-align:right">{h[6]}</th><th>{h[7]}</th></tr></thead>
+                <tbody>{"".join(rows_list)}</tbody>
+            </table>
+        </div>
+        """
+        st.markdown(table_html, unsafe_allow_html=True)
+
     elif menu == "👤 Tài khoản":
-        st.subheader("👤 Thông tin cá nhân")
-        st.write("Vui lòng chọn thành viên ở Bảng KPI để xem chi tiết.")
+        st.subheader("Thông tin tài khoản")
+        st.write("Đang cập nhật...")
 
     elif menu == "⚙️ Quản lý KPI":
-        st.subheader("⚙️ Hệ thống quản trị")
-        st.write("Dành riêng cho Admin Louis.")
+        st.subheader("Quản lý")
+        st.write("Dành cho Admin Louis")
 
     st.markdown(f'<div class="footer">🛡️ Discord: louiss.nee | Zalo: 0.3.7.3.2.7.4.6.0.0</div>', unsafe_allow_html=True)
 else:
