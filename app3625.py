@@ -5,68 +5,100 @@ import plotly.graph_objects as go
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide")
 
-# --- 2. GIAO DIỆN (CSS TÁI TẠO PROFILE NBA) ---
+# --- 2. GIAO DIỆN NÂNG CẤP (GLASSMORPHISM & LAYER EFFECT) ---
 st.markdown("""
     <style>
-    .stApp { background-color: #0e1117; color: #e0e6ed; }
-    .profile-container {
-        background: #1a1c23; border-radius: 15px; padding: 35px;
-        border: 1px solid #2d2f36; margin-bottom: 20px;
+    .stApp { background-color: #0b0e14; color: #e0e6ed; }
+    
+    /* Khung Profile chính với hiệu ứng nổi */
+    .nba-card {
+        background: linear-gradient(135deg, rgba(30, 33, 45, 0.8), rgba(15, 18, 26, 0.9));
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 40px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
     }
-    .player-name-large {
-        color: #ffffff; font-size: 50px; font-weight: 800; 
-        line-height: 1; text-transform: uppercase; letter-spacing: 2px;
+
+    /* Tên và ID nổi bật */
+    .player-name {
+        color: #ffffff; font-size: 55px; font-weight: 900; 
+        line-height: 1; text-transform: uppercase; letter-spacing: -1px;
         margin-bottom: 5px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
     }
-    .id-sub-text { color: #8899a6; font-size: 16px; margin-bottom: 30px; font-family: monospace; }
-    .main-stats-row { display: flex; gap: 50px; margin-bottom: 25px; border-bottom: 1px solid #333; padding-bottom: 20px; }
-    .stat-block { display: flex; flex-direction: column; }
-    .label-nba { color: #8899a6; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
-    .value-nba { color: #ffffff; font-size: 26px; font-weight: bold; }
-    .detail-grid { display: grid; grid-template-columns: 130px 1fr; gap: 10px; font-size: 14px; }
-    .detail-label { color: #8899a6; font-weight: bold; }
-    .detail-val { color: #ffffff; }
-    .main-header {
-        color: #00d4ff; text-align: center; font-size: 32px;
-        font-weight: bold; padding: 15px; text-transform: uppercase;
+    .id-tag { 
+        display: inline-block;
+        background: rgba(0, 212, 255, 0.1);
+        color: #00d4ff; padding: 4px 12px; border-radius: 5px;
+        font-size: 14px; font-weight: bold; margin-bottom: 35px;
+    }
+    
+    /* Stats Row */
+    .stats-container { display: flex; gap: 60px; margin-bottom: 40px; }
+    .stat-box { border-left: 3px solid #00d4ff; padding-left: 20px; }
+    .stat-label { color: #8899a6; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; }
+    .stat-value { color: #ffffff; font-size: 32px; font-weight: 800; display: block; }
+
+    /* Detail Grid */
+    .info-grid { display: grid; grid-template-columns: 140px 1fr; gap: 15px; font-size: 15px; }
+    .info-label { color: #5c6c7a; font-weight: 600; text-transform: uppercase; }
+    .info-val { color: #00d4ff; font-weight: 700; }
+
+    /* Overlay Chart Position - Để biểu đồ nằm đè lên khung */
+    .chart-overlay {
+        position: absolute;
+        right: -20px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 450px;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. QUẢN LÝ NGÔN NGỮ ---
+# --- 3. QUẢN LÝ NGÔN NGỮ (GIỮ NGUYÊN) ---
 col_t, col_l = st.columns([4, 1]) 
 with col_l:
     lang = st.radio("LANG:", ["VN", "EN"], horizontal=True, label_visibility="collapsed")
 
 texts = {
     "VN": {
-        "header": "🛡️ HỆ THỐNG QUẢN LÝ KPI", "search": "🔍 TRA CỨU CHIẾN BINH:", "select": "--- Chọn tên ---",
+        "header": "🛡️ COMMAND CENTER", "search": "🔍 TRA CỨU:", "select": "--- Chọn tên ---",
         "pow": "Sức mạnh", "tk": "Tổng Kill", "kt": "Mục tiêu Kill", "dt": "Mục tiêu Dead", 
-        "ki": "Kill tăng", "di": "Dead tăng", "table": "📋 BẢNG THỐNG KÊ TỔNG HỢP",
-        "cols": ['Tên', 'ID', 'Liên minh', 'Sức mạnh', 'Tổng Kill', 'Kill tăng (+)', 'Dead tăng (+)', 'KPI (%)']
+        "ki": "Kill tăng", "di": "Dead tăng", "table": "📋 THỐNG KÊ CHI TIẾT"
     },
     "EN": {
-        "header": "🛡️ KPI MANAGEMENT SYSTEM", "search": "🔍 WARRIOR LOOKUP:", "select": "--- Select name ---",
+        "header": "🛡️ COMMAND CENTER", "search": "🔍 SEARCH:", "select": "--- Select name ---",
         "pow": "Power", "tk": "Total Kill", "kt": "Target Kill", "dt": "Target Dead", 
-        "ki": "Kill inc", "di": "Dead inc", "table": "📋 SUMMARY STATISTICS TABLE",
-        "cols": ['Name', 'ID', 'Alliance', 'Power', 'Total Kill', 'Kill Inc (+)', 'Dead Inc (+)', 'KPI (%)']
+        "ki": "Kill inc", "di": "Dead inc", "table": "📋 DETAILED STATISTICS"
     }
 }
 L = texts[lang]
 
-# --- 4. HÀM VẼ BIỂU ĐỒ (GIỮ NGUYÊN LOGIC) ---
+# --- 4. VẼ BIỂU ĐỒ KPI (TỐI ƯU MÀU SẮC NỔI BẬT) ---
 def draw_kpi_rings(total, kill_val, kill_target, dead_val, dead_target):
     k_pct = (kill_val / kill_target * 100) if kill_target > 0 else 0
     d_pct = (dead_val / dead_target * 100) if dead_target > 0 else 0
+    
     fig = go.Figure()
-    fig.add_trace(go.Pie(hole=0.85, values=[total, max(0, 100-total)], marker=dict(colors=['#ffcc00', '#222']), showlegend=False, hoverinfo='skip', direction='clockwise', sort=False))
-    fig.add_trace(go.Pie(hole=0.75, values=[k_pct, max(0, 100-k_pct)], marker=dict(colors=['#00d4ff', 'transparent']), showlegend=False, hoverinfo='skip', direction='clockwise', sort=False))
-    fig.add_trace(go.Pie(hole=0.65, values=[d_pct, max(0, 100-d_pct)], marker=dict(colors=['#ffffff', 'transparent']), showlegend=False, hoverinfo='skip', direction='clockwise', sort=False))
-    fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', margin=dict(t=0, b=0, l=0, r=0), height=400,
-                      annotations=[dict(text=f"{total}%", x=0.5, y=0.5, font_size=35, font_color="white", showarrow=False)])
+    # Vòng KPI Tổng (Vàng Neon)
+    fig.add_trace(go.Pie(hole=0.82, values=[total, max(0, 100-total)], marker=dict(colors=['#ffcc00', 'rgba(255,255,255,0.05)']), showlegend=False, hoverinfo='skip', direction='clockwise', sort=False))
+    # Vòng Kill (Xanh Cyan)
+    fig.add_trace(go.Pie(hole=0.72, values=[k_pct, max(0, 100-k_pct)], marker=dict(colors=['#00d4ff', 'transparent']), showlegend=False, hoverinfo='skip', direction='clockwise', sort=False))
+    # Vòng Dead (Trắng bạc)
+    fig.add_trace(go.Pie(hole=0.62, values=[d_pct, max(0, 100-d_pct)], marker=dict(colors=['#ffffff', 'transparent']), showlegend=False, hoverinfo='skip', direction='clockwise', sort=False))
+
+    fig.update_layout(
+        paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+        margin=dict(t=0, b=0, l=0, r=0), height=450,
+        annotations=[dict(text=f"<span style='color:#8899a6;font-size:16px'>KPI</span><br><b style='color:white;font-size:45px'>{total}%</b>", x=0.5, y=0.5, showarrow=False)]
+    )
     return fig
 
-# --- 5. XỬ LÝ DỮ LIỆU ---
+# --- 5. XỬ LÝ DỮ LIỆU (GIỮ NGUYÊN LOGIC CŨ) ---
 SHEET_ID = '1MJQSE3siwFWmQNdJmbbJ6RsilvcoxWTu-r6h-UdHugE'
 URL_T = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=731741617'
 URL_S = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=371969335'
@@ -101,47 +133,47 @@ df = load_data()
 
 # --- 6. HIỂN THỊ ---
 if df is not None:
-    st.markdown(f'<div class="main-header">{L["header"]}</div>', unsafe_allow_html=True)
     names = sorted(df['Tên_2'].unique())
     sel = st.selectbox(L["search"], [L["select"]] + names)
     
     if sel != L["select"]:
         d = df[df['Tên_2'] == sel].iloc[0]
-        col1, col2 = st.columns([1.6, 1])
-        with col1:
-            # FIX: Dùng ngoặc nhọn đơn { } cho biến, không dùng {{ }}
-            profile_html = f"""
-                <div class="profile-container">
-                    <div class="player-name-large">{sel}</div>
-                    <div class="id-sub-text">#{d['ID']} | {d['Liên Minh_2']}</div>
-                    <div class="main-stats-row">
-                        <div class="stat-block">
-                            <span class="label-nba">{L['pow']}</span>
-                            <span class="value-nba">{int(d['Sức Mạnh_2']):,}</span>
-                        </div>
-                        <div class="stat-block">
-                            <span class="label-nba">{L['tk']}</span>
-                            <span class="value-nba">{int(d['Tổng Tiêu Diệt_2']):,}</span>
-                        </div>
+        
+        # Bắt đầu Card Profile
+        st.markdown(f"""
+            <div class="nba-card">
+                <div class="player-name">{sel}</div>
+                <div class="id-tag">#{d['ID']} | {d['Liên Minh_2']}</div>
+                
+                <div class="stats-container">
+                    <div class="stat-box">
+                        <span class="stat-label">{L['pow']}</span>
+                        <span class="stat-value">{int(d['Sức Mạnh_2']):,}</span>
                     </div>
-                    <div class="detail-grid">
-                        <span class="detail-label">{L['kt']}:</span><span class="detail-val">{int(d['GK']):,}</span>
-                        <span class="detail-label">{L['dt']}:</span><span class="detail-val">{int(d['GD']):,}</span>
-                        <span class="detail-label">Status:</span><span class="detail-val">Active Command Center</span>
+                    <div class="stat-box">
+                        <span class="stat-label">{L['tk']}</span>
+                        <span class="stat-value">{int(d['Tổng Tiêu Diệt_2']):,}</span>
                     </div>
                 </div>
-            """
-            st.markdown(profile_html, unsafe_allow_html=True)
-            
-            # FIX: Sửa lỗi SyntaxError tại đây bằng cách dùng ngoặc đơn chuẩn
-            st.write(f"📊 {L['ki']}: {int(d['KI']):,}")
-            st.progress(max(0.0, min(float(d['KI']) / d['GK'], 1.0)) if d['GK'] > 0 else 0.0)
-            st.write(f"📊 {L['di']}: {int(d['DI']):,}")
-            st.progress(max(0.0, min(float(d['DI']) / d['GD'], 1.0)) if d['GD'] > 0 else 0.0)
-
-        with col2:
+                
+                <div class="info-grid">
+                    <span class="info-label">{L['kt']}:</span><span class="info-val">{int(d['GK']):,}</span>
+                    <span class="info-label">{L['dt']}:</span><span class="info-val">{int(d['GD']):,}</span>
+                    <span class="info-label">Current Status:</span><span class="info-val" style="color:#00ff88">ONLINE COMMAND</span>
+                </div>
+                
+                </div>
+        """, unsafe_allow_html=True)
+        
+        # Sử dụng columns để đặt Plotly nằm đè lên Card thông qua căn chỉnh
+        overlay_col1, overlay_col2 = st.columns([1, 1.2])
+        with overlay_col2:
+            st.markdown('<div style="margin-top: -500px;">', unsafe_allow_html=True) # Kéo biểu đồ lên trên Card
             fig = draw_kpi_rings(d['KPI'], d['KI'], d['GK'], d['DI'], d['GD'])
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+            st.markdown('</div>', unsafe_allow_html=True)
 
+    # 7. BẢNG DỮ LIỆU
     st.divider()
-    st.dataframe(df[['Tên_2', 'ID', 'Liên Minh_2', 'KPI']].rename(columns=lambda x: x.replace('_2','')), use_container_width=True)
+    st.subheader(L["table"])
+    st.dataframe(df[['Tên_2', 'ID', 'Liên Minh_2', 'KI', 'DI', 'KPI']].rename(columns=lambda x: x.replace('_2','')), use_container_width=True)
