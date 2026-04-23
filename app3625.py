@@ -9,7 +9,7 @@ st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide")
 LOGO_MAIN = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo1.png?raw=true"
 LOGO_PROFILE = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true"
 
-# --- 2. SIÊU CSS (Tập trung nâng cấp Table) ---
+# --- 2. SIÊU CSS ---
 st.markdown("""
     <style>
     .stApp { background-color: #050a0e; color: #e0e6ed; }
@@ -21,70 +21,19 @@ st.markdown("""
     .logo-img { width: 250px; filter: drop-shadow(0px 0px 10px rgba(0, 212, 255, 0.4)); }
     .slogan { color: #00d4ff; font-size: 16px; font-weight: bold; margin-top: 8px; text-transform: uppercase; letter-spacing: 1px; }
 
-    /* Custom Elite Table */
-    .table-wrapper {
-        background: rgba(13, 27, 42, 0.4);
-        border: 1px solid #1e3a5a;
-        border-radius: 12px;
-        padding: 10px;
-        margin-top: 20px;
-        overflow-x: auto;
-    }
-    .elite-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-family: 'Segoe UI', sans-serif;
-        color: #e0e6ed;
-    }
-    .elite-table thead th {
-        background: rgba(0, 212, 255, 0.05);
-        color: #00d4ff;
-        text-align: left;
-        padding: 15px;
-        font-size: 12px;
-        text-transform: uppercase;
-        border-bottom: 2px solid #00d4ff;
-    }
-    .elite-table tbody tr {
-        border-bottom: 1px solid #1a2a3a;
-        transition: 0.3s;
-    }
-    .elite-table tbody tr:hover {
-        background: rgba(0, 212, 255, 0.05);
-    }
-    .elite-table td {
-        padding: 12px 15px;
-        font-size: 14px;
-    }
-    .rank-badge {
-        background: #ffd700;
-        color: #000;
-        padding: 2px 8px;
-        border-radius: 4px;
-        font-weight: bold;
-        font-size: 12px;
-    }
-    .kpi-bar-container {
-        width: 100px;
-        background: #1a2a3a;
-        height: 8px;
-        border-radius: 4px;
-        display: inline-block;
-        vertical-align: middle;
-        margin-right: 8px;
-    }
-    .kpi-bar-fill {
-        height: 100%;
-        border-radius: 4px;
-        background: linear-gradient(90deg, #00d4ff, #00ffcc);
-    }
+    /* Custom Table */
+    .table-wrapper { background: rgba(13, 27, 42, 0.4); border: 1px solid #1e3a5a; border-radius: 12px; padding: 15px; margin-top: 20px; }
+    .elite-table { width: 100%; border-collapse: collapse; font-family: 'Segoe UI', sans-serif; color: #e0e6ed; }
+    .elite-table thead th { background: rgba(0, 212, 255, 0.05); color: #00d4ff; text-align: left; padding: 15px; font-size: 12px; border-bottom: 2px solid #00d4ff; }
+    .elite-table tbody tr { border-bottom: 1px solid #1a2a3a; transition: 0.3s; }
+    .elite-table tbody tr:hover { background: rgba(0, 212, 255, 0.08); }
+    .elite-table td { padding: 12px 15px; font-size: 14px; }
+    
+    .rank-badge { background: #ffd700; color: #000; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
+    .kpi-bar-container { width: 80px; background: #1a2a3a; height: 6px; border-radius: 3px; display: inline-block; vertical-align: middle; margin-right: 8px; }
+    .kpi-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #00d4ff, #00ffcc); }
 
-    .footer {
-        position: fixed; left: 0; bottom: 0; width: 100%;
-        background-color: rgba(5, 10, 14, 0.95); color: #8b949e;
-        padding: 8px; font-size: 12px; text-align: center;
-        border-top: 1px solid #1a2a3a; z-index: 999;
-    }
+    .footer { position: fixed; left: 0; bottom: 0; width: 100%; background-color: rgba(5, 10, 14, 0.95); color: #8b949e; padding: 8px; font-size: 12px; text-align: center; border-top: 1px solid #1a2a3a; z-index: 999; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -93,17 +42,15 @@ col_space, col_lang = st.columns([8, 1])
 with col_lang:
     lang = st.radio("", ["VN", "EN"], horizontal=True, label_visibility="collapsed")
 
-# --- 4. DỮ LIỆU (Giữ nguyên logic gốc) ---
+# --- 4. DỮ LIỆU ---
 texts = {
     "VN": {
-        "search": "👤 Tìm kiếm thành viên...",
-        "pow": "SỨC MẠNH", "tk": "TỔNG TIÊU DIỆT", "td": "ĐIỂM CHẾT", "rank": "HẠNG",
+        "search": "👤 Tìm kiếm thành viên...", "pow": "SỨC MẠNH", "tk": "TỔNG TIÊU DIỆT", "td": "ĐIỂM CHẾT", "rank": "HẠNG",
         "slogan": "Chào mừng đến trang web quản lý KPI 3625",
-        "cols": ['Hạng', 'Thành viên', 'Sức mạnh', 'Tổng Kill', 'Điểm Chết', 'Kill +', 'Dead +', 'KPI %']
+        "cols": ['Hạng', 'Thành viên', 'Sức mạnh', 'Tổng Kill', 'Điểm Chết', 'Kill Inc', 'Dead Inc', 'KPI %']
     },
     "EN": {
-        "search": "👤 Search member name...",
-        "pow": "POWER", "tk": "TOTAL KILL", "td": "TOTAL DEAD", "rank": "RANK",
+        "search": "👤 Search member name...", "pow": "POWER", "tk": "TOTAL KILL", "td": "TOTAL DEAD", "rank": "RANK",
         "slogan": "Welcome to the 3625 KPI Management Website",
         "cols": ['Rank', 'Member', 'Power', 'Total Kill', 'Total Dead', 'Kill Inc', 'Dead Inc', 'KPI %']
     }
@@ -135,23 +82,20 @@ def load_data():
             gd = 400e3 if p >= 30e6 else 300e3 if p >= 20e6 else 200e3
             pk = max(0.0, float(r['KI']) / gk) if gk > 0 else 0.0
             pdv = max(0.0, float(r['DI']) / gd) if gd > 0 else 0.0
-            return pd.Series([round(pk * 100, 1), round(pdv * 100, 1), round(((pk + pdv) / 2) * 100, 1), gk, gd])
+            return pd.Series([round(pk * 100, 1), round(pdv * 100, 1), round(((pk + pdv) / 2) * 100, 1)])
             
-        df[['KPI_K', 'KPI_D', 'KPI_T', 'Target_K', 'Target_D']] = df.apply(get_metrics, axis=1)
+        df[['KPI_K', 'KPI_D', 'KPI_T']] = df.apply(get_metrics, axis=1)
         return df
     except: return None
 
 df = load_data()
 
-# --- 5. GIAO DIỆN CHÍNH ---
+# --- 5. GIAO DIỆN ---
 if df is not None:
-    # Logo & Slogan
     st.markdown(f'<div class="logo-container"><img src="{LOGO_MAIN}" class="logo-img"><div class="slogan">{L["slogan"]}</div></div>', unsafe_allow_html=True)
 
-    # Search
     sel = st.selectbox("", sorted(df['Tên_2'].unique()), index=None, placeholder=L['search'], label_visibility="collapsed")
 
-    # Card Profile (Giữ nguyên form của Louis)
     if sel:
         d = df[df['Tên_2'] == sel].iloc[0]
         html_card = f"""
@@ -165,44 +109,40 @@ if df is not None:
             </div>
             <div style="background: rgba(13, 25, 47, 0.98); border: 2px solid #00d4ff; border-radius: 15px; padding: 85px 20px 20px 20px;">
                 <div style="display: flex; justify-content: space-between; gap: 15px; margin-bottom: 25px;">
-                    <div style="background: #233549; border-radius: 10px; padding: 15px; flex: 1; text-align: center;">
-                        <div style="font-size: 10px; color: #8b949e;">{L['pow']}</div>
-                        <div style="font-size: 22px; font-weight: 900;">{int(d['Sức Mạnh_2']):,}</div>
+                    <div style="background: #233549; border-radius: 10px; padding: 15px; flex: 1; text-align: center; border-bottom: 3.5px solid #00d4ff;">
+                        <div style="font-size: 10px; color: #8b949e;">{L['pow']}</div><div style="font-size: 20px; font-weight: 900;">{int(d['Sức Mạnh_2']):,}</div>
                     </div>
-                    <div style="background: #233549; border-radius: 10px; padding: 15px; flex: 1; text-align: center;">
-                        <div style="font-size: 10px; color: #8b949e;">{L['tk']}</div>
-                        <div style="font-size: 22px; font-weight: 900;">{int(d['Tổng Tiêu Diệt_2']):,}</div>
+                    <div style="background: #233549; border-radius: 10px; padding: 15px; flex: 1; text-align: center; border-bottom: 3.5px solid #00ffcc;">
+                        <div style="font-size: 10px; color: #8b949e;">{L['tk']}</div><div style="font-size: 20px; font-weight: 900;">{int(d['Tổng Tiêu Diệt_2']):,}</div>
                     </div>
-                    <div style="background: #233549; border-radius: 10px; padding: 15px; flex: 1; text-align: center;">
-                        <div style="font-size: 10px; color: #ff4b4b;">{L['td']}</div>
-                        <div style="font-size: 22px; font-weight: 900; color: #ff4b4b;">{int(d['Điểm Chết_2']):,}</div>
+                    <div style="background: #233549; border-radius: 10px; padding: 15px; flex: 1; text-align: center; border-bottom: 3.5px solid #ff4b4b;">
+                        <div style="font-size: 10px; color: #ff4b4b;">{L['td']}</div><div style="font-size: 20px; font-weight: 900; color:#ff4b4b;">{int(d['Điểm Chết_2']):,}</div>
                     </div>
                 </div>
-                <div style="background: #1a2a3a; border-radius: 15px; padding: 30px; border-bottom: 5px solid #ffd700; display: flex; justify-content: space-around; align-items: center;">
-                    <div style="text-align: center;"><div style="font-size: 24px; color: #ffd700; font-weight: 900;">{d['KPI_T']}%</div><div style="font-size: 12px; color: #8b949e;">TOTAL KPI</div></div>
+                <div style="background: #1a2a3a; border-radius: 15px; padding: 25px; display: flex; justify-content: space-around; align-items: center;">
+                    <div style="text-align: center;"><div style="font-size: 32px; color: #ffd700; font-weight: 900;">{d['KPI_T']}%</div><div style="font-size: 12px; color: #8b949e;">TOTAL KPI</div></div>
                 </div>
             </div>
         </div>
         """
-        components.html(html_card, height=500)
+        components.html(html_card, height=480)
 
-    # --- NÂNG CẤP BẢNG TRANG CHỦ ---
-    df_sorted = df.sort_values(by='KillRank').head(100) # Lấy top 100
-    
+    # --- BẢNG TRANG CHỦ ---
+    df_sorted = df.sort_values(by='KillRank')
     rows_html = ""
     for _, r in df_sorted.iterrows():
-        kpi_val = min(r['KPI_T'], 100)
+        k_bar = min(float(r['KPI_T']), 100)
         rows_html += f"""
         <tr>
             <td><span class="rank-badge">#{int(r['KillRank'])}</span></td>
             <td><b>{r['Tên_2']}</b><br><small style="color:#8b949e">ID: {r['ID']}</small></td>
-            <td>{int(r['Sức Mạnh_2']):,}</td>
-            <td style="color:#00ffcc">{int(r['Tổng Tiêu Diệt_2']):,}</td>
-            <td style="color:#ff4b4b">{int(r['Điểm Chết_2']):,}</td>
-            <td style="color:#00d4ff">+{int(r['KI']):,}</td>
-            <td style="color:#ff4b4b">+{int(r['DI']):,}</td>
+            <td style="text-align:right">{int(r['Sức Mạnh_2']):,}</td>
+            <td style="text-align:right; color:#00ffcc">{int(r['Tổng Tiêu Diệt_2']):,}</td>
+            <td style="text-align:right; color:#ff4b4b">{int(r['Điểm Chết_2']):,}</td>
+            <td style="text-align:right; color:#00d4ff">+{int(r['KI']):,}</td>
+            <td style="text-align:right; color:#ff4b4b">+{int(r['DI']):,}</td>
             <td>
-                <div class="kpi-bar-container"><div class="kpi-bar-fill" style="width:{kpi_val}%"></div></div>
+                <div class="kpi-bar-container"><div class="kpi-bar-fill" style="width:{k_bar}%"></div></div>
                 <span style="color:#ffd700; font-weight:bold">{r['KPI_T']}%</span>
             </td>
         </tr>
@@ -214,17 +154,15 @@ if df is not None:
         <table class="elite-table">
             <thead>
                 <tr>
-                    <th>{h[0]}</th><th>{h[1]}</th><th>{h[2]}</th><th>{h[3]}</th><th>{h[4]}</th><th>{h[5]}</th><th>{h[6]}</th><th>{h[7]}</th>
+                    <th>{h[0]}</th><th>{h[1]}</th><th style="text-align:right">{h[2]}</th><th style="text-align:right">{h[3]}</th>
+                    <th style="text-align:right">{h[4]}</th><th style="text-align:right">{h[5]}</th><th style="text-align:right">{h[6]}</th><th>{h[7]}</th>
                 </tr>
             </thead>
-            <tbody>
-                {rows_html}
-            </tbody>
+            <tbody>{rows_html}</tbody>
         </table>
     </div>
     """
     st.markdown(table_html, unsafe_allow_html=True)
-
-    st.markdown(f'<div class="footer">🛡️ Discord: <b>louiss.nee</b> | Zalo: <b>0.3.7.3.2.7.4.6.0.0</b></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="footer">🛡️ Discord: louiss.nee | Zalo: 0.3.7.3.2.7.4.6.0.0</div>', unsafe_allow_html=True)
 else:
     st.error("⚠️ Không thể tải dữ liệu.")
