@@ -173,4 +173,38 @@ if df is not None:
     rows_list = []
     for _, r in df_sorted.iterrows():
         k_val = float(r['KPI_T'])
-        k_bar = min
+        k_bar = min(k_val, 100)
+        row = f"""
+        <tr>
+            <td><span class="rank-badge">#{int(r['KillRank'])}</span></td>
+            <td><b>{r['Tên_2']}</b><br><small style="color:#8b949e">ID: {r['ID']}</small></td>
+            <td style="text-align:right">{int(r['Sức Mạnh_2']):,}</td>
+            <td style="text-align:right; color:#00ffcc">{int(r['Tổng Tiêu Diệt_2']):,}</td>
+            <td style="text-align:right; color:#ff4b4b">{int(r['Điểm Chết_2']):,}</td>
+            <td style="text-align:right; color:#00d4ff">+{int(r['KI']):,}</td>
+            <td style="text-align:right; color:#ff4b4b">+{int(r['DI']):,}</td>
+            <td>
+                <div class="kpi-bar-container"><div class="kpi-bar-fill" style="width:{k_bar}%"></div></div>
+                <span style="color:#ffd700; font-weight:bold">{k_val}%</span>
+            </td>
+        </tr>"""
+        rows_list.append(row)
+
+    h = L['cols']
+    table_html = f"""
+    <div class="table-wrapper">
+        <table class="elite-table">
+            <thead>
+                <tr>
+                    <th>{h[0]}</th><th>{h[1]}</th><th style="text-align:right">{h[2]}</th><th style="text-align:right">{h[3]}</th>
+                    <th style="text-align:right">{h[4]}</th><th style="text-align:right">{h[5]}</th><th style="text-align:right">{h[6]}</th><th>{h[7]}</th>
+                </tr>
+            </thead>
+            <tbody>{"".join(rows_list)}</tbody>
+        </table>
+    </div>
+    """
+    st.markdown(table_html, unsafe_allow_html=True)
+    st.markdown(f'<div class="footer">🛡️ Discord: <b>louiss.nee</b> | Zalo: <b>0.3.7.3.2.7.4.6.0.0</b></div>', unsafe_allow_html=True)
+else:
+    st.error("⚠️ Lỗi tải dữ liệu.")
