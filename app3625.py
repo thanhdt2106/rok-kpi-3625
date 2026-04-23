@@ -12,7 +12,7 @@ st.markdown("""
     [data-testid="stSidebar"] { background-color: #0d1b2a; border-right: 1px solid #00d4ff; }
     .block-container { padding-top: 1rem !important; max-width: 98% !important; }
     
-    /* FIX 1: KHÔNG ẨN HEADER ĐỂ GIỮ THANH TASKBAR GỐC VÀ NGĂN KÉO */
+    /* GIỮ THANH TASKBAR GỐC */
     header { visibility: visible !important; } 
 
     /* STYLE CHO THANH KÉO (DRAWER) */
@@ -76,7 +76,7 @@ with st.sidebar:
     menu = st.radio("Menu", ["📊 Bảng KPI", "👤 Tài khoản", "⚙️ Quản lý KPI"])
     st.info(f"Phiên bản v10.9 - Admin Louis")
 
-# --- 4. DATA LOGIC ---
+# --- 4. DATA LOGIC (FIX LỖI MERGE & ÉP KIỂU ID) ---
 SHEET_ID = '1MJQSE3siwFWmQNdJmbbJ6RsilvcoxWTu-r6h-UdHugE'
 URL_T = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=731741617'
 URL_S = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=371969335'
@@ -86,11 +86,16 @@ def load_data():
     try:
         dt = pd.read_csv(URL_T).rename(columns=lambda x: x.strip())
         ds = pd.read_csv(URL_S).rename(columns=lambda x: x.strip())
+        
+        # FIX TRIỆT ĐỂ LỖI FLOAT64 VÀ STR: Ép tất cả ID về chuỗi và xóa khoảng trắng
         for d in [dt, ds]:
-            d['ID'] = d['ID'].astype(str).str.replace('.0', '', regex=False).str.strip()
+            d['ID'] = d['ID'].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
+            
         df = pd.merge(dt.drop_duplicates('ID'), ds.drop_duplicates('ID'), on='ID', suffixes=('_1', '_2'))
+        
         for c in ['Sức Mạnh_2', 'Tổng Tiêu Diệt_2', 'Điểm Chết_2', 'Tổng Tiêu Diệt_1', 'Điểm Chết_1']:
             df[c] = pd.to_numeric(df[c].astype(str).str.replace(r'[^\d.]', '', regex=True), errors='coerce').fillna(0)
+            
         df['KI'] = df['Tổng Tiêu Diệt_2'] - df['Tổng Tiêu Diệt_1']
         df['DI'] = df['Điểm Chết_2'] - df['Điểm Chết_1']
         
@@ -105,20 +110,24 @@ def load_data():
         df[['KPI_K', 'KPI_D', 'KPI_T']] = df.apply(calc_kpi, axis=1)
         df['Rank'] = df['Tổng Tiêu Diệt_2'].rank(ascending=False, method='min').astype(int)
         return df
-    except: return None
+    except Exception as e:
+        st.error(f"Lỗi tải dữ liệu: {e}")
+        return None
 
 df = load_data()
 
-# --- 5. HIỂN THỊ CHI TIẾT ---
+# --- 5. HIỂN THỊ ---
 if df is not None:
     st.markdown('<div class="logo-container"><img src="https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo1.png?raw=true" class="logo-img"></div>', unsafe_allow_html=True)
     
     if menu == "📊 Bảng KPI":
-        sel = st.selectbox("", sorted(df['Tên_2'].unique()), index=None, placeholder="👤 Tìm kiếm thành viên...", label_visibility="collapsed")
+        # Sửa lỗi hiển thị selectbox khi df trống
+        member_list = sorted(df['Tên_2'].dropna().unique())
+        sel = st.selectbox("", member_list, index=None, placeholder="👤 Tìm kiếm thành viên...", label_visibility="collapsed")
         
         if sel:
             d = df[df['Tên_2'] == sel].iloc[0]
-            # FIX 2: THÊM LẠI CHỮ MỤC TIÊU DƯỚI CHÂN VÒNG TRÒN
+            # KHÔI PHỤC CHỮ DƯỚI VÒNG TRÒN
             html_card = f"""
             <div style="position: relative; width: 100%; margin: 60px auto 20px; font-family: 'Segoe UI', sans-serif;">
                 <div style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); background: #1c2e3e; border: 2px solid #00d4ff; border-radius: 12px; padding: 12px 50px; z-index: 10; text-align: center; border-bottom: 4px solid #ffd700; box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);">
@@ -127,7 +136,7 @@ if df is not None:
                         <img src="https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true" style="width: 45px; filter: drop-shadow(0 0 5px #ffd700);">
                         <div style="color: #ffffff; font-size: 28px; font-weight: bold; text-shadow: 0 0 15px rgba(255,255,255,0.6);">{sel}</div>
                     </div>
-                    <div style="font-size: 13px; color: #e0e6ed; margin-top: 5px; font-weight: 500;">ID: {d['ID']} | {d['Liên Minh_2']}</div>
+                    <div style="font-size: 13px; color: #e0e6ed; margin-top: 5px;">ID: {d['ID']} | {d['Liên Minh_2']}</div>
                 </div>
 
                 <div style="background: rgba(13, 25, 47, 0.98); border: 2px solid #00d4ff; border-radius: 15px; padding: 85px 25px 25px 25px; box-shadow: inset 0 0 50px rgba(0, 212, 255, 0.1); position: relative; overflow: hidden;">
@@ -163,7 +172,6 @@ if df is not None:
                             <div style="font-size:10px; color:#ff4b4b; font-weight:bold; margin-top:2px;">DEAD KPI</div>
                         </div>
                     </div>
-
                     <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 6px; background: linear-gradient(90deg, transparent, #ffd700, transparent); box-shadow: 0 -2px 10px #ffd700;"></div>
                 </div>
             </div>
@@ -202,4 +210,4 @@ if df is not None:
 
     st.markdown('<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999;">🛡️ Admin Louis | v10.9 | Zalo: 0373274600</div>', unsafe_allow_html=True)
 else:
-    st.error("⚠️ Không thể kết nối dữ liệu!")
+    st.error("⚠️ Không thể kết nối dữ liệu! Louis hãy kiểm tra lại file Google Sheets nhé.")
