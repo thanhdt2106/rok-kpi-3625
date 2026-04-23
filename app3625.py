@@ -9,7 +9,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. SIÊU CSS (TỐI ƯU GIAO DIỆN & CÔNG TẮC) ---
+# --- 2. SIÊU CSS (FIX LỖI SEARCH & GỘP HEADER) ---
 st.markdown("""
     <style>
     /* ẨN SIDEBAR & HEADER MẶC ĐỊNH */
@@ -18,25 +18,32 @@ st.markdown("""
 
     .main .block-container {
         max-width: 100% !important;
-        padding: 1rem 2rem !important;
+        padding: 0.5rem 1.5rem !important;
         margin-left: 0px !important;
     }
 
     .stApp { background-color: #050a0e; color: #e0e6ed; }
     
+    /* STYLE DÒNG CHỮ TRÁI */
+    .header-left-container {
+        display: flex;
+        align-items: center;
+        gap: 20px; /* Khoảng cách giữa chữ và nút gạt */
+    }
+
     .header-left-text {
         color: #00d4ff;
         font-weight: 900;
-        font-size: 22px;
+        font-size: 20px;
         text-shadow: 0 0 10px #00d4ff;
         font-family: 'Segoe UI', sans-serif;
+        white-space: nowrap;
     }
 
-    /* ĐIỀU CHỈNH CÔNG TẮC (TOGGLE) SÁT GÓC PHẢI */
-    div[data-testid="stMarkdownContainer"] > p { margin-bottom: 0px; }
-    .stElementContainer:has(label[data-testid="stWidgetLabel"]) {
-        display: flex;
-        justify-content: flex-end;
+    /* FIX THANH TÌM KIẾM */
+    div[data-testid="stSelectbox"] {
+        width: 100% !important;
+        max-width: 400px; /* Giới hạn độ rộng tìm kiếm để không bị loãng */
     }
 
     /* TABLE STYLE */
@@ -44,26 +51,22 @@ st.markdown("""
         background: rgba(13, 27, 42, 0.6); 
         border: 1px solid #1e3a5a; 
         border-radius: 12px; 
-        padding: 20px; 
+        padding: 15px; 
         margin-top: 10px;
         overflow-x: auto;
     }
-    .elite-table { width: 100%; border-collapse: collapse; font-family: 'Segoe UI', sans-serif; min-width: 850px;}
+    .elite-table { width: 100%; border-collapse: collapse; min-width: 850px;}
     .elite-table thead th { 
         background: rgba(0, 212, 255, 0.1); color: #00d4ff; 
         text-align: center !important; 
-        padding: 15px; font-size: 14px; border-bottom: 3px solid #00d4ff; 
+        padding: 12px; font-size: 14px; border-bottom: 3px solid #00d4ff; 
     }
-    .elite-table td { padding: 12px 15px; font-size: 14px; color: #e0e6ed; border-bottom: 1px solid #1a2a3a; }
-    .rank-badge { 
-        background: linear-gradient(135deg, #ffd700, #b8860b); color: #000; 
-        padding: 4px 10px; border-radius: 6px; font-weight: 900;
-    }
-
-    /* RESPONSIVE */
+    .elite-table td { padding: 10px 15px; font-size: 14px; color: #e0e6ed; border-bottom: 1px solid #1a2a3a; }
+    
+    /* MOBILE RESPONSIVE */
     @media (max-width: 768px) {
-        [data-testid="column"] { width: 100% !important; flex: 1 1 100% !important; text-align: center !important; }
-        .header-left-text { font-size: 18px; margin-bottom: 10px; }
+        .header-left-container { flex-direction: column; align-items: flex-start; gap: 5px; }
+        div[data-testid="stSelectbox"] { max-width: 100%; }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -101,21 +104,22 @@ def load_data():
 
 df = load_data()
 
-# --- 4. HEADER (TEXT TRÁI - SEARCH GIỮA - TOGGLE PHẢI) ---
+# --- 4. HEADER LAYOUT MỚI ---
 if df is not None:
-    head_left, head_mid, head_right = st.columns([3, 4, 3])
+    # Chia 2 cột: Cột trái chứa (Text + Lang), Cột phải chứa (Search)
+    col1, col2 = st.columns([1, 1])
 
-    with head_left:
-        st.markdown('<div class="header-left-text">FIGHT TO DEAD 3625</div>', unsafe_allow_html=True)
+    with col1:
+        # Tạo một hàng ngang cho Text và Toggle
+        sub_col_text, sub_col_toggle = st.columns([2, 1])
+        with sub_col_text:
+            st.markdown('<div class="header-left-text">FIGHT TO DEAD 3625</div>', unsafe_allow_html=True)
+        with sub_col_toggle:
+            is_en = st.toggle("EN", value=False, label_visibility="collapsed")
+            lang = "EN" if is_en else "VN"
 
-    with head_mid:
-        sel = st.selectbox("", sorted(df['Tên_2'].dropna().unique()), index=None, placeholder="🔍 Tìm kiếm thành viên...", label_visibility="collapsed")
-
-    with head_right:
-        # CÔNG TẮC BẬT TẮT NGÔN NGỮ
-        # Tắt (False) = VN, Bật (True) = EN
-        is_en = st.toggle("EN", value=False)
-        lang = "EN" if is_en else "VN"
+    with col2:
+        sel = st.selectbox("", sorted(df['Tên_2'].dropna().unique()), index=None, placeholder="🔍 Tìm tên thành viên...", label_visibility="collapsed")
 
     t = {
         "VN": {"rank": "HẠNG", "pow": "SỨC MẠNH", "kill": "TỔNG KILL", "dead": "ĐIỂM CHẾT", "headers": ['Hạng', 'Thành viên', 'Sức mạnh', 'Tổng Kill', 'Điểm Chết', 'Kill +', 'Dead +', 'KPI %']},
@@ -128,34 +132,30 @@ if df is not None:
         html_card = f"""
         <div style="position: relative; width: 100%; margin: 60px auto 20px; font-family: 'Segoe UI', sans-serif;">
             <div style="position: absolute; top: -55px; left: 50%; transform: translateX(-50%); background: #1c2e3e; border: 2px solid #00d4ff; border-radius: 12px; padding: 12px 40px; z-index: 10; text-align: center; border-bottom: 4px solid #ffd700; box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);">
-                <div style="color: #00d4ff; font-size: 11px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 5px #00d4ff;">MEMBER PROFILE</div>
+                <div style="color: #00d4ff; font-size: 11px; font-weight: 900; letter-spacing: 2px;">MEMBER PROFILE</div>
                 <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 5px;">
                     <img src="https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true" style="width: 40px;">
                     <div style="color: #ffffff; font-size: 28px; font-weight: bold;">{sel}</div>
                 </div>
-                <div style="font-size: 12px; color: #e0e6ed; opacity: 0.8;">ID: {d['ID']} | {d['Liên Minh_2']}</div>
             </div>
             <div style="background: rgba(13, 25, 47, 0.98); border: 2px solid #00d4ff; border-radius: 15px; padding: 85px 20px 25px 20px; box-shadow: inset 0 0 30px rgba(0, 212, 255, 0.1);">
-                <div style="display: flex; justify-content: space-between; gap: 10px; margin-bottom: 25px; flex-wrap: wrap;">
-                    <div style="background: #233549; border-radius: 8px; padding: 12px; flex: 1; min-width: 100px; text-align: center; border-bottom: 3px solid #ffd700;">
-                        <div style="font-size: 10px; color: #8b949e;">{t['rank']}</div>
-                        <div style="font-size: 20px; font-weight: 900; color: #ffd700;">#{int(d['Rank'])}</div>
-                    </div>
-                    <div style="background: #233549; border-radius: 8px; padding: 12px; flex: 1.5; min-width: 120px; text-align: center; border-bottom: 3px solid #00d4ff;"><div style="font-size: 10px; color: #8b949e;">{t['pow']}</div><div style="font-size: 20px; font-weight: 900; color: #fff;">{int(d['Sức Mạnh_2']):,}</div></div>
-                    <div style="background: #233549; border-radius: 8px; padding: 12px; flex: 1.5; min-width: 120px; text-align: center; border-bottom: 3px solid #00ffcc;"><div style="font-size: 10px; color: #8b949e;">{t['kill']}</div><div style="font-size: 20px; font-weight: 900; color: #fff;">{int(d['Tổng Tiêu Diệt_2']):,}</div></div>
-                    <div style="background: #233549; border-radius: 8px; padding: 12px; flex: 1.5; min-width: 120px; text-align: center; border-bottom: 3px solid #ff4b4b;"><div style="font-size: 10px; color: #8b949e;">{t['dead']}</div><div style="font-size: 20px; font-weight: 900; color: #ff4b4b;">{int(d['Điểm Chết_2']):,}</div></div>
+                <div style="display: flex; justify-content: space-between; gap: 10px; margin-bottom: 25px;">
+                    <div style="background: #233549; border-radius: 8px; padding: 12px; flex: 1; text-align: center; border-bottom: 3px solid #ffd700;"><div style="font-size: 10px; color: #8b949e;">{t['rank']}</div><div style="font-size: 20px; font-weight: 900; color: #ffd700;">#{int(d['Rank'])}</div></div>
+                    <div style="background: #233549; border-radius: 8px; padding: 12px; flex: 1.5; text-align: center; border-bottom: 3px solid #00d4ff;"><div style="font-size: 10px; color: #8b949e;">{t['pow']}</div><div style="font-size: 20px; font-weight: 900; color: #fff;">{int(d['Sức Mạnh_2']):,}</div></div>
+                    <div style="background: #233549; border-radius: 8px; padding: 12px; flex: 1.5; text-align: center; border-bottom: 3px solid #00ffcc;"><div style="font-size: 10px; color: #8b949e;">{t['kill']}</div><div style="font-size: 20px; font-weight: 900; color: #fff;">{int(d['Tổng Tiêu Diệt_2']):,}</div></div>
+                    <div style="background: #233549; border-radius: 8px; padding: 12px; flex: 1.5; text-align: center; border-bottom: 3px solid #ff4b4b;"><div style="font-size: 10px; color: #8b949e;">{t['dead']}</div><div style="font-size: 20px; font-weight: 900; color: #ff4b4b;">{int(d['Điểm Chết_2']):,}</div></div>
                 </div>
                 <div style="background: rgba(26, 42, 58, 0.5); border-radius: 15px; padding: 25px 5px; display: flex; justify-content: space-around; align-items: center; border: 1px solid rgba(0, 212, 255, 0.2);">
                     <div style="text-align: center;">
-                        <svg width="80" height="80" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#00ffff" stroke-width="3" stroke-dasharray="{min(d['KPI_K'], 100)}, 100" stroke-linecap="round" transform="rotate(-90 18 18)"/></svg>
+                        <svg width="80" height="80" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#00ffff" stroke-width="3" stroke-dasharray="{min(d['KPI_K'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
                         <div style="color:#00ffff; font-size: 18px; font-weight:bold;">{d['KPI_K']}%</div>
                     </div>
                     <div style="text-align: center;">
-                        <svg width="110" height="110" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ffd700" stroke-width="3" stroke-dasharray="{min(d['KPI_T'], 100)}, 100" stroke-linecap="round" transform="rotate(-90 18 18)"/></svg>
+                        <svg width="110" height="110" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ffd700" stroke-width="3" stroke-dasharray="{min(d['KPI_T'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
                         <div style="color:#ffd700; font-size:26px; font-weight:bold;">{d['KPI_T']}%</div>
                     </div>
                     <div style="text-align: center;">
-                        <svg width="80" height="80" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ff4b4b" stroke-width="3" stroke-dasharray="{min(d['KPI_D'], 100)}, 100" stroke-linecap="round" transform="rotate(-90 18 18)"/></svg>
+                        <svg width="80" height="80" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ff4b4b" stroke-width="3" stroke-dasharray="{min(d['KPI_D'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
                         <div style="color:#ff4b4b; font-size: 18px; font-weight:bold;">{d['KPI_D']}%</div>
                     </div>
                 </div>
@@ -170,7 +170,7 @@ if df is not None:
     for _, r in df_sorted.iterrows():
         rows_list.append(f"""
         <tr>
-            <td><span class="rank-badge">#{int(r['Rank'])}</span></td>
+            <td><span style="background:linear-gradient(135deg, #ffd700, #b8860b); color:#000; padding:4px 10px; border-radius:6px; font-weight:900;">#{int(r['Rank'])}</span></td>
             <td><b style="color:#fff">{r['Tên_2']}</b><br><small style="color:#8b949e">ID: {r['ID']}</small></td>
             <td style="text-align:right">{int(r['Sức Mạnh_2']):,}</td>
             <td style="text-align:right; color:#00ffcc">{int(r['Tổng Tiêu Diệt_2']):,}</td>
@@ -196,4 +196,4 @@ if df is not None:
     st.markdown(table_html, unsafe_allow_html=True)
 
     # Footer
-    st.markdown(f'<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999;">🛡️ Admin Louis | v11.2 | Zalo: 0373274600</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999;">🛡️ Admin Louis | v11.3 | Zalo: 0373274600</div>', unsafe_allow_html=True)
