@@ -1,138 +1,171 @@
 import streamlit as st
 import pandas as pd
-import streamlit.components.v1 as components
+import plotly.graph_objects as go
 
 # --- 1. CẤU HÌNH TRANG ---
-st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide")
+st.set_page_config(layout="wide")
 
-# --- 2. CSS TỐI GIẢN & CHUYÊN NGHIỆP ---
+# --- 2. CSS CUSTOM: TẠO KHUNG VUÔNG CHÍNH GIỮA MÀN HÌNH ---
 st.markdown("""
     <style>
-    .stApp { background-color: #050a0e; color: #e0e6ed; }
-    div[data-testid="stRadio"] > label { font-weight: bold; color: #00d4ff; }
-    .main-header {
-        color: #00d4ff; text-align: center; font-size: 28px;
-        font-weight: bold; padding: 10px; text-transform: uppercase;
-        text-shadow: 0 0 10px rgba(0, 212, 255, 0.4);
+    /* Nền chính tối sâu phía sau */
+    .stApp {
+        background-color: #0b1015 !important;
     }
+
+    /* Tạo container căn giữa màn hình */
+    [data-testid="stVerticalBlock"] > div:has(div.rok-profile-card) {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 50px 0;
+    }
+
+    /* Khung xanh đậm vuông vức, nổi bật */
+    .rok-profile-card {
+        background: linear-gradient(180deg, #1d82b5 0%, #135d88 100%);
+        border: 2px solid #3eb5e5;
+        border-radius: 15px;
+        width: 80%;
+        max-width: 900px; /* Độ rộng tối đa để giữ dáng vuông */
+        padding: 30px;
+        color: white;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+        font-family: sans-serif;
+    }
+
+    /* Header Profile */
+    .p-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; }
+    .governor-name { font-size: 38px; font-weight: 800; text-transform: uppercase; margin: 0; line-height: 1; }
+    .governor-id { color: #b0d4e3; font-size: 14px; margin-top: 5px; }
+    .alliance-tag { color: #ffd700; font-weight: bold; font-size: 15px; }
+
+    /* Xếp hạng góc phải */
+    .rank-tag {
+        background: #f39c12; color: #fff;
+        padding: 5px 15px; border-radius: 20px;
+        font-weight: bold; font-size: 14px;
+    }
+
+    /* Lưới thông số (Sức mạnh, Kill, Dead...) */
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        margin-top: 20px;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        padding-top: 20px;
+    }
+    .stat-box {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+    }
+    .s-label { color: #b0d4e3; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+    .s-value { font-size: 26px; font-weight: 800; color: #ffffff; }
+
+    /* Khu vực chỉ số KPI % */
+    .kpi-row {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        background: rgba(0, 0, 0, 0.15);
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .kpi-item { text-align: center; }
+    .kpi-title { font-size: 11px; font-weight: bold; color: #e0e0e0; margin-bottom: 5px; text-transform: uppercase; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. QUẢN LÝ NGÔN NGỮ ---
-col_t, col_l = st.columns([4, 1]) 
-with col_l:
-    lang = st.radio("LANG:", ["VN", "EN"], horizontal=True, label_visibility="collapsed")
-
-texts = {
-    "VN": {
-        "header": "🛡️ HỆ THỐNG QUẢN LÝ KPI", "search": "🔍 TRA CỨU CHIẾN BINH:",
-        "select": "--- Chọn tên ---", "pow": "SỨC MẠNH", "tk": "TỔNG KILL", 
-        "td": "TỔNG DEAD", "rank": "HẠNG", "cols": ['Tên', 'ID', 'Liên minh', 'Sức mạnh', 'Tổng Kill', 'Kill tăng (+)', 'Dead tăng (+)', 'KPI (%)']
-    },
-    "EN": {
-        "header": "🛡️ KPI MANAGEMENT SYSTEM", "search": "🔍 WARRIOR LOOKUP:",
-        "select": "--- Select name ---", "pow": "POWER", "tk": "TOTAL KILL", 
-        "td": "TOTAL DEAD", "rank": "RANK", "cols": ['Name', 'ID', 'Alliance', 'Power', 'Total Kill', 'Kill Inc (+)', 'Dead Inc (+)', 'KPI (%)']
-    }
-}
-L = texts[lang]
-
-# --- 4. XỬ LÝ DỮ LIỆU ---
-SHEET_ID = '1MJQSE3siwFWmQNdJmbbJ6RsilvcoxWTu-r6h-UdHugE'
-URL_T = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=731741617'
-URL_S = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=371969335'
-
-@st.cache_data(ttl=30)
-def load_data():
+# --- 3. HÀM CHỐNG LỖI DỮ LIỆU ---
+def safe_n(val):
+    """Chuyển đổi dữ liệu sang số, nếu lỗi trả về 0 để app không bị sập"""
     try:
-        dt = pd.read_csv(URL_T).rename(columns=lambda x: x.strip())
-        ds = pd.read_csv(URL_S).rename(columns=lambda x: x.strip())
-        for d in [dt, ds]:
-            d['ID'] = d['ID'].astype(str).str.replace('.0', '', regex=False).str.strip()
-            d['Tên'] = d['Tên'].fillna('Unknown').astype(str).str.strip()
-        
-        df = pd.merge(dt.drop_duplicates('ID'), ds.drop_duplicates('ID'), on='ID', suffixes=('_1', '_2'))
-        
-        # Làm sạch dữ liệu số để tránh lỗi 'strip' hoặc 'ValueError'
-        for c in ['Sức Mạnh_2', 'Tổng Tiêu Diệt_2', 'Điểm Chết_2', 'Tổng Tiêu Diệt_1', 'Điểm Chết_1']:
-            df[c] = pd.to_numeric(df[c].astype(str).str.replace(r'[^\d.]', '', regex=True), errors='coerce').fillna(0)
-            
-        df['KI'] = df['Tổng Tiêu Diệt_2'] - df['Tổng Tiêu Diệt_1']
-        df['DI'] = df['Điểm Chết_2'] - df['Điểm Chết_1']
-        
-        # TÍNH TOÁN THỨ HẠNG DỰA TRÊN TỔNG KILL
-        df['KillRank'] = df['Tổng Tiêu Diệt_2'].rank(ascending=False, method='min').astype(int)
+        return float(str(val).replace(',', '').strip())
+    except:
+        return 0.0
 
-        def get_metrics(r):
-            p = r['Sức Mạnh_2']
-            gk = 300e6 if p >= 45e6 else 250e6 if p >= 40e6 else 220e6 if p >= 35e6 else 200e3
-            gd = 400e3 if p >= 30e6 else 300e3 if p >= 20e6 else 200e3
-            pk = max(0.0, float(r['KI']) / gk) if gk > 0 else 0.0
-            pdv = max(0.0, float(r['DI']) / gd) if gd > 0 else 0.0
-            return pd.Series([round(pk * 100, 1), round(pdv * 100, 1), round(((pk + pdv) / 2) * 100, 1)])
-        
-        df[['KPI_K', 'KPI_D', 'KPI_T']] = df.apply(get_metrics, axis=1)
-        return df
-    except: return None
+# --- 4. GIẢ LẬP DỮ LIỆU TỪ SHEET (Thay bằng df của bạn) ---
+# Thống đốc Gấu As | ID: 205888413 | [B/56] Praetoria
+d = {
+    "Tên": "Gấu As",
+    "ID": "205888413",
+    "Liên Minh": "[B/56] Praetoria",
+    "Sức Mạnh": 52119586,
+    "Tiêu Diệt": 330648467,
+    "Điểm Chết": 2324564,
+    "KPI_K": 33.3,
+    "KPI_D": 250.0,
+    "KPI_Total": 141.7
+}
 
-df = load_data()
+# --- 5. HIỂN THỊ GIAO DIỆN CHUẨN Ô Profile VUÔNG ---
+# Tiêu đề bên ngoài khung
+st.write("## TRUNG TÂM CHỈ HUY KPI")
+st.markdown("---")
 
-# --- 5. HIỂN THỊ ---
-if df is not None:
-    st.markdown(f'<div class="main-header">{L["header"]}</div>', unsafe_allow_html=True)
-    names = sorted(df['Tên_2'].unique())
-    sel = st.selectbox(L["search"], [L["select"]] + names)
-    
-    if sel != L["select"]:
-        d = df[df['Tên_2'] == sel].iloc[0]
-        
-        # HTML PROFILE COMPACT (GỌN GÀNG HƠN)
-        html_card = f"""
-        <div style="background: linear-gradient(135deg, #0a192f, #062c43); border: 1px solid #00d4ff; border-radius: 10px; padding: 15px; font-family: sans-serif; color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(0,212,255,0.2); padding-bottom: 10px;">
-                <div>
-                    <span style="font-size: 20px; font-weight: bold; color: #00d4ff;">战士: {sel}</span>
-                    <div style="font-size: 11px; color: #8899a6; margin-top: 3px;">ID: {d['ID']} | {d['Liên Minh_2']}</div>
-                </div>
-                <div style="text-align: right;">
-                    <span style="background: #ffd700; color: #000; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 12px;">{L['rank']} {d['KillRank']}</span>
-                </div>
-            </div>
+# MỞ THẺ DIV KHUNG Profile
+st.markdown('<div class="rok-profile-card">', unsafe_allow_html=True)
 
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; text-align: center;">
-                <div style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 5px;">
-                    <div style="color: #bbe1fa; font-size: 10px;">{L['pow']}</div>
-                    <div style="font-size: 14px; font-weight: bold;">{int(d['Sức Mạnh_2']):,}</div>
-                </div>
-                <div style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 5px;">
-                    <div style="color: #bbe1fa; font-size: 10px;">{L['tk']}</div>
-                    <div style="font-size: 14px; font-weight: bold;">{int(d['Tổng Tiêu Diệt_2']):,}</div>
-                </div>
-                <div style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 5px;">
-                    <div style="color: #bbe1fa; font-size: 10px;">{L['td']}</div>
-                    <div style="font-size: 14px; font-weight: bold;">{int(d['Điểm Chết_2']):,}</div>
-                </div>
-            </div>
-
-            <div style="display: flex; justify-content: space-around; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px;">
-                <div style="text-align:center;">
-                    <div style="font-size:9px; color:#00ffff;">KPI KILL</div>
-                    <div style="font-size:16px; font-weight:bold;">{d['KPI_K']}%</div>
-                </div>
-                <div style="text-align:center;">
-                    <div style="font-size:9px; color:#ff4b4b;">KPI DEAD</div>
-                    <div style="font-size:16px; font-weight:bold;">{d['KPI_D']}%</div>
-                </div>
-                <div style="text-align:center;">
-                    <div style="font-size:9px; color:#ffd700;">TOTAL</div>
-                    <div style="font-size:16px; font-weight:bold; color:#ffd700;">{d['KPI_T']}%</div>
-                </div>
-            </div>
+# Header: Tên & ID & Alliance & Rank
+st.markdown(f"""
+    <div class="p-header">
+        <div>
+            <h1 class="governor-name">战士: {d['Tên']}</h1>
+            <p class="governor-id">ID: {d['ID']} | <span class="alliance-tag">{d['Liên Minh']}</span></p>
         </div>
-        """
-        components.html(html_card, height=220)
+        <div class="rank-tag">RANK 3</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    st.divider()
-    v_df = df[['Tên_2', 'ID', 'Liên Minh_2', 'Sức Mạnh_2', 'Tổng Tiêu Diệt_2', 'KI', 'DI', 'KPI_T']].sort_values(by='Tổng Tiêu Diệt_2', ascending=False)
-    v_df.columns = L["cols"]
-    st.dataframe(v_df.style.format({L["cols"][3]: '{:,.0f}', L["cols"][4]: '{:,.0f}', L["cols"][5]: '{:,.0f}', L["cols"][6]: '{:,.0f}', L["cols"][7]: '{:.1f}%'}), use_container_width=True, height=400)
+# Chia cột thông số chính
+st.markdown(f"""
+    <div class="stats-container">
+        <div class="stat-box">
+            <span class="s-label">POWER</span>
+            <span class="s-value">{int(safe_n(d['Sức Mạnh'])):,}</span>
+        </div>
+        <div class="stat-box">
+            <span class="s-label">TOTAL KILL (Points)</span>
+            <span class="s-value">{int(safe_n(d['Tiêu Diệt'])):,}</span>
+        </div>
+        <div class="stat-box">
+            <span class="s-label">TOTAL DEAD (Points)</span>
+            <span class="s-value">{int(safe_n(d['Điểm Chết'])):,}</span>
+        </div>
+        <div class="stat-box">
+            <span class="s-label">TIẾN ĐỘ CHIẾN DỊCH</span>
+            <span class="s-value" style="color:#00ff88">S-RANK</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+st.markdown('<div style="margin-top:20px; color: #b0d4e3; text-align:center; font-weight:bold; font-size:12px;">HIỆU SUẤT KPI (%)</div>', unsafe_allow_html=True)
+
+# Hàng chứa các con số KPI %
+st.markdown(f"""
+    <div class="kpi-row">
+        <div class="kpi-item">
+            <div class="kpi-title">KPI KILL</div>
+            <div style="font-size:20px; font-weight:bold; color:white;">{safe_n(d['KPI_K']):.1f}%</div>
+        </div>
+        <div class="kpi-item">
+            <div class="kpi-title">KPI DEAD</div>
+            <div style="font-size:20px; font-weight:bold; color:#ff4b4b;">{safe_n(d['KPI_D']):.1f}%</div>
+        </div>
+        <div class="kpi-item">
+            <div class="kpi-title">TOTAL KPI</div>
+            <div style="font-size:24px; font-weight:bold; color:#ffd700;">{safe_n(d['KPI_Total']):.1f}%</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ĐÓNG THẺ DIV KHUNG Profile
+st.markdown('</div>', unsafe_allow_html=True)
