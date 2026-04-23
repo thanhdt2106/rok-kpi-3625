@@ -9,53 +9,68 @@ st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide")
 LOGO_MAIN = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo1.png?raw=true" 
 LOGO_PROFILE = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true"
 
-# --- 2. SIÊU CSS (FIX CĂN THẲNG HÀNG TUYỆT ĐỐI) ---
+# --- 2. SIÊU CSS (CĂN CHỈNH THẲNG HÀNG TUYỆT ĐỐI) ---
 st.markdown("""
     <style>
-    /* Tổng thể */
+    /* Nền và tổng thể */
     .stApp { background-color: #050a0e; color: #e0e6ed; }
-    .block-container { padding-top: 1rem !important; max-width: 95% !important; }
+    .block-container { padding-top: 1rem !important; max-width: 98% !important; }
     header { visibility: hidden; height: 0px !important; }
 
-    /* Tạo Header Flexbox để ép 3 phần thẳng hàng */
-    .custom-header {
+    /* Fix lỗi nhảy hàng của Streamlit Columns */
+    [data-testid="column"] {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
+        align-items: center; /* Căn giữa theo chiều dọc */
+        justify-content: center;
+    }
+
+    /* Tinh chỉnh Logo bên trái */
+    .logo-box {
+        display: flex;
+        justify-content: flex-start;
         width: 100%;
-        margin-bottom: 20px;
-        padding: 0 10px;
     }
-
-    /* Phần Logo trái */
-    .header-left { flex: 1; display: flex; justify-content: flex-start; }
-    .logo-header { 
-        width: 480px; /* Chỉnh lại size để không lấn át thanh tìm kiếm */
+    .logo-img { 
+        width: 450px; 
         filter: drop-shadow(0px 0px 15px rgba(0, 212, 255, 0.4));
+        margin-top: -10px;
     }
 
-    /* Phần Tìm kiếm giữa */
-    .header-mid { flex: 1.5; display: flex; justify-content: center; }
-    div[data-testid="stSelectbox"] { width: 100% !important; max-width: 500px; }
+    /* Tinh chỉnh Selectbox ở giữa */
+    div[data-testid="stSelectbox"] {
+        width: 100% !important;
+        max-width: 500px;
+        margin-top: 18px; /* Cân bằng lại độ cao với Logo */
+    }
 
-    /* Phần Lang phải */
-    .header-right { flex: 1; display: flex; justify-content: flex-end; margin-top: -15px; }
+    /* Tinh chỉnh Lang bên phải */
+    .lang-box {
+        display: flex;
+        justify-content: flex-end;
+        width: 100%;
+        margin-top: 15px;
+    }
 
-    /* Đường kẻ phân cách */
+    /* Đường kẻ phân cách nghệ thuật */
     .hr-line {
         border: 0; height: 1px;
-        background-image: linear-gradient(to right, rgba(0, 212, 255, 0), rgba(0, 212, 255, 0.7), rgba(0, 212, 255, 0));
-        margin: 10px 0 20px 0;
+        background-image: linear-gradient(to right, rgba(0, 212, 255, 0), rgba(0, 212, 255, 0.6), rgba(0, 212, 255, 0));
+        margin: 5px 0 20px 0;
+    }
+
+    /* Footer cố định */
+    .footer {
+        position: fixed; left: 0; bottom: 0; width: 100%;
+        background-color: rgba(5, 10, 14, 0.95); color: #8b949e;
+        padding: 8px; font-size: 12px; text-align: center;
+        border-top: 1px solid #1a2a3a; z-index: 999;
     }
 
     /* Bảng dữ liệu */
-    [data-testid="stDataFrame"] { background: #1a2a3a; border-radius: 10px; border: 1px solid #00d4ff; }
-    
-    .footer {
-        position: fixed; left: 0; bottom: 0; width: 100%;
-        background-color: rgba(5, 10, 14, 0.9); color: #8b949e;
-        padding: 8px; font-size: 12px; text-align: center;
-        border-top: 1px solid #1a2a3a; z-index: 999;
+    [data-testid="stDataFrame"] { 
+        background: #0d1b2a; 
+        border-radius: 10px; 
+        border: 1px solid #00d4ff; 
     }
     </style>
     """, unsafe_allow_html=True)
@@ -107,34 +122,27 @@ def load_data():
 
 df = load_data()
 
-# --- 4. HIỂN THỊ ---
+# --- 4. GIAO DIỆN CHÍNH ---
 if df is not None:
-    # Header Layout
-    st.markdown('<div class="custom-header">', unsafe_allow_html=True)
-    
-    # Cột Trái: Logo
-    st.markdown(f'<div class="header-left"><img src="{LOGO_MAIN}" class="logo-header"></div>', unsafe_allow_html=True)
-    
-    # Cột Giữa: Selectbox
-    # (Dùng container để bao bọc selectbox của streamlit)
-    with st.container():
-        st.markdown('<div class="header-mid">', unsafe_allow_html=True)
-        # Lưu ý: Selectbox được render bởi Streamlit, chúng ta dùng CSS để căn giữa nó
-        sel = st.selectbox("", sorted(df['Tên_2'].unique()), index=None, placeholder="👤 Tìm tên thành viên...", label_visibility="collapsed")
-        st.markdown('</div>', unsafe_allow_html=True)
+    # Header 3 cột: Trái (Logo) | Giữa (Tìm kiếm) | Phải (Ngôn ngữ)
+    c1, c2, c3 = st.columns([2.5, 3.5, 1.2])
 
-    # Cột Phải: Lang radio
-    with st.container():
-        st.markdown('<div class="header-right">', unsafe_allow_html=True)
-        lang = st.radio("LANG:", ["VN", "EN"], horizontal=True, label_visibility="collapsed")
+    with c1:
+        st.markdown(f'<div class="logo-box"><img src="{LOGO_MAIN}" class="logo-img"></div>', unsafe_allow_html=True)
+
+    with c2:
+        sel = st.selectbox("", sorted(df['Tên_2'].unique()), index=None, placeholder="👤 Tìm kiếm tên thành viên...", label_visibility="collapsed")
+
+    with c3:
+        st.markdown('<div class="lang-box">', unsafe_allow_html=True)
+        lang = st.radio("", ["VN", "EN"], horizontal=True, label_visibility="collapsed")
         st.markdown('</div>', unsafe_allow_html=True)
     
-    st.markdown('</div>', unsafe_allow_html=True) # Kết thúc custom-header
     st.markdown("<div class='hr-line'></div>", unsafe_allow_html=True)
 
     L = texts[lang]
 
-    # Hiển thị Profile Card khi chọn thành viên
+    # Hiển thị Card chi tiết
     if sel:
         d = df[df['Tên_2'] == sel].iloc[0]
         html_card = f"""
@@ -208,7 +216,7 @@ if df is not None:
         """
         components.html(html_card, height=580)
 
-    # Bảng dữ liệu chính
+    # Bảng dữ liệu 
     display_df = df[['Tên_2', 'ID', 'Liên Minh_2', 'KillRank', 'Sức Mạnh_2', 'Tổng Tiêu Diệt_2', 'Điểm Chết_2', 'KI', 'DI', 'KPI_T']].copy()
     display_df.columns = L['cols']
     for col in L['cols'][4:9]:
@@ -219,4 +227,4 @@ if df is not None:
 
     st.markdown(f'<div class="footer">🛡️ Discord: <b>louiss.nee</b> | Zalo: <b>0.3.7.3.2.7.4.6.0.0</b></div>', unsafe_allow_html=True)
 else:
-    st.error("⚠️ Không thể kết nối với dữ liệu.")
+    st.error("⚠️ Không thể tải dữ liệu từ Sheets.")
