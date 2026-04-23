@@ -12,28 +12,20 @@ st.set_page_config(
 # --- 2. SIÊU CSS (XÓA SIDEBAR & TỐI ƯU KHOẢNG TRỐNG) ---
 st.markdown("""
     <style>
-    /* 1. ẨN HOÀN TOÀN SIDEBAR VÀ NÚT ĐIỀU KHIỂN */
+    /* ẨN SIDEBAR TUYỆT ĐỐI */
+    [data-testid="stSidebar"], [data-testid="stSidebarCollapseButton"] {
+        display: none !important;
+        width: 0px !important;
+    }
 
-    /* 2. ÉP NỘI DUNG CHÍNH TRÀN RA SÁT LỀ */
     .main .block-container {
         max-width: 100% !important;
-        padding: 1rem 2rem !important; /* Chừa một chút lề để không bị dính sát vách */
+        padding: 1rem 2rem !important;
         margin-left: 0px !important;
     }
 
-    /* 3. LÀM ĐẸP NỀN VÀ CHỮ */
     .stApp { background-color: #050a0e; color: #e0e6ed; }
     
-    /* CẤU TRÚC HEADER MỚI */
-    .header-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-bottom: 20px;
-        border-bottom: 1px solid rgba(0, 212, 255, 0.3);
-        margin-bottom: 30px;
-    }
-
     .header-center {
         color: #00d4ff;
         font-weight: 900;
@@ -43,7 +35,7 @@ st.markdown("""
         letter-spacing: 2px;
     }
 
-    /* TABLE STYLE (GIỮ NGUYÊN) */
+    /* TABLE STYLE */
     .table-wrapper { background: rgba(13, 27, 42, 0.6); border: 1px solid #1e3a5a; border-radius: 12px; padding: 20px; }
     .elite-table { width: 100%; border-collapse: collapse; font-family: 'Segoe UI', sans-serif; }
     .elite-table thead th { 
@@ -56,8 +48,9 @@ st.markdown("""
         background: linear-gradient(135deg, #ffd700, #b8860b); color: #000; 
         padding: 4px 10px; border-radius: 6px; font-weight: 900;
     }
-    .kpi-bar-container { width: 100px; background: #1a2a3a; height: 8px; border-radius: 4px; display: inline-block; margin-right: 8px; }
-    .kpi-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #00d4ff, #00ffcc); }
+    
+    /* CUSTOM CHECKBOX STYLE */
+    .stCheckbox { margin-bottom: -15px; }
     
     header { visibility: hidden; }
     </style>
@@ -96,29 +89,47 @@ def load_data():
 
 df = load_data()
 
-# --- 4. GIAO DIỆN HEADER (SEARCH TRÁI - TEXT GIỮA - LANG PHẢI) ---
+# --- 4. GIAO DIỆN HEADER ---
 if df is not None:
     head_left, head_mid, head_right = st.columns([3, 4, 3])
 
     with head_left:
-        # Tên cột ID là ID_1 hoặc ID_2 tùy theo merge, ở đây dùng ID từ merge
         sel = st.selectbox("", sorted(df['Tên_2'].dropna().unique()), index=None, placeholder="👤 Tìm kiếm thành viên...", label_visibility="collapsed")
 
     with head_mid:
         st.markdown('<div class="header-center" style="text-align:center;">FIGHT TO DEAD 3625</div>', unsafe_allow_html=True)
 
     with head_right:
-        r_col1, r_col2 = st.columns([2.5, 1])
-        with r_col1:
-            lang = st.selectbox("", ["VN", "EN"], label_visibility="collapsed")
-       
+        # LOGIC 2 Ô VUÔNG TÍCH CHỌN NGÔN NGỮ
+        l_col1, l_col2, l_col3 = st.columns([1, 1, 1])
+        
+        # Khởi tạo session state cho ngôn ngữ nếu chưa có
+        if 'lang' not in st.session_state:
+            st.session_state.lang = "VN"
 
+        with l_col1:
+            vn_check = st.checkbox("VN", value=(st.session_state.lang == "VN"))
+        with l_col2:
+            en_check = st.checkbox("EN", value=(st.session_state.lang == "EN"))
+        
+        # Cập nhật session state dựa trên ô được tích mới nhất
+        if vn_check and st.session_state.lang != "VN":
+            st.session_state.lang = "VN"
+            st.rerun()
+        elif en_check and st.session_state.lang != "EN":
+            st.session_state.lang = "EN"
+            st.rerun()
+            
+        with l_col3:
+            st.button("👤", use_container_width=True)
+
+    lang = st.session_state.lang
     t = {
         "VN": {"rank": "HẠNG", "pow": "SỨC MẠNH", "kill": "TỔNG KILL", "dead": "ĐIỂM CHẾT", "headers": ['Hạng', 'Thành viên', 'Sức mạnh', 'Tổng Kill', 'Điểm Chết', 'Kill +', 'Dead +', 'KPI %']},
         "EN": {"rank": "RANK", "pow": "POWER", "kill": "TOTAL KILL", "dead": "DEAD PT", "headers": ['Rank', 'Member', 'Power', 'Total Kill', 'Dead Pt', 'Kill +', 'Dead +', 'KPI %']}
     }[lang]
 
-    # --- 5. PROFILE CHI TIẾT (GIỮ NGUYÊN) ---
+    # --- 5. PROFILE CHI TIẾT ---
     if sel:
         d = df[df['Tên_2'] == sel].iloc[0]
         html_card = f"""
@@ -160,7 +171,7 @@ if df is not None:
         """
         components.html(html_card, height=530)
 
-    # --- 6. BẢNG TABLE (CHIẾM TOÀN BỘ CHIỀU RỘNG) ---
+    # --- 6. BẢNG TABLE ---
     df_sorted = df.sort_values(by='Rank')
     rows_list = []
     for _, r in df_sorted.iterrows():
@@ -189,5 +200,5 @@ if df is not None:
     """
     st.markdown(table_html, unsafe_allow_html=True)
 
-    # Footer cố định
+    # Footer
     st.markdown(f'<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999;">🛡️ Admin Louis | v11.0 | Zalo: 0373274600</div>', unsafe_allow_html=True)
