@@ -2,162 +2,125 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 
-# --- 1. CẤU HÌNH TRANG ---
-st.set_page_config(page_title="ROK PROFILE PRO", layout="wide")
+# --- CẤU HÌNH TRANG ---
+st.set_page_config(layout="wide")
 
-# --- 2. CSS NỀN XANH BAO QUANH TOÀN BỘ (SỬA LỖI HIỂN THỊ) ---
+# --- CSS ĐỂ TẠO KHUNG XANH BAO PHỦ TOÀN BỘ ---
 st.markdown("""
     <style>
-    .stApp { background-color: #0b1015; }
-    
-    /* Khung xanh bao quanh tất cả giống Profile game */
-    .main-container {
+    /* Nền tối cho app */
+    .stApp { background-color: #0e1117; }
+
+    /* Khung xanh chủ đạo bao quanh toàn bộ nội dung */
+    .main-profile-container {
         background: linear-gradient(180deg, #1d82b5 0%, #135d88 100%);
-        border-radius: 15px;
-        padding: 25px;
         border: 2px solid #3eb5e5;
+        border-radius: 15px;
+        padding: 30px;
         color: white;
-        width: 100%;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     }
 
-    /* Tên và ID */
-    .p-name { font-size: 38px; font-weight: 800; text-transform: uppercase; margin: 0; line-height: 1.2; }
-    .p-id { font-size: 14px; color: #b0d4e3; margin-bottom: 20px; }
+    /* Header: Tên và ID */
+    .profile-header { margin-bottom: 25px; }
+    .governor-name { font-size: 40px; font-weight: 800; text-transform: uppercase; margin: 0; }
+    .governor-id { font-size: 16px; color: #b0d4e3; }
 
-    /* Ô thông số nền mờ */
-    .stat-box {
-        background: rgba(0, 0, 0, 0.35);
+    /* Ô thông số (Stats) */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+    .stat-card {
+        background: rgba(0, 0, 0, 0.4);
         padding: 15px;
         border-radius: 10px;
         border: 1px solid rgba(255, 255, 255, 0.1);
         text-align: center;
-        margin-bottom: 10px;
     }
-    .s-label { color: #b0d4e3; font-size: 12px; text-transform: uppercase; display: block; font-weight: bold; }
-    .s-value { font-size: 24px; font-weight: 800; color: white; display: block; margin-top: 5px; }
+    .stat-label { display: block; font-size: 11px; color: #b0d4e3; text-transform: uppercase; font-weight: bold; }
+    .stat-value { display: block; font-size: 22px; font-weight: 800; margin-top: 5px; }
 
-    /* Khung chứa biểu đồ KPI */
-    .kpi-section {
+    /* Khu vực biểu đồ */
+    .chart-section {
         background: rgba(0, 0, 0, 0.2);
         border-radius: 12px;
         padding: 20px;
-        margin-top: 20px;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. HÀM VẼ BIỂU ĐỒ (ĐÃ SỬA LỖI VALUERROR) ---
-def draw_kpi(pct, color, title):
-    # Đảm bảo pct là số
+# --- HÀM VẼ BIỂU ĐỒ (SỬA LỖI VALUEERROR) ---
+def draw_kpi_chart(pct, color, label):
     try:
-        val = round(float(pct), 1)
+        val = float(pct)
     except:
         val = 0.0
     
-    # Giới hạn giá trị từ 0-100 để biểu đồ không lỗi
-    display_val = min(max(val, 0.0), 100.0)
-    
     fig = go.Figure(go.Pie(
-        hole=0.7, 
-        values=[display_val, 100 - display_val],
+        hole=0.7,
+        values=[val, max(0, 100-val)],
         marker=dict(colors=[color, "rgba(255,255,255,0.05)"]),
-        showlegend=False, 
+        showlegend=False,
         hoverinfo='skip'
     ))
-    
     fig.update_layout(
-        title={'text': title, 'y':0.95, 'x':0.5, 'xanchor':'center', 'font':{'color':'white','size':14}},
-        paper_bgcolor='rgba(0,0,0,0)', 
+        title={'text': f"<b>{label}</b>", 'y':0.9, 'x':0.5, 'xanchor':'center', 'font':{'color':'white', 'size':14}},
+        paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
-        margin=dict(t=40, b=0, l=10, r=10), 
+        margin=dict(t=30, b=0, l=10, r=10),
         height=180,
-        # SỬA LỖI TẠI ĐÂY: Loại bỏ fontWeight và dùng thẻ <b>
-        annotations=[dict(
-            text=f"<b>{val}%</b>", 
-            x=0.5, y=0.5, 
-            showarrow=False, 
-            font=dict(color='white', size=20)
-        )]
+        annotations=[dict(text=f"<b>{val}%</b>", x=0.5, y=0.5, showarrow=False, font=dict(color='white', size=18))]
     )
     return fig
 
-# --- 4. DATA LOGIC (CHỐNG LỖI MERGE & ÉP KIỂU) ---
-SHEET_ID = '1MJQSE3siwFWmQNdJmbbJ6RsilvcoxWTu-r6h-UdHugE'
-URL_T = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=731741617'
-URL_S = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=371969335'
+# --- GIẢ LẬP DỮ LIỆU (Thay bằng df của bạn) ---
+# Ở đây tôi dùng dữ liệu mẫu để bạn thấy khung hình
+d = {
+    "Tên": "22 MORPHEUS",
+    "ID": "210247547",
+    "Liên Minh": "[sis6] shared house 3956",
+    "Sức Mạnh": 20095399,
+    "Tiêu Diệt": 9216189,
+    "Điểm Chết": 450123,
+    "KPI_K": 45.5,
+    "KPI_D": 80.0,
+    "KPI_T": 62.7
+}
 
-@st.cache_data(ttl=30)
-def load_data():
-    try:
-        df_t = pd.read_csv(URL_T)
-        df_s = pd.read_csv(URL_S)
-        
-        # Dọn dẹp tên cột
-        df_t.columns = df_t.columns.str.strip()
-        df_s.columns = df_s.columns.str.strip()
-        
-        # Ép kiểu ID về chuỗi để không bao giờ lỗi Merge
-        df_t['ID'] = df_t['ID'].astype(str).str.replace('.0', '', regex=False).str.strip()
-        df_s['ID'] = df_s['ID'].astype(str).str.replace('.0', '', regex=False).str.strip()
-        
-        df = pd.merge(df_t, df_s, on='ID', suffixes=('_1', '_2'))
-        
-        # Chuyển đổi dữ liệu số an toàn (loại bỏ dấu phẩy rác)
-        num_cols = ['Sức Mạnh_2', 'Tổng Tiêu Diệt_2', 'Điểm Chết_2', 'Tổng Tiêu Diệt_1', 'Điểm Chết_1']
-        for c in num_cols:
-            df[c] = pd.to_numeric(df[c].astype(str).str.replace(',', ''), errors='coerce').fillna(0)
+# --- HIỂN THỊ GIAO DIỆN ---
+st.title("Hệ thống quản lý KPI")
 
-        def calculate_kpis(r):
-            sm = r['Sức Mạnh_2']
-            # Công thức KPI của bạn
-            target_k = 300e6 if sm >= 45e6 else 220e6 if sm >= 35e6 else 130e6 if sm >= 25e6 else 80e6
-            target_d = 400e3 if sm >= 30e6 else 200e3
-            
-            diff_k = max(0, r['Tổng Tiêu Diệt_2'] - r['Tổng Tiêu Diệt_1'])
-            diff_d = max(0, r['Điểm Chết_2'] - r['Điểm Chết_1'])
-            
-            pk = round((diff_k / target_k * 100), 1) if target_k > 0 else 0
-            pd_v = round((diff_d / target_d * 100), 1) if target_d > 0 else 0
-            return pd.Series([round((pk + pd_v) / 2, 1), pk, pd_v])
-        
-        df[['KPI_T', 'KPI_K', 'KPI_D']] = df.apply(calculate_kpis, axis=1)
-        return df
-    except Exception as e:
-        st.error(f"Lỗi hệ thống: {e}")
-        return None
+# Mở khung xanh bao phủ
+st.markdown('<div class="main-profile-container">', unsafe_allow_html=True)
 
-df = load_data()
+# Header
+st.markdown(f"""
+    <div class="profile-header">
+        <div class="governor-name">⚔️ {d['Tên']}</div>
+        <div class="governor-id">ID: {d['ID']} | Liên minh: {d['Liên Minh']}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-# --- 5. GIAO DIỆN HIỂN THỊ ---
-if df is not None:
-    names = sorted(df['Tên_2'].dropna().unique())
-    sel_name = st.selectbox("🔍 CHỌN THỐNG ĐỐC:", ["---"] + names)
-    
-    if sel_name != "---":
-        d = df[df['Tên_2'] == sel_name].iloc[0]
-        
-        # --- BẮT ĐẦU KHUNG XANH BAO QUANH TOÀN BỘ ---
-        st.markdown('<div class="main-container">', unsafe_allow_html=True)
-        
-        # Header: Tên & ID
-        st.markdown(f'<div class="p-name">{sel_name}</div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="p-id">ID: {d["ID"]} | Liên minh: [{d["Liên Minh_2"]}]</div>', unsafe_allow_html=True)
-        
-        # Hàng 1: Ô thông số (4 cột lấp đầy)
-        c1, c2, c3, c4 = st.columns(4)
-        with c1: st.markdown(f'<div class="stat-box"><span class="s-label">Tiêu Diệt</span><span class="s-value">{int(d["Tổng Tiêu Diệt_2"]):,}</span></div>', unsafe_allow_html=True)
-        with c2: st.markdown(f'<div class="stat-box"><span class="s-label">Sức Mạnh</span><span class="s-value">{int(d["Sức Mạnh_2"]):,}</span></div>', unsafe_allow_html=True)
-        with c3: st.markdown(f'<div class="stat-box"><span class="s-label">Điểm Chết</span><span class="s-value">{int(d["Điểm Chết_2"]):,}</span></div>', unsafe_allow_html=True)
-        with c4: st.markdown(f'<div class="stat-box"><span class="s-label">Xếp hạng</span><span class="s-value">S-RANK</span></div>', unsafe_allow_html=True)
-        
-        # Hàng 2: Biểu đồ KPI nằm trong khung mờ phía dưới (vẫn thuộc khung xanh)
-        st.markdown('<div class="kpi-section">', unsafe_allow_html=True)
-        st.markdown('<p style="text-align:center; font-size:12px; font-weight:bold; color:#b0d4e3; letter-spacing:1px;">KẾT QUẢ CHIẾN DỊCH KVK</p>', unsafe_allow_html=True)
-        
-        k1, k2, k3 = st.columns(3)
-        with k1: st.plotly_chart(draw_kpi(d['KPI_K'], "#00ffff", "KPI KILL"), use_container_width=True, config={'displayModeBar': False})
-        with k2: st.plotly_chart(draw_kpi(d['KPI_D'], "#ff4b4b", "KPI DEAD"), use_container_width=True, config={'displayModeBar': False})
-        with k3: st.plotly_chart(draw_kpi(d['KPI_T'], "#ffd700", "TỔNG KPI"), use_container_width=True, config={'displayModeBar': False})
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True) # --- KẾT THÚC KHUNG XANH ---
+# Grid thông số
+st.markdown(f"""
+    <div class="stats-grid">
+        <div class="stat-card"><span class="stat-label">SỨC MẠNH</span><span class="stat-value">{d['Sức Mạnh']:,}</span></div>
+        <div class="stat-card"><span class="stat-label">TỔNG KILL</span><span class="stat-value">{d['Tiêu Diệt']:,}</span></div>
+        <div class="stat-card"><span class="stat-label">ĐIỂM CHẾT</span><span class="stat-value">{d['Điểm Chết']:,}</span></div>
+        <div class="stat-card"><span class="stat-label">XẾP HẠNG</span><span class="stat-value" style="color:#ffd700">S-RANK</span></div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Khu vực biểu đồ
+st.markdown('<div class="chart-section">', unsafe_allow_html=True)
+c1, c2, c3 = st.columns(3)
+with c1: st.plotly_chart(draw_kpi_chart(d['KPI_K'], "#00ffff", "KPI KILL"), use_container_width=True)
+with c2: st.plotly_chart(draw_kpi_chart(d['KPI_D'], "#ff4b4b", "KPI DEAD"), use_container_width=True)
+with c3: st.plotly_chart(draw_kpi_chart(d['KPI_T'], "#ffd700", "TOTAL KPI"), use_container_width=True)
+st.markdown('</div>', unsafe_allow_html=True)
+
+# Đóng khung xanh
+st.markdown('</div>', unsafe_allow_html=True)
