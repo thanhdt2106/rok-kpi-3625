@@ -230,5 +230,3 @@ if df is not None:
         st.markdown(table_html, unsafe_allow_html=True)
 
     st.markdown(f'<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999;">🛡️ Admin Louis | v10.9 | Zalo: 0373274600</div>', unsafe_allow_html=True)
-
-chỉnh sao cho tự động tương thích với mọi loại thiết bị chứ đừng có xoá gì cảu tôi cả
