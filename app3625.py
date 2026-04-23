@@ -5,33 +5,21 @@ import streamlit.components.v1 as components
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide")
 
-# --- 2. SIÊU CSS & JS (THÊM LẠI TASKBAR VÀ GIỮ NGUYÊN CSS) ---
+# --- 2. SIÊU CSS & JS (KHÔI PHỤC HEADER GỐC & CĂN GIỮA TIÊU ĐỀ) ---
 st.markdown("""
     <style>
     .stApp { background-color: #050a0e; color: #e0e6ed; }
     [data-testid="stSidebar"] { background-color: #0d1b2a; border-right: 1px solid #00d4ff; }
     
-    /* ĐẨY SÁT LÊN TRÊN */
+    /* GIỮ KHOẢNG TRỐNG VỪA ĐỦ ĐỂ HIỆN HEADER GỐC */
     .main .block-container {
         max-width: 98% !important;
-        padding-top: 0rem !important;
+        padding-top: 2rem !important; 
         margin: auto !important;
-    }
-    header { visibility: hidden !important; }
-
-    /* TASKBAR (THANH ĐIỀU HƯỚNG TRÊN CÙNG) */
-    .navbar {
-        display: flex; justify-content: space-between; align-items: center;
-        background: rgba(13, 27, 42, 0.9); padding: 10px 20px;
-        border-bottom: 1px solid #00d4ff; position: sticky; top: 0; z-index: 999;
-    }
-    .nav-btn {
-        background: transparent; color: #00d4ff; border: 1px solid #00d4ff;
-        padding: 5px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;
     }
 
     /* HIỆU ỨNG PHÁT SÁNG CHO LOGO CHÍNH */
-    .logo-container { display: flex; justify-content: center; width: 100%; margin-bottom: 5px; margin-top: 10px; }
+    .logo-container { display: flex; justify-content: center; width: 100%; margin-bottom: 20px; }
     .logo-img { width: 320px; filter: drop-shadow(0 0 15px rgba(0,212,255,0.6)); }
 
     /* NGĂN KÉO (DRAWER) */
@@ -51,7 +39,7 @@ st.markdown("""
     .table-wrapper { background: rgba(13, 27, 42, 0.6); border: 1px solid #1e3a5a; border-radius: 12px; padding: 20px; margin-top: 20px; }
     .elite-table { width: 100%; border-collapse: collapse; font-family: 'Segoe UI', sans-serif; }
     
-    /* CĂN GIỮA TIÊU ĐỀ */
+    /* ĐƯA TIÊU ĐỀ VÀO GIỮA CÁC Ô */
     .elite-table thead th { 
         background: rgba(0, 212, 255, 0.1); color: #00d4ff; 
         text-align: center !important; 
@@ -66,11 +54,6 @@ st.markdown("""
     .kpi-bar-container { width: 100px; background: #1a2a3a; height: 8px; border-radius: 4px; display: inline-block; margin-right: 8px; }
     .kpi-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #00d4ff, #00ffcc); }
     </style>
-
-    <div class="navbar">
-        <button class="nav-btn" onclick="openNav()">☰ SYSTEM SETTINGS</button>
-        <div style="color: #00d4ff; font-weight: bold; font-size: 14px;">FTD COMMAND CENTER</div>
-    </div>
 
     <div id="myDrawer">
       <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
@@ -90,6 +73,14 @@ st.markdown("""
 # --- 3. SIDEBAR & LANG ---
 with st.sidebar:
     st.markdown('<div style="color: #00d4ff; font-weight: bold; font-size: 18px; text-align: center; margin-bottom: 20px;">🛡️ COMMAND CENTER</div>', unsafe_allow_html=True)
+    
+    # Nút bấm mở ngăn kéo nằm trong Sidebar như cũ
+    components.html("""
+        <button onclick="parent.openNav()" style="width: 100%; background: #1a2a3a; color: #00d4ff; border: 1px solid #00d4ff; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; font-family: sans-serif;">
+            ⚙️ SYSTEM SETTINGS
+        </button>
+    """, height=50)
+    
     st.divider()
     lang = st.radio("Language", ["VN", "EN"], horizontal=True)
     
@@ -145,7 +136,7 @@ df = load_data()
 
 # --- 5. HIỂN THỊ ---
 if df is not None:
-    # HIỂN THỊ LOGO SÁT TRÊN
+    # HIỂN THỊ LOGO
     st.markdown('<div class="logo-container"><img src="https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo1.png?raw=true" class="logo-img"></div>', unsafe_allow_html=True)
     
     if menu in t["menu"][:2]:
@@ -209,7 +200,7 @@ if df is not None:
             """
             components.html(html_card, height=530)
 
-        # --- BẢNG TABLE (CĂN GIỮA TIÊU ĐỀ) ---
+        # --- BẢNG TABLE ---
         df_sorted = df.sort_values(by='Rank')
         rows_list = []
         for _, r in df_sorted.iterrows():
