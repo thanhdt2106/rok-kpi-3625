@@ -12,7 +12,6 @@ st.set_page_config(
 # --- 2. CLEAN & SHARP CSS ---
 st.markdown("""
     <style>
-    /* Import phông chữ gọn gàng, sắc nét hơn */
     @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Saira:wght@400;600;800&display=swap');
 
     [data-testid="stSidebar"], [data-testid="stSidebarCollapseButton"] { display: none !important; width: 0px !important; }
@@ -35,13 +34,12 @@ st.markdown("""
         text-transform: uppercase;
     }
 
-    /* Table Improvements */
     .table-wrapper { 
         background: rgba(13, 27, 42, 0.4); 
         border: 1px solid #1e3a5a; 
         border-radius: 8px; padding: 15px; margin-top: 10px; overflow-x: auto;
     }
-    .elite-table { width: 100%; border-collapse: collapse; min-width: 850px;}
+    .elite-table { width: 100%; border-collapse: collapse; min-width: 1000px;}
     .elite-table thead th { 
         font-family: 'Rajdhani', sans-serif;
         background: rgba(0, 212, 255, 0.05); color: #00d4ff; 
@@ -96,7 +94,7 @@ if df is not None:
     with h_col2:
         sel = st.selectbox("", sorted(df['Tên_2'].dropna().unique()), index=None, placeholder="🔍 Search member name...", label_visibility="collapsed")
 
-    # --- 5. PROFILE (CLEAN FONT LAYOUT) ---
+    # --- 5. PROFILE ---
     if sel:
         d = df[df['Tên_2'] == sel].iloc[0]
         cur_k = f"{d['KI']/1e6:.1f}M"
@@ -154,13 +152,11 @@ if df is not None:
                             <div class="target-label">Target: {tar_k}</div>
                         </div>
                     </div>
-
                     <div style="text-align: center;">
                         <svg width="80" height="80" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ffd700" stroke-width="4" stroke-dasharray="{min(d['KPI_T'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
                         <div style="font-family: 'Rajdhani', sans-serif; color:#ffd700; font-size:24px; font-weight:700;">{d['KPI_T']}%</div>
                         <div style="font-size:11px; color:#ffd700; font-weight:600; text-transform:uppercase; margin-top:2px;">Total KPI</div>
                     </div>
-
                     <div style="text-align: center;">
                         <svg width="50" height="50" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ff4b4b" stroke-width="3" stroke-dasharray="{min(d['KPI_D'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
                         <div style="font-family: 'Rajdhani', sans-serif; color:#ff4b4b; font-size: 14px; font-weight:700; margin-top:2px;">{d['KPI_D']}%</div>
@@ -176,18 +172,20 @@ if df is not None:
         """
         components.html(html_card, height=500)
 
-    # --- 6. TABLE ---
+    # --- 6. TABLE (ENGLISH LABELS & NEW COLUMNS) ---
     df_sorted = df.sort_values(by='Rank')
-    headers = ['Rank', 'Member', 'Power', 'Total Kill', 'Dead Pt', 'KPI %']
+    # Thêm Alliance và đổi tên cột sang tiếng Anh
+    headers = ['Rank', 'Member', 'Alliance', 'Power', 'Kill Points (+)', 'Death Points (+)', 'KPI %']
     rows_list = []
     for _, r in df_sorted.iterrows():
         rows_list.append(f"""
         <tr>
-            <td style="font-family: 'Rajdhani', sans-serif; font-weight:700; color:#ffd700;">#{int(r['Rank'])}</td>
+            <td style="font-family: 'Rajdhani', sans-serif; font-weight:700; color:#ffd700; text-align:center;">#{int(r['Rank'])}</td>
             <td><b style="color:#fff;">{r['Tên_2']}</b><br><small style="color:#8b949e;">ID: {r['ID']}</small></td>
+            <td style="text-align:center; color:#8b949e; font-size:12px;">{r['Liên Minh_2']}</td>
             <td style="text-align:right; font-family: 'Rajdhani', sans-serif;">{int(r['Sức Mạnh_2']):,}</td>
-            <td style="text-align:right; color:#00ffcc; font-family: 'Rajdhani', sans-serif;">{int(r['Tổng Tiêu Diệt_2']):,}</td>
-            <td style="text-align:right; color:#ff4b4b; font-family: 'Rajdhani', sans-serif;">{int(r['Điểm Chết_2']):,}</td>
+            <td style="text-align:right; color:#00d4ff; font-family: 'Rajdhani', sans-serif; font-weight:bold;">+{int(r['KI']):,}</td>
+            <td style="text-align:right; color:#ff4b4b; font-family: 'Rajdhani', sans-serif; font-weight:bold;">+{int(r['DI']):,}</td>
             <td>
                 <div style="width: 70px; background: #1a2a3a; height: 5px; border-radius: 2px; display: inline-block; margin-right: 5px; vertical-align: middle;">
                     <div style="height: 100%; background: #ffd700; width:{min(r['KPI_T'], 100)}%"></div>
@@ -207,4 +205,4 @@ if df is not None:
     st.markdown(table_html, unsafe_allow_html=True)
 
     # Footer
-    st.markdown(f'<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999; font-size:12px; font-family: Rajdhani;">🛡️ ADMIN LOUIS | V11.9 | SHARP UI</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999; font-size:12px; font-family: Rajdhani;">🛡️ ADMIN LOUIS | V12.0 | GLOBAL INTERFACE</div>', unsafe_allow_html=True)
