@@ -20,11 +20,11 @@ st.markdown("""
     .block-container { padding-top: 0rem !important; max-width: 98% !important; }
     header { visibility: hidden; height: 0px !important; }
 
-    /* Sidebar Style */
+    /* Sidebar Style - GIỮ NGUYÊN MÀU XANH ĐEN CỦA LOUIS */
     [data-testid="stSidebar"] { background-color: #0d1b2a; border-right: 1px solid #00d4ff; }
-    .sidebar-header { color: #00d4ff; font-weight: bold; font-size: 18px; text-align: center; margin-bottom: 10px; }
+    .sidebar-header { color: #00d4ff; font-weight: bold; font-size: 18px; text-align: center; margin-bottom: 20px; }
 
-    /* HIỆU ỨNG NGĂN KÉO TRƯỢT (FIXED DRAWER) */
+    /* NGĂN KÉO TRƯỢT (FIXED DRAWER) - NẰM ĐÈ LÊN TRÊN CÙNG */
     .custom-drawer {
         position: fixed;
         top: 0;
@@ -33,13 +33,13 @@ st.markdown("""
         height: 100%;
         background: rgba(13, 27, 42, 0.98);
         border-right: 2px solid #00d4ff;
-        z-index: 99999;
-        padding: 100px 25px;
-        transition: transform 0.4s ease-in-out;
-        box-shadow: 15px 0 30px rgba(0,0,0,0.8);
+        z-index: 100000;
+        padding: 80px 25px;
+        transition: transform 0.3s ease;
+        box-shadow: 10px 0 30px rgba(0,0,0,0.8);
     }
     .drawer-title { color: #00d4ff; font-weight: bold; font-size: 16px; border-bottom: 1px solid #1e3a5a; padding-bottom: 10px; margin-bottom: 20px; }
-    .drawer-item { padding: 12px 0; color: #e0e6ed; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.05); font-family: 'Segoe UI', sans-serif; }
+    .drawer-item { padding: 12px 0; color: #e0e6ed; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.05); }
 
     /* Bảng dữ liệu nguyên bản */
     .table-wrapper { background: rgba(13, 27, 42, 0.6); border: 1px solid #1e3a5a; border-radius: 12px; padding: 20px; }
@@ -56,51 +56,47 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. SIDEBAR (THANH ĐIỀU KHIỂN) ---
+# --- 3. SIDEBAR (THANH ĐIỀU KHIỂN GỐC) ---
 with st.sidebar:
     st.markdown('<div class="sidebar-header">🛡️ COMMAND CENTER</div>', unsafe_allow_html=True)
     
-    # NÚT CÀI ĐẶT (Đưa lên đầu Sidebar để dễ thấy)
-    if 'drawer_open' not in st.session_state:
-        st.session_state.drawer_open = False
+    # 1. NÚT CÀI ĐẶT
+    if 'drawer_state' not in st.session_state:
+        st.session_state.drawer_state = False
     
-    # Dùng cột để nút Cài đặt trông gọn hơn
-    c1, c2 = st.columns([1, 4])
-    with c1:
-        if st.button("⚙️"):
-            st.session_state.drawer_open = not st.session_state.drawer_open
-    with c2:
-        st.write("Cài đặt hệ thống")
+    if st.button("⚙️ THÔNG TIN HỆ THỐNG"):
+        st.session_state.drawer_state = not st.session_state.drawer_state
 
     st.divider()
     
-    # CHỨC NĂNG NGÔN NGỮ (GIỮ NGUYÊN)
+    # 2. CHỨC NĂNG NGÔN NGỮ (KHÔNG THỂ THIẾU)
     st.write("**NGÔN NGỮ / LANGUAGE**")
     lang = st.radio("Chon ngon ngu", ["VN", "EN"], horizontal=True, label_visibility="collapsed")
     
     st.divider()
     
-    # MENU CHÍNH (GIỮ NGUYÊN)
+    # 3. MENU CHÍNH
     st.write("**MENU**")
     menu = st.radio("Chon menu", ["📊 Bảng KPI", "👤 Tài khoản", "⚙️ Quản lý KPI"], label_visibility="collapsed")
     
     st.divider()
     st.info("Phiên bản v10.9 - Admin Louis")
 
-# --- HIỂN THỊ NGĂN KÉO (DRAWER) ---
-if st.session_state.drawer_open:
+# --- HIỂN THỊ NGĂN KÉO ---
+if st.session_state.drawer_state:
     st.markdown("""
         <div class="custom-drawer">
-            <div class="drawer-title">📋 THÔNG TIN NHANH</div>
-            <div class="drawer-item">⚠️ Tài khoản thiếu KPI</div>
-            <div class="drawer-item">🏔️ Top 15 Đèo 4</div>
-            <div class="drawer-item">🌋 Top 15 Đèo 7</div>
-            <div class="drawer-item">👑 Top 15 Kingland</div>
-            <div class="drawer-item">📅 Dữ liệu cập nhật: 2026</div>
+            <div class="drawer-title">📋 TRẠNG THÁI KVK</div>
+            <div class="drawer-item">⚠️ Thành viên chưa đạt KPI</div>
+            <div class="drawer-item">🏔️ Mục tiêu Đèo 4</div>
+            <div class="drawer-item">🌋 Mục tiêu Đèo 7</div>
+            <div class="drawer-item">👑 Mục tiêu Kingland</div>
+            <br>
+            <p style='font-size:11px; color:#666;'>Bấm nút cài đặt lần nữa để đóng</p>
         </div>
     """, unsafe_allow_html=True)
 
-# --- 4. LOGIC DỮ LIỆU (GIỮ NGUYÊN 100%) ---
+# --- 4. LOGIC DỮ LIỆU ---
 texts = {
     "VN": {
         "search": "👤 Tìm kiếm thành viên...", "pow": "SỨC MẠNH", "tk": "TỔNG TIÊU DIỆT", "td": "ĐIỂM CHẾT",
@@ -113,8 +109,6 @@ texts = {
 }
 L = texts[lang]
 
-# ... (Phần load_data giữ nguyên như cũ của Louis) ...
-# Để demo mình dùng logic merge cũ của bạn
 SHEET_ID = '1MJQSE3siwFWmQNdJmbbJ6RsilvcoxWTu-r6h-UdHugE'
 URL_T = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=731741617'
 URL_S = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=371969335'
@@ -133,6 +127,7 @@ def load_data():
         df['KI'] = df['Tổng Tiêu Diệt_2'] - df['Tổng Tiêu Diệt_1']
         df['DI'] = df['Điểm Chết_2'] - df['Điểm Chết_1']
         df['KillRank'] = df['Tổng Tiêu Diệt_2'].rank(ascending=False, method='min').astype(int)
+        
         def get_metrics(r):
             p = r['Sức Mạnh_2']
             gk = 300e6 if p >= 45e6 else 250e6 if p >= 40e6 else 200e6
@@ -140,19 +135,21 @@ def load_data():
             pk = max(0.0, float(r['KI']) / gk) if gk > 0 else 0.0
             pdv = max(0.0, float(r['DI']) / gd) if gd > 0 else 0.0
             return pd.Series([round(pk * 100, 1), round(pdv * 100, 1), round(((pk + pdv) / 2) * 100, 1)])
+            
         df[['KPI_K', 'KPI_D', 'KPI_T']] = df.apply(get_metrics, axis=1)
         return df
     except: return None
 
 df = load_data()
 
-# --- 5. HIỂN THỊ (CARD PROFILE & BẢNG) ---
+# --- 5. HIỂN THỊ (QUAN TRỌNG: PROFILE CARD & TABLE) ---
 if df is not None:
     st.markdown(f'<div class="logo-container"><img src="{LOGO_MAIN}" class="logo-img"></div>', unsafe_allow_html=True)
+
     if menu == "📊 Bảng KPI":
         sel = st.selectbox("", sorted(df['Tên_2'].unique()), index=None, placeholder=L['search'], label_visibility="collapsed")
-        
-        # CARD PROFILE (GIỮ NGUYÊN)
+
+        # PROFILE CARD CỰC ĐẸP CỦA LOUIS
         if sel:
             d = df[df['Tên_2'] == sel].iloc[0]
             html_card = f"""
@@ -167,18 +164,9 @@ if df is not None:
                 </div>
                 <div style="background: rgba(13, 25, 47, 0.98); border: 2px solid #00d4ff; border-radius: 15px; padding: 85px 20px 20px 20px;">
                     <div style="display: flex; justify-content: space-between; gap: 15px; margin-bottom: 25px;">
-                        <div style="background: #233549; border-radius: 10px; padding: 15px; flex: 1; text-align: center; border-bottom: 3.5px solid #00d4ff;">
-                            <div style="font-size: 10px; color: #8b949e; font-weight: bold;">{L['pow']}</div>
-                            <div style="font-size: 22px; font-weight: 900; color: #fff;">{int(d['Sức Mạnh_2']):,}</div>
-                        </div>
-                        <div style="background: #233549; border-radius: 10px; padding: 15px; flex: 1; text-align: center; border-bottom: 3.5px solid #00ffcc;">
-                            <div style="font-size: 10px; color: #8b949e; font-weight: bold;">{L['tk']}</div>
-                            <div style="font-size: 22px; font-weight: 900; color: #fff;">{int(d['Tổng Tiêu Diệt_2']):,}</div>
-                        </div>
-                        <div style="background: #233549; border-radius: 10px; padding: 15px; flex: 1; text-align: center; border-bottom: 3.5px solid #ff4b4b;">
-                            <div style="font-size: 10px; color: #ff4b4b; font-weight: bold;">{L['td']}</div>
-                            <div style="font-size: 22px; font-weight: 900; color: #ff4b4b;">{int(d['Điểm Chết_2']):,}</div>
-                        </div>
+                        <div style="background: #233549; border-radius: 10px; padding: 15px; flex: 1; text-align: center; border-bottom: 3.5px solid #00d4ff;"><div style="font-size: 10px; color: #8b949e;">{L['pow']}</div><div style="font-size: 22px; font-weight: 900; color: #fff;">{int(d['Sức Mạnh_2']):,}</div></div>
+                        <div style="background: #233549; border-radius: 10px; padding: 15px; flex: 1; text-align: center; border-bottom: 3.5px solid #00ffcc;"><div style="font-size: 10px; color: #8b949e;">{L['tk']}</div><div style="font-size: 22px; font-weight: 900; color: #fff;">{int(d['Tổng Tiêu Diệt_2']):,}</div></div>
+                        <div style="background: #233549; border-radius: 10px; padding: 15px; flex: 1; text-align: center; border-bottom: 3.5px solid #ff4b4b;"><div style="font-size: 10px; color: #ff4b4b;">{L['td']}</div><div style="font-size: 22px; font-weight: 900; color: #ff4b4b;">{int(d['Điểm Chết_2']):,}</div></div>
                     </div>
                     <div style="background: #1a2a3a; border-radius: 15px; padding: 30px; border-bottom: 5px solid #ffd700; display: flex; justify-content: space-around; align-items: center;">
                         <div style="text-align: center;">
@@ -217,12 +205,14 @@ if df is not None:
             """
             components.html(html_card, height=580)
 
-        # BẢNG KPI (GIỮ NGUYÊN)
+        # BẢNG DỮ LIỆU
         df_sorted = df.sort_values(by='KillRank')
-        rows_list = []
+        rows = []
         for _, r in df_sorted.iterrows():
-            rows_list.append(f"""<tr><td><span class="rank-badge">#{int(r['KillRank'])}</span></td><td><b>{r['Tên_2']}</b><br><small style="color:#8b949e">ID: {r['ID']}</small></td><td style="text-align:right">{int(r['Sức Mạnh_2']):,}</td><td style="text-align:right; color:#00ffcc">{int(r['Tổng Tiêu Diệt_2']):,}</td><td style="text-align:right; color:#ff4b4b">{int(r['Điểm Chết_2']):,}</td><td style="text-align:right; color:#00d4ff">+{int(r['KI']):,}</td><td style="text-align:right; color:#ff4b4b">+{int(r['DI']):,}</td><td><div class="kpi-bar-container"><div class="kpi-bar-fill" style="width:{min(r['KPI_T'], 100)}%"></div></div><span style="color:#ffd700; font-weight:bold">{r['KPI_T']}%</span></td></tr>""")
+            rows.append(f"""<tr><td><span class="rank-badge">#{int(r['KillRank'])}</span></td><td><b>{r['Tên_2']}</b><br><small>ID: {r['ID']}</small></td><td style="text-align:right">{int(r['Sức Mạnh_2']):,}</td><td style="text-align:right; color:#00ffcc">{int(r['Tổng Tiêu Diệt_2']):,}</td><td style="text-align:right; color:#ff4b4b">{int(r['Điểm Chết_2']):,}</td><td style="text-align:right; color:#00d4ff">+{int(r['KI']):,}</td><td style="text-align:right; color:#ff4b4b">+{int(r['DI']):,}</td><td><div class="kpi-bar-container"><div class="kpi-bar-fill" style="width:{min(r['KPI_T'], 100)}%"></div></div><span style="color:#ffd700; font-weight:bold">{r['KPI_T']}%</span></td></tr>""")
         
-        st.markdown(f'<div class="table-wrapper"><table class="elite-table"><thead><tr><th>Hạng</th><th>Thành viên</th><th style="text-align:right">Sức mạnh</th><th style="text-align:right">Tổng Kill</th><th style="text-align:right">Điểm Chết</th><th style="text-align:right">Kill +</th><th style="text-align:right">Dead +</th><th>KPI %</th></tr></thead><tbody>{"".join(rows_list)}</tbody></table></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="table-wrapper"><table class="elite-table"><thead><tr><th>Hạng</th><th>Thành viên</th><th style="text-align:right">Sức mạnh</th><th style="text-align:right">Tổng Kill</th><th style="text-align:right">Điểm Chết</th><th style="text-align:right">Kill +</th><th style="text-align:right">Dead +</th><th>KPI %</th></tr></thead><tbody>{"".join(rows)}</tbody></table></div>', unsafe_allow_html=True)
 
-    st.markdown(f'<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: rgba(5,10,14,0.95); color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index: 999;">🛡️ Admin Louis | v10.9</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a;">🛡️ Admin Louis | v10.9</div>', unsafe_allow_html=True)
+else:
+    st.error("Lỗi kết nối dữ liệu Google Sheets. Louis hãy kiểm tra lại quyền truy cập file CSV nhé!")
