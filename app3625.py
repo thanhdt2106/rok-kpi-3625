@@ -34,7 +34,6 @@ st.markdown("""
         text-transform: uppercase;
     }
 
-    /* Table Improvements */
     .table-wrapper { 
         background: rgba(13, 27, 42, 0.4); 
         border: 1px solid #1e3a5a; 
@@ -94,7 +93,6 @@ if df is not None:
     with h_col1:
         st.markdown('<div class="header-left-text">FIGHT TO DEAD 3625</div>', unsafe_allow_html=True)
     with h_col2:
-        # Chỉnh index=None và placeholder theo ý bạn
         sel = st.selectbox(
             "", 
             sorted(df['Tên_2'].dropna().unique()), 
@@ -103,19 +101,77 @@ if df is not None:
             label_visibility="collapsed"
         )
 
-    # --- 5. PROFILE CARD ---
+    # --- 5. DETAILED PROFILE CARD (v11.9 STYLE) ---
     if sel:
         d = df[df['Tên_2'] == sel].iloc[0]
+        cur_k = f"{d['KI']/1e6:.1f}M"
+        tar_k = f"{d['T_K']/1e6:.0f}M"
+        cur_d = f"{d['DI']/1e3:.1f}K"
+        tar_d = f"{d['T_D']/1e3:.0f}K"
+
         html_card = f"""
-        <div style="background: rgba(13, 25, 47, 0.98); border: 1px solid #00d4ff; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 20px; border-bottom: 4px solid #ffd700;">
-            <h2 style="font-family: 'Rajdhani', sans-serif; color: #fff; margin: 0; letter-spacing: 1px;">{sel}</h2>
-            <div style="font-size: 12px; color: #8b949e; margin-top: 5px;">ID: {d['ID']} | {d['Liên Minh_2']}</div>
-            <p style="color: #ffd700; font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 26px; margin: 10px 0 0 0;">TOTAL KPI: {d['KPI_T']}%</p>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Saira:wght@400;700&display=swap');
+            .mini-bar-box {{ margin-top: 5px; width: 90px; margin-left: auto; margin-right: auto; }}
+            .mini-progress-container {{ width: 100%; background: #0d151f; height: 4px; border-radius: 2px; overflow: hidden; }}
+            .mini-fill-k {{ height: 100%; background: #00d4ff; }}
+            .mini-fill-d {{ height: 100%; background: #ff4b4b; }}
+            .target-label {{ font-family: 'Saira', sans-serif; font-size: 10px; color: #ffd700; font-weight: 600; margin-top: 2px; }}
+            .current-label {{ font-family: 'Rajdhani', sans-serif; font-size: 13px; color: #fff; font-weight: 700; }}
+        </style>
+
+        <div style="position: relative; max-width: 800px; margin: 55px auto 15px; font-family: 'Saira', sans-serif;">
+            <div style="position: absolute; top: -40px; left: 50%; transform: translateX(-50%); background: #1c2e3e; border: 1px solid #00d4ff; border-radius: 8px; padding: 10px 25px; z-index: 10; text-align: center; border-bottom: 3px solid #ffd700; width: 320px;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
+                    <img src="https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true" style="width: 30px;">
+                    <div style="font-family: 'Rajdhani', sans-serif; color: #ffffff; font-size: 22px; font-weight: 700;">{sel}</div>
+                </div>
+                <div style="font-size: 11px; color: #8b949e; margin-top: 2px;">ID: {d['ID']} | {d['Liên Minh_2']}</div>
+            </div>
+            
+            <div style="background: rgba(13, 25, 47, 0.98); border: 1px solid #00d4ff; border-radius: 12px; padding: 55px 20px 15px 20px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                    <div style="background: rgba(35, 53, 73, 0.5); border-radius: 6px; padding: 10px; text-align: center; border-left: 3px solid #ffd700;">
+                        <div style="font-size: 11px; color: #8b949e;">RANK</div>
+                        <div style="font-family: 'Rajdhani', sans-serif; font-size: 24px; font-weight: 700; color: #ffd700;">#{int(d['Rank'])}</div>
+                    </div>
+                    <div style="background: rgba(35, 53, 73, 0.5); border-radius: 6px; padding: 10px; text-align: center; border-left: 3px solid #00d4ff;">
+                        <div style="font-size: 11px; color: #8b949e;">POWER</div>
+                        <div style="font-family: 'Rajdhani', sans-serif; font-size: 24px; font-weight: 700; color: #fff;">{int(d['Sức Mạnh_2']):,}</div>
+                    </div>
+                </div>
+
+                <div style="background: rgba(26, 42, 58, 0.3); border-radius: 8px; padding: 20px 10px; border: 1px solid rgba(0, 212, 255, 0.1); display: flex; justify-content: space-around; align-items: flex-start;">
+                    <div style="text-align: center;">
+                        <svg width="50" height="50" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#00ffff" stroke-width="3" stroke-dasharray="{min(d['KPI_K'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
+                        <div style="font-family: 'Rajdhani', sans-serif; color:#00ffff; font-size: 14px; font-weight:700;">{d['KPI_K']}%</div>
+                        <div class="mini-bar-box">
+                            <div class="current-label">{cur_k}</div>
+                            <div class="mini-progress-container"><div class="mini-fill-k" style="width:{min(d['KPI_K'], 100)}%"></div></div>
+                            <div class="target-label">Target: {tar_k}</div>
+                        </div>
+                    </div>
+                    <div style="text-align: center;">
+                        <svg width="80" height="80" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ffd700" stroke-width="4" stroke-dasharray="{min(d['KPI_T'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
+                        <div style="font-family: 'Rajdhani', sans-serif; color:#ffd700; font-size:24px; font-weight:700;">{d['KPI_T']}%</div>
+                        <div style="font-size:11px; color:#ffd700; font-weight:600;">TOTAL KPI</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <svg width="50" height="50" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ff4b4b" stroke-width="3" stroke-dasharray="{min(d['KPI_D'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
+                        <div style="font-family: 'Rajdhani', sans-serif; color:#ff4b4b; font-size: 14px; font-weight:700;">{d['KPI_D']}%</div>
+                        <div class="mini-bar-box">
+                            <div class="current-label">{cur_d}</div>
+                            <div class="mini-progress-container"><div class="mini-fill-d" style="width:{min(d['KPI_D'], 100)}%"></div></div>
+                            <div class="target-label">Target: {tar_d}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         """
-        components.html(html_card, height=140)
+        components.html(html_card, height=500)
 
-    # --- 6. TABLE ---
+    # --- 6. TABLE (BASE + CURRENT + DIFF) ---
     df_sorted = df.sort_values(by='Rank')
     headers = [
         'Rank', 'Member', 'Alliance', 'Power', 
@@ -153,4 +209,4 @@ if df is not None:
     st.markdown(table_html, unsafe_allow_html=True)
 
     # Footer
-    st.markdown(f'<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999; font-size:12px; font-family: Rajdhani;">🛡️ ADMIN LOUIS | V12.3 | CLEAN SEARCH UI</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999; font-size:12px; font-family: Rajdhani;">🛡️ ADMIN LOUIS | V12.4 | COMPLETE CENTER</div>', unsafe_allow_html=True)
