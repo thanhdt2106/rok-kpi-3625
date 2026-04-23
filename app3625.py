@@ -3,32 +3,32 @@ import pandas as pd
 import streamlit.components.v1 as components
 
 # --- 1. CẤU HÌNH TRANG ---
-st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide")
+# initial_sidebar_state="collapsed" giúp menu EN/VN ẩn đi, chỉ hiện nút nhọn bên trái
+st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide", initial_sidebar_state="collapsed")
 
 # Link các ảnh
 LOGO_MAIN = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo1.png?raw=true"
 LOGO_PROFILE = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true"
 
-# --- 2. SIÊU CSS (TỐI ƯU KHÔNG GIAN) ---
+# --- 2. SIÊU CSS ---
 st.markdown("""
     <style>
     .stApp { background-color: #050a0e; color: #e0e6ed; }
-    /* Đưa nội dung sát lên đỉnh */
     .block-container { padding-top: 0rem !important; max-width: 98% !important; }
     header { visibility: hidden; height: 0px !important; }
 
-    /* Logo cao nhất có thể */
+    /* Logo cao nhất */
     .logo-container { 
         display: flex; 
         justify-content: center; 
-        margin-top: -20px; /* Đẩy ngược lên trên */
+        margin-top: -20px; 
         margin-bottom: 10px; 
     }
     .logo-img { width: 280px; filter: drop-shadow(0px 0px 10px rgba(0, 212, 255, 0.4)); }
 
-    /* Sidebar Menu */
+    /* Sidebar (Menu ẩn bên trái) */
     [data-testid="stSidebar"] { background-color: #0d1b2a; border-right: 1px solid #00d4ff; }
-    .sidebar-header { color: #00d4ff; font-weight: bold; font-size: 18px; text-align: center; margin-bottom: 20px; }
+    .sidebar-header { color: #00d4ff; font-weight: bold; font-size: 18px; text-align: center; margin-bottom: 20px; border-bottom: 1px solid #1e3a5a; padding-bottom: 10px; }
 
     /* Bảng dữ liệu */
     .table-wrapper { background: rgba(13, 27, 42, 0.6); border: 1px solid #1e3a5a; border-radius: 12px; padding: 20px; }
@@ -47,20 +47,22 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. SIDEBAR (MỤC NỔI ẨN BÊN TRÁI) ---
+# --- 3. SIDEBAR (NƠI ẨN EN/VN VÀ SETTING) ---
 with st.sidebar:
-    st.markdown('<div class="sidebar-header">COMMAND CENTER</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-header">CONFIG SYSTEM</div>', unsafe_allow_html=True)
     
-    # Chuyển EN/VN vào đây
-    lang = st.radio("NGÔN NGỮ / LANGUAGE", ["VN", "EN"], horizontal=True)
-    
-    st.divider()
-    
-    # Thêm 2 mục mới theo yêu cầu của Louis
-    menu = st.radio("MENU CHÍNH", ["📊 Bảng KPI", "👤 Tài khoản", "⚙️ Quản lý KPI"])
+    # Mục EN/VN ẩn ở đây
+    st.write("**CHỌN NGÔN NGỮ**")
+    lang = st.radio("LANGUAGE", ["VN", "EN"], horizontal=True, label_visibility="collapsed")
     
     st.divider()
-    st.info("Phiên bản v10.9 - Admin Louis")
+    
+    # Các mục quản lý
+    st.write("**HỆ THỐNG**")
+    menu = st.radio("MENU", ["📊 Bảng KPI", "👤 Tài khoản", "⚙️ Quản lý KPI"], label_visibility="collapsed")
+    
+    st.divider()
+    st.info(f"Phiên bản v10.9\nAdmin Louis")
 
 # --- 4. DỮ LIỆU ---
 texts = {
@@ -95,7 +97,8 @@ def load_data():
         df['KillRank'] = df['Tổng Tiêu Diệt_2'].rank(ascending=False, method='min').astype(int)
         
         def get_metrics(r):
-            p = r['Sức Mạnh_2']; gk = 300e6 if p >= 45e6 else 250e6 if p >= 40e6 else 200e6
+            p = r['Sức Mạnh_2']
+            gk = 300e6 if p >= 45e6 else 250e6 if p >= 40e6 else 200e6
             gd = 400e3 if p >= 30e6 else 300e3 if p >= 20e6 else 200e3
             pk = max(0.0, float(r['KI']) / gk) if gk > 0 else 0.0
             pdv = max(0.0, float(r['DI']) / gd) if gd > 0 else 0.0
@@ -107,9 +110,8 @@ def load_data():
 
 df = load_data()
 
-# --- 5. HIỂN THỊ NỘI DUNG THEO MENU ---
+# --- 5. HIỂN THỊ NỘI DUNG ---
 if df is not None:
-    # Logo đưa lên cao nhất
     st.markdown(f'<div class="logo-container"><img src="{LOGO_MAIN}" class="logo-img"></div>', unsafe_allow_html=True)
 
     if menu == "📊 Bảng KPI":
@@ -202,12 +204,7 @@ if df is not None:
         table_html = f"""
         <div class="table-wrapper">
             <table class="elite-table">
-                <thead>
-                    <tr>
-                        <th>{h[0]}</th><th>{h[1]}</th><th style="text-align:right">{h[2]}</th><th style="text-align:right">{h[3]}</th>
-                        <th style="text-align:right">{h[4]}</th><th style="text-align:right">{h[5]}</th><th style="text-align:right">{h[6]}</th><th>{h[7]}</th>
-                    </tr>
-                </thead>
+                <thead><tr><th>{h[0]}</th><th>{h[1]}</th><th style="text-align:right">{h[2]}</th><th style="text-align:right">{h[3]}</th><th style="text-align:right">{h[4]}</th><th style="text-align:right">{h[5]}</th><th style="text-align:right">{h[6]}</th><th>{h[7]}</th></tr></thead>
                 <tbody>{"".join(rows_list)}</tbody>
             </table>
         </div>
@@ -216,12 +213,12 @@ if df is not None:
 
     elif menu == "👤 Tài khoản":
         st.subheader("Thông tin tài khoản")
-        st.write("Chức năng đang được cập nhật...")
+        st.write("Module tài khoản đang được phát triển...")
 
     elif menu == "⚙️ Quản lý KPI":
         st.subheader("Cấu hình & Quản lý KPI")
-        st.write("Chức năng dành cho Quản trị viên...")
+        st.write("Dành cho quản trị viên Louis")
 
-    st.markdown(f'<div class="footer">🛡️ Discord: <b>louiss.nee</b> | Zalo: <b>0.3.7.3.2.7.4.6.0.0</b></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="footer">🛡️ Discord: louiss.nee | Zalo: 0.3.7.3.2.7.4.6.0.0</div>', unsafe_allow_html=True)
 else:
-    st.error("⚠️ Lỗi kết nối Google Sheets.")
+    st.error("⚠️ Lỗi kết nối dữ liệu. Vui lòng kiểm tra lại quyền chia sẻ file Google Sheets!")
