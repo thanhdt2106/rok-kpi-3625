@@ -69,8 +69,12 @@ def load_data():
         for c in ['Sức Mạnh_2', 'Tổng Tiêu Diệt_2', 'Điểm Chết_2', 'Tổng Tiêu Diệt_1', 'Điểm Chết_1']:
             df[c] = pd.to_numeric(df[c].astype(str).str.replace(r'[^\d.]', '', regex=True), errors='coerce').fillna(0)
         
+        # Killpoint và Deathpoint tăng thêm
         df['KI'] = df['Tổng Tiêu Diệt_2'] - df['Tổng Tiêu Diệt_1']
         df['DI'] = df['Điểm Chết_2'] - df['Điểm Chết_1']
+        
+        # Xếp hạng (Rank) dựa trên Killpoint Tăng Thêm (KI)
+        df['Rank'] = df['KI'].rank(ascending=False, method='min').astype(int)
         
         def calc_kpi(r):
             p = r['Sức Mạnh_2']
@@ -81,7 +85,6 @@ def load_data():
             return pd.Series([pk, pdv, round((pk + pdv) / 2, 1), target_k, target_d])
             
         df[['KPI_K', 'KPI_D', 'KPI_T', 'T_K', 'T_D']] = df.apply(calc_kpi, axis=1)
-        df['Rank'] = df['Tổng Tiêu Diệt_2'].rank(ascending=False, method='min').astype(int)
         return df
     except: return None
 
@@ -101,7 +104,7 @@ if df is not None:
             label_visibility="collapsed"
         )
 
-    # --- 5. DETAILED PROFILE CARD (2 ROWS STATS) ---
+    # --- 5. DETAILED PROFILE CARD ---
     if sel:
         d = df[df['Tên_2'] == sel].iloc[0]
         cur_k = f"{d['KI']/1e6:.1f}M"
@@ -133,10 +136,9 @@ if df is not None:
             </div>
             
             <div style="background: rgba(13, 25, 47, 0.98); border: 1px solid #00d4ff; border-radius: 12px; padding: 60px 20px 25px 20px;">
-                
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 12px;">
                     <div class="stat-box" style="border-left: 4px solid #ffd700;">
-                        <div class="stat-label">RANK</div>
+                        <div class="stat-label">RANK (BY KILL+)</div>
                         <div class="stat-value" style="color: #ffd700;">#{int(d['Rank'])}</div>
                     </div>
                     <div class="stat-box" style="border-left: 4px solid #00d4ff;">
@@ -165,13 +167,11 @@ if df is not None:
                             <div class="target-label">Target: {tar_k}</div>
                         </div>
                     </div>
-
                     <div style="text-align: center;">
                         <svg width="85" height="85" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ffd700" stroke-width="4" stroke-dasharray="{min(d['KPI_T'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
                         <div style="font-family: 'Rajdhani', sans-serif; color:#ffd700; font-size:28px; font-weight:700;">{d['KPI_T']}%</div>
                         <div style="font-size:12px; color:#ffd700; font-weight:700; letter-spacing:1px;">TOTAL KPI</div>
                     </div>
-
                     <div style="text-align: center;">
                         <svg width="55" height="55" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ff4b4b" stroke-width="3" stroke-dasharray="{min(d['KPI_D'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
                         <div style="font-family: 'Rajdhani', sans-serif; color:#ff4b4b; font-size: 16px; font-weight:700; margin-top:4px;">{d['KPI_D']}%</div>
@@ -187,12 +187,13 @@ if df is not None:
         """
         components.html(html_card, height=600)
 
-    # --- 6. TABLE ---
-    df_sorted = df.sort_values(by='Rank')
+    # --- 6. TABLE (SORTED BY KILL (+)) ---
+    df_sorted = df.sort_values(by='KI', ascending=False)
     headers = ['Rank', 'Member', 'Alliance', 'Power', 'Base Kill', 'Total Kill', 'Kill (+)', 'Base Death', 'Total Death', 'Death (+)', 'KPI %']
     
     rows_list = []
     for _, r in df_sorted.iterrows():
+        # Highlighting the Kill (+) column since it's the sort key
         rows_list.append(f"""
         <tr>
             <td style="font-family: 'Rajdhani', sans-serif; font-weight:700; color:#ffd700; text-align:center;">#{int(r['Rank'])}</td>
@@ -201,7 +202,7 @@ if df is not None:
             <td style="text-align:right; font-family: 'Rajdhani', sans-serif;">{int(r['Sức Mạnh_2']):,}</td>
             <td style="text-align:right; color:#8b949e; font-size:12px;">{int(r['Tổng Tiêu Diệt_1']):,}</td>
             <td style="text-align:right; color:#e0e6ed;">{int(r['Tổng Tiêu Diệt_2']):,}</td>
-            <td style="text-align:right; color:#00d4ff; font-weight:bold;">+{int(r['KI']):,}</td>
+            <td style="text-align:right; color:#00d4ff; font-weight:bold; background: rgba(0, 212, 255, 0.05);">+{int(r['KI']):,}</td>
             <td style="text-align:right; color:#8b949e; font-size:12px;">{int(r['Điểm Chết_1']):,}</td>
             <td style="text-align:right; color:#e0e6ed;">{int(r['Điểm Chết_2']):,}</td>
             <td style="text-align:right; color:#ff4b4b; font-weight:bold;">+{int(r['DI']):,}</td>
@@ -211,4 +212,4 @@ if df is not None:
     st.markdown(f'<div class="table-wrapper"><table class="elite-table"><thead><tr>{"".join([f"<th>{h}</th>" for h in headers])}</tr></thead><tbody>{"".join(rows_list)}</tbody></table></div>', unsafe_allow_html=True)
 
     # Footer
-    st.markdown(f'<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999; font-size:12px; font-family: Rajdhani;">🛡️ ADMIN LOUIS | V12.7 | 2-ROW STATS UI</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999; font-size:12px; font-family: Rajdhani;">🛡️ ADMIN LOUIS | V12.8 | RANKED BY KILL POINT INCREASE</div>', unsafe_allow_html=True)
