@@ -101,7 +101,7 @@ if df is not None:
             label_visibility="collapsed"
         )
 
-    # --- 5. FULL DETAILED PROFILE CARD (RESTORED ALL 4 TOP BOXES) ---
+    # --- 5. DETAILED PROFILE CARD (2 ROWS STATS) ---
     if sel:
         d = df[df['Tên_2'] == sel].iloc[0]
         cur_k = f"{d['KI']/1e6:.1f}M"
@@ -112,9 +112,9 @@ if df is not None:
         html_card = f"""
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Saira:wght@400;700&display=swap');
-            .stat-box {{ background: rgba(35, 53, 73, 0.5); border-radius: 6px; padding: 12px; text-align: center; }}
-            .stat-label {{ font-size: 10px; color: #8b949e; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }}
-            .stat-value {{ font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; color: #fff; }}
+            .stat-box {{ background: rgba(35, 53, 73, 0.4); border-radius: 8px; padding: 10px; text-align: center; border: 1px solid rgba(0, 212, 255, 0.1); }}
+            .stat-label {{ font-size: 10px; color: #8b949e; font-weight: 700; text-transform: uppercase; margin-bottom: 2px; }}
+            .stat-value {{ font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700; color: #fff; }}
             .mini-bar-box {{ margin-top: 8px; width: 100px; margin-left: auto; margin-right: auto; }}
             .mini-progress-container {{ width: 100%; background: #0d151f; height: 5px; border-radius: 3px; overflow: hidden; margin: 4px 0; }}
             .mini-fill-k {{ height: 100%; background: #00d4ff; }}
@@ -123,7 +123,7 @@ if df is not None:
             .current-label {{ font-family: 'Rajdhani', sans-serif; font-size: 15px; color: #fff; font-weight: 700; }}
         </style>
 
-        <div style="position: relative; max-width: 950px; margin: 55px auto 15px; font-family: 'Saira', sans-serif;">
+        <div style="position: relative; max-width: 800px; margin: 55px auto 15px; font-family: 'Saira', sans-serif;">
             <div style="position: absolute; top: -40px; left: 50%; transform: translateX(-50%); background: #1c2e3e; border: 1px solid #00d4ff; border-radius: 8px; padding: 10px 25px; z-index: 10; text-align: center; border-bottom: 3px solid #ffd700; width: 340px;">
                 <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
                     <img src="https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo.png?raw=true" style="width: 32px;">
@@ -132,21 +132,24 @@ if df is not None:
                 <div style="font-size: 12px; color: #8b949e; margin-top: 2px;">ID: {d['ID']} | {d['Liên Minh_2']}</div>
             </div>
             
-            <div style="background: rgba(13, 25, 47, 0.98); border: 1px solid #00d4ff; border-radius: 12px; padding: 60px 20px 20px 20px;">
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px;">
-                    <div class="stat-box" style="border-bottom: 2px solid #ffd700;">
+            <div style="background: rgba(13, 25, 47, 0.98); border: 1px solid #00d4ff; border-radius: 12px; padding: 60px 20px 25px 20px;">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 12px;">
+                    <div class="stat-box" style="border-left: 4px solid #ffd700;">
                         <div class="stat-label">RANK</div>
                         <div class="stat-value" style="color: #ffd700;">#{int(d['Rank'])}</div>
                     </div>
-                    <div class="stat-box" style="border-bottom: 2px solid #00d4ff;">
+                    <div class="stat-box" style="border-left: 4px solid #00d4ff;">
                         <div class="stat-label">POWER</div>
                         <div class="stat-value">{int(d['Sức Mạnh_2']):,}</div>
                     </div>
-                    <div class="stat-box" style="border-bottom: 2px solid #00ffcc;">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div class="stat-box" style="border-left: 4px solid #00ffcc;">
                         <div class="stat-label">TOTAL KILL</div>
                         <div class="stat-value" style="color: #00ffcc;">{int(d['Tổng Tiêu Diệt_2']):,}</div>
                     </div>
-                    <div class="stat-box" style="border-bottom: 2px solid #ff4b4b;">
+                    <div class="stat-box" style="border-left: 4px solid #ff4b4b;">
                         <div class="stat-label">DEAD PT</div>
                         <div class="stat-value" style="color: #ff4b4b;">{int(d['Điểm Chết_2']):,}</div>
                     </div>
@@ -182,7 +185,7 @@ if df is not None:
             </div>
         </div>
         """
-        components.html(html_card, height=520)
+        components.html(html_card, height=600)
 
     # --- 6. TABLE ---
     df_sorted = df.sort_values(by='Rank')
@@ -208,4 +211,4 @@ if df is not None:
     st.markdown(f'<div class="table-wrapper"><table class="elite-table"><thead><tr>{"".join([f"<th>{h}</th>" for h in headers])}</tr></thead><tbody>{"".join(rows_list)}</tbody></table></div>', unsafe_allow_html=True)
 
     # Footer
-    st.markdown(f'<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999; font-size:12px; font-family: Rajdhani;">🛡️ ADMIN LOUIS | V12.6 | FULL PROFILE INTERFACE</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999; font-size:12px; font-family: Rajdhani;">🛡️ ADMIN LOUIS | V12.7 | 2-ROW STATS UI</div>', unsafe_allow_html=True)
