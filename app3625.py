@@ -24,18 +24,20 @@ st.markdown("""
         text-shadow: 0 0 10px #00d4ff;
     }
 
-    /* MINI PROGRESS BAR STYLE */
+    /* MINI PROGRESS BAR STYLE (REFINED) */
+    .mini-bar-box { margin-top: 8px; width: 80px; margin-left: auto; margin-right: auto; }
     .mini-progress-container {
-        width: 75px;
-        background: #1a2a3a;
+        width: 100%;
+        background: rgba(255,255,255,0.05);
         height: 5px;
-        border-radius: 2px;
-        margin: 5px auto;
+        border-radius: 10px;
         overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.1);
     }
-    .mini-fill-k { height: 100%; background: #00ffff; box-shadow: 0 0 5px #00ffff; }
-    .mini-fill-d { height: 100%; background: #ff4b4b; box-shadow: 0 0 5px #ff4b4b; }
-    .mini-text { font-size: 10px; color: #8b949e; font-family: monospace; }
+    .mini-fill-k { height: 100%; background: linear-gradient(90deg, #00d4ff, #00ffcc); box-shadow: 0 0 8px #00d4ff; }
+    .mini-fill-d { height: 100%; background: linear-gradient(90deg, #ff4b4b, #ff8f8f); box-shadow: 0 0 8px #ff4b4b; }
+    .target-label { font-size: 9px; color: #ffd700; font-weight: bold; margin-top: 3px; letter-spacing: 0.5px; opacity: 0.9; }
+    .current-label { font-size: 10px; color: #fff; font-weight: bold; }
 
     /* TABLE STYLE */
     .table-wrapper { 
@@ -93,7 +95,7 @@ if df is not None:
     with h_col2:
         sel = st.selectbox("", sorted(df['Tên_2'].dropna().unique()), index=None, placeholder="🔍 Search member name...", label_visibility="collapsed")
 
-    # --- 5. PROFILE (2 COLUMNS PER ROW LAYOUT) ---
+    # --- 5. PROFILE (REFINED PROGRESS BARS) ---
     if sel:
         d = df[df['Tên_2'] == sel].iloc[0]
         
@@ -133,33 +135,41 @@ if df is not None:
                     </div>
                 </div>
 
-                <div style="background: rgba(26, 42, 58, 0.5); border-radius: 12px; padding: 15px; border: 1px solid rgba(0, 212, 255, 0.1); display: flex; justify-content: space-around; align-items: center;">
+                <div style="background: rgba(26, 42, 58, 0.5); border-radius: 12px; padding: 20px 10px; border: 1px solid rgba(0, 212, 255, 0.1); display: flex; justify-content: space-around; align-items: flex-start;">
                     
                     <div style="text-align: center;">
                         <svg width="55" height="55" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#00ffff" stroke-width="3" stroke-dasharray="{min(d['KPI_K'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
                         <div style="color:#00ffff; font-size: 12px; font-weight:bold; margin-top:3px;">{d['KPI_K']}%</div>
-                        <div class="mini-progress-container"><div class="mini-fill-k" style="width:{min(d['KPI_K'], 100)}%"></div></div>
-                        <div class="mini-text">{cur_k}/{tar_k}</div>
+                        
+                        <div class="mini-bar-box">
+                            <div class="current-label">{cur_k}</div>
+                            <div class="mini-progress-container"><div class="mini-fill-k" style="width:{min(d['KPI_K'], 100)}%"></div></div>
+                            <div class="target-label">TARGET: {tar_k}</div>
+                        </div>
                     </div>
 
                     <div style="text-align: center;">
                         <svg width="85" height="85" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ffd700" stroke-width="4" stroke-dasharray="{min(d['KPI_T'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
                         <div style="color:#ffd700; font-size:22px; font-weight:bold;">{d['KPI_T']}%</div>
-                        <div style="font-size:9px; color:#ffd700; font-weight:bold; letter-spacing:1px;">TOTAL KPI</div>
+                        <div style="font-size:9px; color:#ffd700; font-weight:bold; letter-spacing:1px; margin-top:5px;">TOTAL SCORE</div>
                     </div>
 
                     <div style="text-align: center;">
                         <svg width="55" height="55" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#0d151f" stroke-width="3"/><circle cx="18" cy="18" r="16" fill="none" stroke="#ff4b4b" stroke-width="3" stroke-dasharray="{min(d['KPI_D'], 100)}, 100" transform="rotate(-90 18 18)"/></svg>
                         <div style="color:#ff4b4b; font-size: 12px; font-weight:bold; margin-top:3px;">{d['KPI_D']}%</div>
-                        <div class="mini-progress-container"><div class="mini-fill-d" style="width:{min(d['KPI_D'], 100)}%"></div></div>
-                        <div class="mini-text">{cur_d}/{tar_d}</div>
+                        
+                        <div class="mini-bar-box">
+                            <div class="current-label">{cur_d}</div>
+                            <div class="mini-progress-container"><div class="mini-fill-d" style="width:{min(d['KPI_D'], 100)}%"></div></div>
+                            <div class="target-label">TARGET: {tar_d}</div>
+                        </div>
                     </div>
 
                 </div>
             </div>
         </div>
         """
-        components.html(html_card, height=480)
+        components.html(html_card, height=520)
 
     # --- 6. TABLE ---
     df_sorted = df.sort_values(by='Rank')
@@ -194,4 +204,4 @@ if df is not None:
     st.markdown(table_html, unsafe_allow_html=True)
 
     # Footer
-    st.markdown(f'<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999; font-size:12px;">🛡️ Admin Louis | v11.6 | Optimized Layout</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="position: fixed; left: 0; bottom: 0; width: 100%; background: #050a0e; color: #8b949e; padding: 10px; text-align: center; border-top: 1px solid #1a2a3a; z-index:999; font-size:12px;">🛡️ Admin Louis | v11.7 | Target Focused</div>', unsafe_allow_html=True)
