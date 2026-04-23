@@ -3,8 +3,12 @@ import pandas as pd
 import streamlit.components.v1 as components
 
 # --- 1. CẤU HÌNH TRANG ---
-# initial_sidebar_state="collapsed" giúp menu EN/VN ẩn đi, chỉ hiện nút nhọn bên trái
-st.set_page_config(page_title="FTD KPI | COMMAND CENTER", layout="wide", initial_sidebar_state="collapsed")
+# initial_sidebar_state="expanded" đảm bảo thanh Setting luôn hiện ra ở bên trái
+st.set_page_config(
+    page_title="FTD KPI | COMMAND CENTER", 
+    layout="wide", 
+    initial_sidebar_state="expanded"
+)
 
 # Link các ảnh
 LOGO_MAIN = "https://github.com/thanhdt2106/rok-kpi-3625/blob/main/logo1.png?raw=true"
@@ -26,9 +30,19 @@ st.markdown("""
     }
     .logo-img { width: 280px; filter: drop-shadow(0px 0px 10px rgba(0, 212, 255, 0.4)); }
 
-    /* Sidebar (Menu ẩn bên trái) */
-    [data-testid="stSidebar"] { background-color: #0d1b2a; border-right: 1px solid #00d4ff; }
-    .sidebar-header { color: #00d4ff; font-weight: bold; font-size: 18px; text-align: center; margin-bottom: 20px; border-bottom: 1px solid #1e3a5a; padding-bottom: 10px; }
+    /* Sidebar - Thanh bên trái */
+    [data-testid="stSidebar"] { 
+        background-color: #0d1b2a; 
+        border-right: 1px solid #00d4ff; 
+    }
+    .sidebar-header { 
+        color: #00d4ff; 
+        font-weight: bold; 
+        font-size: 20px; 
+        text-align: center; 
+        padding: 20px 0;
+        border-bottom: 1px solid #1e3a5a;
+    }
 
     /* Bảng dữ liệu */
     .table-wrapper { background: rgba(13, 27, 42, 0.6); border: 1px solid #1e3a5a; border-radius: 12px; padding: 20px; }
@@ -47,31 +61,29 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. SIDEBAR (NƠI ẨN EN/VN VÀ SETTING) ---
+# --- 3. SIDEBAR (THANH MENU BÊN TRÁI) ---
 with st.sidebar:
-    st.markdown('<div class="sidebar-header">CONFIG SYSTEM</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-header">🛡️ COMMAND CENTER</div>', unsafe_allow_html=True)
     
-    # Mục EN/VN ẩn ở đây
-    st.write("**CHỌN NGÔN NGỮ**")
-    lang = st.radio("LANGUAGE", ["VN", "EN"], horizontal=True, label_visibility="collapsed")
-    
-    st.divider()
-    
-    # Các mục quản lý
-    st.write("**HỆ THỐNG**")
-    menu = st.radio("MENU", ["📊 Bảng KPI", "👤 Tài khoản", "⚙️ Quản lý KPI"], label_visibility="collapsed")
+    st.write("### 🌍 NGÔN NGỮ")
+    lang = st.radio("Chọn ngôn ngữ:", ["VN", "EN"], horizontal=True, label_visibility="collapsed")
     
     st.divider()
-    st.info(f"Phiên bản v10.9\nAdmin Louis")
+    
+    st.write("### ⚙️ QUẢN LÝ")
+    menu = st.radio("Menu chính:", ["📊 Bảng KPI", "👤 Tài khoản", "⚙️ Quản lý KPI"], label_visibility="collapsed")
+    
+    st.divider()
+    st.info(f"Admin: Louis\nPhiên bản v10.9")
 
 # --- 4. DỮ LIỆU ---
 texts = {
     "VN": {
-        "search": "👤 Tìm kiếm thành viên...", "pow": "SỨC MẠNH", "tk": "TỔNG TIÊU DIỆT", "td": "ĐIỂM CHẾT", "rank": "HẠNG",
+        "search": "👤 Tìm kiếm thành viên...", "pow": "SỨC MẠNH", "tk": "TỔNG TIÊU DIỆT", "td": "ĐIỂM CHẾT",
         "cols": ['Hạng', 'Thành viên', 'Sức mạnh', 'Tổng Kill', 'Điểm Chết', 'Kill +', 'Dead +', 'KPI %']
     },
     "EN": {
-        "search": "👤 Search member name...", "pow": "POWER", "tk": "TOTAL KILL", "td": "TOTAL DEAD", "rank": "RANK",
+        "search": "👤 Search member name...", "pow": "POWER", "tk": "TOTAL KILL", "td": "TOTAL DEAD",
         "cols": ['Rank', 'Member', 'Power', 'Total Kill', 'Total Dead', 'Kill Inc', 'Dead Inc', 'KPI %']
     }
 }
@@ -181,7 +193,7 @@ if df is not None:
             """
             components.html(html_card, height=580)
 
-        # Bảng dữ liệu
+        # Bảng dữ liệu chính
         df_sorted = df.sort_values(by='KillRank')
         rows_list = []
         for _, r in df_sorted.iterrows():
@@ -213,12 +225,12 @@ if df is not None:
 
     elif menu == "👤 Tài khoản":
         st.subheader("Thông tin tài khoản")
-        st.write("Module tài khoản đang được phát triển...")
+        st.info("Chức năng đang phát triển...")
 
     elif menu == "⚙️ Quản lý KPI":
-        st.subheader("Cấu hình & Quản lý KPI")
-        st.write("Dành cho quản trị viên Louis")
+        st.subheader("Cấu hình hệ thống")
+        st.write("Dành cho Admin Louis")
 
     st.markdown(f'<div class="footer">🛡️ Discord: louiss.nee | Zalo: 0.3.7.3.2.7.4.6.0.0</div>', unsafe_allow_html=True)
 else:
-    st.error("⚠️ Lỗi kết nối dữ liệu. Vui lòng kiểm tra lại quyền chia sẻ file Google Sheets!")
+    st.error("⚠️ Lỗi kết nối dữ liệu. Louis hãy kiểm tra xem file Google Sheets đã được bật 'Bất kỳ ai có liên kết đều có thể xem' chưa nhé!")
