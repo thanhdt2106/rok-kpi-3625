@@ -3,55 +3,66 @@ import pandas as pd
 
 st.set_page_config(layout="wide")
 
-# ===== LINK =====
 SHEET_ID = "1MJQSE3siwFWmQNdJmbbJ6RsilvcoxWTu-r6h-UdHugE"
 
 URL_BEFORE = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=731741617"
 URL_AFTER  = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=371969335"
 
-# ===== LOAD DATA =====
 @st.cache_data(ttl=30)
 def load_data():
-    df_before = pd.read_csv(URL_BEFORE)
-    df_after  = pd.read_csv(URL_AFTER)
+    df1 = pd.read_csv(URL_BEFORE)
+    df2 = pd.read_csv(URL_AFTER)
 
-    # clean column
-    df_before.columns = df_before.columns.str.strip()
-    df_after.columns  = df_after.columns.str.strip()
+    # ===== CLEAN COLUMN =====
+    df1.columns = df1.columns.str.strip()
+    df2.columns = df2.columns.str.strip()
 
-    # ID dạng string
-    df_before["ID"] = df_before["ID"].astype(str)
-    df_after["ID"]  = df_after["ID"].astype(str)
+    # ===== FIX ID (QUAN TRỌNG NHẤT) =====
+    for df in [df1, df2]:
+        df["ID"] = (
+            df["ID"]
+            .astype(str)
+            .str.replace(".0", "", regex=False)
+            .str.strip()
+        )
 
-    # merge theo ID
-    df = pd.merge(df_before, df_after, on="ID", suffixes=("_1", "_2"))
+    # ===== DROP ID RỖNG =====
+    df1 = df1[df1["ID"] != "nan"]
+    df2 = df2[df2["ID"] != "nan"]
 
-    # convert number
-    cols = [
+    # ===== REMOVE DUP =====
+    df1 = df1.drop_duplicates(subset="ID")
+    df2 = df2.drop_duplicates(subset="ID")
+
+    # ===== MERGE =====
+    df = pd.merge(df1, df2, on="ID", suffixes=("_1", "_2"))
+
+    # ===== CONVERT NUMBER =====
+    num_cols = [
         "Tổng Tiêu Diệt_1","Tổng Tiêu Diệt_2",
         "Điểm Chết_1","Điểm Chết_2",
         "T4_2","T5_2","Sức Mạnh_2"
     ]
 
-    for c in cols:
+    for c in num_cols:
         df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0)
 
-    # tính tăng
-    df["Kill_Up"]  = df["Tổng Tiêu Diệt_2"] - df["Tổng Tiêu Diệt_1"]
-    df["Dead_Up"]  = df["Điểm Chết_2"] - df["Điểm Chết_1"]
+    # ===== CALC =====
+    df["Kill_Up"] = df["Tổng Tiêu Diệt_2"] - df["Tổng Tiêu Diệt_1"]
+    df["Dead_Up"] = df["Điểm Chết_2"] - df["Điểm Chết_1"]
 
-    # sort theo kill tăng
+    # ===== SORT =====
     df = df.sort_values(by="Kill_Up", ascending=False)
 
-    # Rank thay STT
     df["Rank"] = range(1, len(df)+1)
 
     return df
 
 df = load_data()
 
-# ===== HIỂN THỊ TEST =====
-st.title("TEST LOAD DATA")
+st.title("TEST LOAD DATA FIXED")
+
+st.write("Rows:", len(df))
 
 st.dataframe(
     df[[
