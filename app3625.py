@@ -148,49 +148,68 @@ html = f"""
 
 <div id="profile" style="display:none; position:fixed; right:0; top:0; width:35%; height:100%; background:#020617; padding:20px; box-shadow:-10px 0 20px rgba(0,0,0,.5);"></div>
 
+html = f"""
+<div class="table-wrapper">
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Name</th>
+<th>ID</th>
+<th>Alliance</th>
+<th>Kill+</th>
+<th>Dead+</th>
+<th>Power</th>
+<th>KPI</th>
+</tr>
+</thead>
+<tbody>
+{rows}
+</tbody>
+</table>
+</div>
+
+<div id="profile" style="display:none; position:fixed; right:0; top:0; width:35%; height:100%; background:#020617; padding:20px;"></div>
+
 <script>
-function showProfile(name,id,alliance,kill,dead,power,kpi,rank){
+function showProfile(name,id,alliance,kill,dead,power,kpi,rank){{
 
 document.getElementById("profile").style.display="block";
 
 document.getElementById("profile").innerHTML = `
-<h2 style="color:#22d3ee; text-shadow:0 0 10px #22d3ee;">${name}</h2>
-<div>ID: ${id}</div>
-<div>Alliance: ${alliance}</div>
+<h2 style="color:#22d3ee;">${{name}}</h2>
+<div>ID: ${{id}}</div>
+<div>Alliance: ${{alliance}}</div>
 
-<div style="margin-top:20px;padding:10px;border:1px solid #22d3ee;border-radius:10px;">
-🏆 Rank #${rank}
+<div style="margin-top:20px;">
+🏆 Rank #${{rank}}
 </div>
 
 <div style="margin-top:20px;">
-⚔ Kill: ${kill.toLocaleString()}<br>
-💀 Dead: ${dead.toLocaleString()}<br>
-⚡ Power: ${power.toLocaleString()}
+⚔ Kill: ${{kill.toLocaleString()}}<br>
+💀 Dead: ${{dead.toLocaleString()}}<br>
+⚡ Power: ${{power.toLocaleString()}}
 </div>
 
 <div style="margin-top:30px;text-align:center;">
 <div style="
 width:150px;height:150px;
 border-radius:50%;
-background:conic-gradient(#22d3ee ${kpi}%, #1e293b 0);
+background:conic-gradient(#22d3ee ${{kpi}}%, #1e293b 0);
 display:flex;
 align-items:center;
 justify-content:center;
 margin:auto;
-font-size:22px;
-box-shadow:0 0 20px #22d3ee;
 ">
-${kpi}%
+${{kpi}}%
 </div>
-<div style="margin-top:10px;">KPI</div>
 </div>
 
-<div style="margin-top:20px;text-align:center;">
 <button onclick="document.getElementById('profile').style.display='none'">Close</button>
-</div>
 `;
-}
+}}
 </script>
+"""
 """
 
 components.html(html, height=900, scrolling=False)
