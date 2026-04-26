@@ -1,73 +1,61 @@
+# -*- coding: utf-8 -*-
 import streamlit as st
 import pandas as pd
 import streamlit.components.v1 as components
 
 st.set_page_config(layout="wide")
 
-# ===== CSS =====
+# ================= CSS =================
 st.markdown("""
 <style>
-[data-testid="stSidebar"] {display:none;}
-header {visibility:hidden;}
-.block-container {padding:0;margin:0;}
-
-body{
-background: radial-gradient(circle at top,#020617,#000814);
-color:white;
-font-family:'Segoe UI';
-}
-
-.title{
+body {background:#050a0e;color:white;}
+.header {
 font-size:28px;
 font-weight:bold;
-color:#22d3ee;
-text-shadow:0 0 12px #22d3ee;
-padding:20px;
+color:#00d4ff;
+text-shadow:0 0 15px #00d4ff;
 }
 
-.table-wrapper{
-margin:20px;
-border:1px solid rgba(34,211,238,.3);
-border-radius:16px;
-overflow:hidden;
-box-shadow:0 0 20px rgba(34,211,238,.2);
+.card {
+background:#0f172a;
+border-radius:14px;
+padding:15px;
+box-shadow:0 0 15px rgba(0,212,255,.2);
 }
 
-table{
-width:100%;
-border-collapse:collapse;
+.player-name{
+font-size:26px;
+font-weight:bold;
+color:white;
+text-shadow:0 0 12px #00d4ff;
 }
 
-th{
-background:#020617;
-color:#22d3ee;
-padding:10px;
-}
-
-td{
-padding:10px;
-text-align:center;
-}
-
-tr:hover{
-background:rgba(34,211,238,.08);
-cursor:pointer;
-}
-
-.rank{
-color:#facc15;
+.rank-box{
+margin-top:8px;
+display:inline-block;
+padding:6px 14px;
+border:1px solid #00d4ff;
+border-radius:10px;
+color:#ffd700;
 font-weight:bold;
 }
 
-.kpi{
-color:#22d3ee;
+.kpi-circle{
+width:140px;
+height:140px;
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:26px;
 font-weight:bold;
+margin:auto;
+box-shadow:0 0 25px #00d4ff;
 }
-
 </style>
 """, unsafe_allow_html=True)
 
-# ===== DATA =====
+# ================= DATA =================
 SHEET_ID = '1MJQSE3siwFWmQNdJmbbJ6RsilvcoxWTu-r6h-UdHugE'
 URL_T = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=731741617'
 URL_S = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=371969335'
@@ -77,139 +65,90 @@ def load_data():
     dt = pd.read_csv(URL_T)
     ds = pd.read_csv(URL_S)
 
-    for d in [dt, ds]:
-        d['ID'] = d['ID'].astype(str).str.replace(r'\.0$', '', regex=True)
+    dt.columns = dt.columns.str.strip()
+    ds.columns = ds.columns.str.strip()
 
-    df = pd.merge(dt, ds, on='ID', suffixes=('_1', '_2'))
+    dt['ID'] = dt['ID'].astype(str)
+    ds['ID'] = ds['ID'].astype(str)
 
-    # FIX NUMBER
-    cols = [
-        'Tổng Tiêu Diệt_1','Tổng Tiêu Diệt_2',
-        'Điểm Chết_1','Điểm Chết_2',
-        'Sức Mạnh_2'
-    ]
+    df = pd.merge(dt, ds, on='ID', suffixes=('_1','_2'))
 
-    for c in cols:
-        df[c] = pd.to_numeric(
-            df[c].astype(str).str.replace(r'[^\d.]','', regex=True),
-            errors='coerce'
-        ).fillna(0)
+    for c in ['Tổng Tiêu Diệt_1','Tổng Tiêu Diệt_2','Điểm Chết_1','Điểm Chết_2','Sức Mạnh_2']:
+        df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0)
 
     df['KI'] = df['Tổng Tiêu Diệt_2'] - df['Tổng Tiêu Diệt_1']
     df['DI'] = df['Điểm Chết_2'] - df['Điểm Chết_1']
 
     df = df.sort_values(by='KI', ascending=False)
-    df['Rank'] = range(1, len(df)+1)
+    df['Rank'] = range(1,len(df)+1)
+
+    df['Search'] = df['Tên_2'] + " (" + df['ID'] + ")"
+
+    df['KPI'] = ((df['KI']/200_000_000)+(df['DI']/300_000))*50
+    df['KPI'] = df['KPI'].clip(0,100)
 
     return df
 
 df = load_data()
 
-# ===== HEADER =====
-st.markdown('<div class="title">🏆 BẢNG XẾP HẠNG TỔNG HỢP</div>', unsafe_allow_html=True)
+# ================= HEADER =================
+st.markdown('<div class="header">🏆 BẢNG XẾP HẠNG PRO MAX</div>', unsafe_allow_html=True)
 
-# ===== TABLE HTML =====
-rows = ""
-for _, r in df.iterrows():
-    kpi = min(100, round((r['KI']/300_000_000)*100,1))
-    rows += f"""
-    <tr onclick="showProfile('{r['Tên_2']}','{r['ID']}','{r['Liên Minh_2']}',{int(r['KI'])},{int(r['DI'])},{int(r['Sức Mạnh_2'])},{kpi},{int(r['Rank'])})">
-        <td class="rank">#{int(r['Rank'])}</td>
-        <td>{r['Tên_2']}</td>
-        <td>{r['ID']}</td>
-        <td>{r['Liên Minh_2']}</td>
-        <td style="color:#22d3ee;">+{int(r['KI']):,}</td>
-        <td style="color:#ef4444;">+{int(r['DI']):,}</td>
-        <td>{int(r['Sức Mạnh_2']):,}</td>
-        <td class="kpi">{kpi}%</td>
+# ================= SEARCH =================
+search = st.selectbox("", df['Search'], index=None, placeholder="🔍 Tìm player...")
+
+# ================= PROFILE =================
+if search:
+    p = df[df['Search']==search].iloc[0]
+
+    kpi = int(p['KPI'])
+
+    html = f"""
+    <div class="card" style="margin-top:20px;text-align:center;">
+        <img src="https://api.dicebear.com/7.x/bottts/svg?seed={p['Tên_2']}" 
+        style="width:90px;border-radius:50%;box-shadow:0 0 20px #00d4ff;">
+
+        <div class="player-name">{p['Tên_2']}</div>
+
+        <div class="rank-box">
+        &#127942; Rank #{int(p['Rank'])}
+        </div>
+
+        <div style="margin-top:15px;">
+            ⚡ Power: {int(p['Sức Mạnh_2']):,}<br>
+            ⚔ Kill: {int(p['Tổng Tiêu Diệt_2']):,} (+{int(p['KI']):,})<br>
+            💀 Death: {int(p['Điểm Chết_2']):,} (+{int(p['DI']):,})
+        </div>
+
+        <div style="margin-top:20px;">
+            <div class="kpi-circle"
+            style="background:conic-gradient(#00d4ff {kpi}%, #1e293b 0);">
+            {kpi}%
+            </div>
+            KPI
+        </div>
+    </div>
+    """
+
+    components.html(html, height=400)
+
+# ================= TABLE =================
+st.markdown("### 📊 Top Ranking")
+
+table_html = "<div class='card'><table style='width:100%;text-align:center;'>"
+table_html += "<tr><th>#</th><th>Name</th><th>Kill+</th><th>Death+</th><th>KPI</th></tr>"
+
+for _,r in df.head(30).iterrows():
+    table_html += f"""
+    <tr>
+    <td style="color:#ffd700;">#{int(r['Rank'])}</td>
+    <td>{r['Tên_2']}</td>
+    <td style="color:#00d4ff;">+{int(r['KI']):,}</td>
+    <td style="color:#ff4b4b;">+{int(r['DI']):,}</td>
+    <td style="color:#ffd700;">{int(r['KPI'])}%</td>
     </tr>
     """
 
-html = f"""
-<div class="table-wrapper">
-<table>
-<thead>
-<tr>
-<th>#</th>
-<th>Name</th>
-<th>ID</th>
-<th>Alliance</th>
-<th>Kill+</th>
-<th>Dead+</th>
-<th>Power</th>
-<th>KPI</th>
-</tr>
-</thead>
-<tbody>
-{rows}
-</tbody>
-</table>
-</div>
+table_html += "</table></div>"
 
-<div id="profile" style="display:none; position:fixed; right:0; top:0; width:35%; height:100%; background:#020617; padding:20px; box-shadow:-10px 0 20px rgba(0,0,0,.5);"></div>
-
-html = f"""
-<div class="table-wrapper">
-<table>
-<thead>
-<tr>
-<th>#</th>
-<th>Name</th>
-<th>ID</th>
-<th>Alliance</th>
-<th>Kill+</th>
-<th>Dead+</th>
-<th>Power</th>
-<th>KPI</th>
-</tr>
-</thead>
-<tbody>
-{rows}
-</tbody>
-</table>
-</div>
-
-<div id="profile" style="display:none; position:fixed; right:0; top:0; width:35%; height:100%; background:#020617; padding:20px;"></div>
-
-<script>
-function showProfile(name,id,alliance,kill,dead,power,kpi,rank){{
-
-document.getElementById("profile").style.display="block";
-
-document.getElementById("profile").innerHTML = `
-<h2 style="color:#22d3ee;">${{name}}</h2>
-<div>ID: ${{id}}</div>
-<div>Alliance: ${{alliance}}</div>
-
-<div style="margin-top:20px;">
-🏆 Rank #${{rank}}
-</div>
-
-<div style="margin-top:20px;">
-⚔ Kill: ${{kill.toLocaleString()}}<br>
-💀 Dead: ${{dead.toLocaleString()}}<br>
-⚡ Power: ${{power.toLocaleString()}}
-</div>
-
-<div style="margin-top:30px;text-align:center;">
-<div style="
-width:150px;height:150px;
-border-radius:50%;
-background:conic-gradient(#22d3ee ${{kpi}}%, #1e293b 0);
-display:flex;
-align-items:center;
-justify-content:center;
-margin:auto;
-">
-${{kpi}}%
-</div>
-</div>
-
-<button onclick="document.getElementById('profile').style.display='none'">Close</button>
-`;
-}}
-</script>
-"""
-"""
-
-components.html(html, height=900, scrolling=False)
+st.markdown(table_html, unsafe_allow_html=True)
