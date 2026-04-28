@@ -1,88 +1,69 @@
-/* BACKGROUND GAME */
+/* ===== REMOVE STREAMLIT UI ===== */
+header, footer {visibility: hidden;}
+.block-container {padding-top: 1rem; max-width: 100%;}
+
+/* ===== BACKGROUND ===== */
 .stApp {
-    background: radial-gradient(circle at 50% 0%, #1b2735, #090a0f 80%);
+    background: radial-gradient(circle at top, #1a2332, #0b0f17);
     color: white;
     font-family: 'Segoe UI', sans-serif;
 }
 
-/* CARD GLASS */
+/* ===== CARD ===== */
 .card {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(20px);
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(25px);
     border-radius: 25px;
     padding: 25px;
     border: 1px solid rgba(255,255,255,0.08);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    box-shadow: 0 25px 60px rgba(0,0,0,0.6);
 }
 
-/* ===== TOP 3 (QUAN TRỌNG) ===== */
+/* ===== TOP 3 ===== */
 .top-player {
     text-align: center;
-    position: relative;
 }
 
-/* CENTER (TOP 1) TO HƠN */
 .top-player:nth-child(2) {
     transform: scale(1.2);
 }
 
-/* AVATAR */
+/* ===== AVATAR ===== */
 .avatar {
-    width: 60px;
-    height: 60px;
     border-radius: 50%;
     margin: auto;
-    background: linear-gradient(135deg, #00f2fe, #4facfe);
-    box-shadow: 0 0 25px rgba(79,172,254,0.9);
+    background: linear-gradient(135deg, #00c6ff, #0072ff);
+}
+
+.avatar.small {
+    width: 35px;
+    height: 35px;
 }
 
 .avatar.big {
-    width: 110px;
-    height: 110px;
+    width: 90px;
+    height: 90px;
+    box-shadow: 0 0 30px rgba(0,150,255,0.8);
 }
 
-/* GLOW EFFECT */
-.avatar.big {
-    box-shadow: 0 0 40px rgba(0,150,255,1);
-}
-
-/* ===== LIST PLAYER ===== */
+/* ===== LIST ===== */
 .row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
     padding: 14px;
     margin-bottom: 10px;
     border-radius: 15px;
-
-    background: linear-gradient(
-        145deg,
-        rgba(255,255,255,0.05),
-        rgba(255,255,255,0.02)
-    );
-
-    border: 1px solid rgba(255,255,255,0.05);
-
-    transition: all 0.25s ease;
+    background: rgba(255,255,255,0.05);
+    transition: 0.25s;
 }
 
-/* HOVER = GAME EFFECT */
 .row:hover {
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 10px 30px rgba(0,150,255,0.2);
+    transform: scale(1.02);
 }
 
-/* ACTIVE PLAYER */
 .row.active {
     border: 1px solid #00c6ff;
-    box-shadow: 0 0 20px rgba(0,198,255,0.6);
-}
-
-/* LEFT */
-.left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    box-shadow: 0 0 15px rgba(0,198,255,0.5);
 }
 
 /* ===== PROFILE ===== */
@@ -90,68 +71,52 @@
     text-align: center;
 }
 
-/* NAME */
-.profile h2 {
-    font-size: 28px;
-    margin-top: 10px;
-}
-
-/* SUB */
 .sub {
     opacity: 0.6;
-    margin-bottom: 15px;
 }
 
-/* STATS */
 .stats {
     display: flex;
     justify-content: space-around;
-    margin: 25px 0;
+    margin: 20px 0;
 }
 
-.stats span {
-    font-size: 12px;
-    opacity: 0.5;
-}
-
-/* BUTTONS */
-.buttons button {
-    padding: 10px 16px;
-    border-radius: 12px;
-    border: none;
-    cursor: pointer;
-    margin: 5px;
-}
-
-/* FOLLOW BUTTON (NEON) */
+/* ===== BUTTON ===== */
 .follow {
-    background: linear-gradient(135deg, #6a5cff, #8f7bff);
-    box-shadow: 0 0 15px rgba(106,92,255,0.8);
+    background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    padding: 10px;
+    border-radius: 10px;
     color: white;
+    border: none;
 }
 
-/* MESSAGE */
 .msg {
-    background: rgba(255,255,255,0.1);
+    background: #555;
+    padding: 10px;
+    border-radius: 10px;
     color: white;
+    border: none;
 }
 
 /* ===== BADGES ===== */
 .badges {
     display: flex;
     justify-content: center;
-    gap: 12px;
-    margin-top: 10px;
+    gap: 10px;
 }
 
 .badge {
-    width: 55px;
-    height: 55px;
-    border-radius: 15px;
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
 }
 
-.gold { background: linear-gradient(135deg, gold, orange); }
-.green { background: linear-gradient(135deg, #00b894, #55efc4); }
-.purple { background: linear-gradient(135deg, #6c5ce7, #a29bfe); }
-.gray { background: linear-gradient(135deg, #636e72, #b2bec3); }
+.gold { background: gold; }
+.green { background: #00b894; }
+.purple { background: #6c5ce7; }
+.gray { background: gray; }
+
+/* ===== HIDE BUTTON UI (QUAN TRỌNG) ===== */
+button[kind="secondary"] {
+    display: none !important;
+}
