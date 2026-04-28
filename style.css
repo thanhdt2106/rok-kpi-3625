@@ -1,75 +1,95 @@
-/* nền */
-.stApp {
-    background: radial-gradient(circle at top,#0f172a,#020617);
+body {
+    background: radial-gradient(circle,#020617,#000);
     color:white;
 }
 
-/* card */
+/* NAVBAR */
+.navbar {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:15px 30px;
+    border-radius:20px;
+    background:rgba(255,255,255,0.03);
+    border:1px solid rgba(255,255,255,0.08);
+    margin-bottom:20px;
+}
+
+.menu {
+    display:flex;
+    gap:20px;
+}
+
+.item {
+    padding:10px 20px;
+    border-radius:12px;
+    cursor:pointer;
+}
+
+.item.active {
+    background:linear-gradient(90deg,#00c6ff,#7f00ff);
+}
+
+/* CARD */
 .card {
-    background: rgba(255,255,255,0.03);
+    background:rgba(255,255,255,0.03);
     border-radius:20px;
     padding:20px;
     border:1px solid rgba(255,255,255,0.08);
-    box-shadow:0 0 50px rgba(0,0,0,0.9);
 }
 
-/* bảng */
+/* TABLE */
 .table-header, .row {
     display:grid;
-    grid-template-columns: 50px 150px repeat(8,120px);
+    grid-template-columns: 50px 80px 160px repeat(8,120px);
     padding:10px;
     align-items:center;
 }
 
 .table-header {
-    font-weight:bold;
     color:#888;
     border-bottom:1px solid #333;
 }
 
-/* row */
 .row {
     border-bottom:1px solid rgba(255,255,255,0.05);
     transition:0.3s;
 }
 
 .row:hover {
-    background: rgba(0,198,255,0.08);
-    transform:scale(1.01);
+    background:rgba(0,198,255,0.08);
 }
 
-/* avatar */
-.avatar {
-    width:35px;
-    height:35px;
-    border-radius:50%;
-    background:linear-gradient(135deg,#00c6ff,#0072ff);
-}
-
-/* name */
+/* NAME */
 .name {
     display:flex;
     align-items:center;
     gap:10px;
 }
 
-/* màu chỉ số */
+/* AVATAR */
+.avatar {
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    border:2px solid #00c6ff;
+}
+
+/* COLORS */
 .pow {color:#00ff9c;}
 .max {color:#ffd700;}
 .t4,.t5 {color:#b084f5;}
 .kill {color:#00c6ff;}
 .d4,.d5 {color:#ff7675;}
-.dead {color:#ff4d4d; font-weight:bold;}
+.dead {color:#ff4d4d;}
 
-/* side */
+/* SIDE */
 .side input {
     background:#111 !important;
 }
 
-/* summary */
 .summary {
-    margin-top:10px;
-    padding:10px;
     background:#111;
+    padding:10px;
     border-radius:10px;
 }
