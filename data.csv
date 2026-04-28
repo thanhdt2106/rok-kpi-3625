@@ -1,9 +1,9 @@
-name,power,games
-Rin,20950,1200
-Zyra,21056,1500
-Elara,19367,1100
-Kyra Neonwave,15328,900
-Vexa Chromis,10056,800
-Lunara Flux,5260,1356
-Astra Voidline,1538,300
-Nyomi Glitch,672,150
+name,power,games,kill,dead,gather,activity
+Rin,20950,1200,80,40,70,85
+Zyra,21056,1500,90,30,60,80
+Elara,19367,1100,70,50,75,60
+Kyra Neonwave,15328,900,60,40,65,70
+Vexa Chromis,10056,800,50,30,55,65
+Lunara Flux,5260,1356,40,20,50,60
+Astra Voidline,1538,300,30,20,40,50
+Nyomi Glitch,672,150,20,10,30,40
