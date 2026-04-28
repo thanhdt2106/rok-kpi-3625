@@ -14,7 +14,7 @@ body{
     font-family:Arial;
 }
 
-/* HEADER VÀNG */
+/* HEADER */
 .header{
     background:linear-gradient(#ffd54f,#e6a700);
     height:220px;
@@ -87,20 +87,28 @@ body{
     background:linear-gradient(to right,#00ff87,#00c853);
 }
 
-/* BOX PROFILE */
+/* PROFILE BOX */
 .profile{
     margin-top:15px;
-    background:linear-gradient(#1f6d8c,#15546b);
+    background:
+        linear-gradient(#1f6d8c,#15546b),
+        repeating-linear-gradient(
+            0deg,
+            rgba(255,255,255,0.02),
+            rgba(255,255,255,0.02) 2px,
+            transparent 2px,
+            transparent 4px
+        );
     border-radius:15px;
     padding:15px;
     color:white;
+    border:2px solid rgba(255,255,255,0.08);
     box-shadow:
         inset 0 0 10px rgba(255,255,255,0.1),
         0 0 10px rgba(0,0,0,0.8);
-    border:2px solid rgba(255,255,255,0.1);
 }
 
-/* NAME PILL */
+/* NAME */
 .name{
     display:inline-block;
     background:#0d4f6a;
@@ -109,17 +117,31 @@ body{
     font-size:22px;
     font-weight:bold;
     box-shadow:inset 0 2px 5px rgba(0,0,0,0.6);
+    margin-bottom:10px;
 }
 
-/* ROW */
+/* ROW BOX (QUAN TRỌNG) */
 .row{
     display:flex;
     justify-content:space-between;
-    margin:8px 0;
+    margin:6px 0;
+    padding:8px 10px;
+
+    background:rgba(255,255,255,0.05);
+    border-radius:8px;
+
+    border:1px solid rgba(255,255,255,0.08);
+
+    box-shadow:
+        inset 0 1px 2px rgba(255,255,255,0.05),
+        inset 0 -2px 5px rgba(0,0,0,0.4);
 }
 
+/* VALUE TEXT */
 .row span:last-child{
     color:#ffd54f;
+    font-weight:bold;
+    text-shadow:0 0 5px gold;
 }
 
 /* MEDALS */
@@ -157,7 +179,7 @@ body{
     margin-top:5px;
 }
 
-/* MENU ICON */
+/* MENU */
 .menu{
     display:flex;
     justify-content:space-around;
@@ -201,12 +223,12 @@ body{
 
 <div class="name">Louis Noob</div>
 
-<div class="row"><span>Nền văn minh</span><span>Đức</span></div>
-<div class="row"><span>Liên minh</span><span>[FT-D]FIGHT TO DEAD</span></div>
-<div class="row"><span>Sức mạnh</span><span>87.424.868</span></div>
-<div class="row"><span>Điểm Tiêu Diệt</span><span>6.119.626.641</span></div>
-<div class="row"><span>Điểm Chiến Công</span><span>0</span></div>
-<div class="row"><span>Điểm Cao Nhất</span><span>0</span></div>
+<div class="row"><span>🌍 Nền văn minh</span><span>Đức</span></div>
+<div class="row"><span>🏰 Liên minh</span><span>[FT-D]FIGHT TO DEAD</span></div>
+<div class="row"><span>⚔️ Sức mạnh</span><span>87.424.868</span></div>
+<div class="row"><span>💀 Điểm Tiêu Diệt</span><span>6.119.626.641</span></div>
+<div class="row"><span>🎖️ Điểm Chiến Công</span><span>0</span></div>
+<div class="row"><span>🏆 Điểm Cao Nhất</span><span>0</span></div>
 
 <div class="medals">
     <div class="card">
