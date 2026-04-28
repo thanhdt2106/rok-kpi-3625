@@ -3,80 +3,85 @@ import pandas as pd
 
 st.set_page_config(layout="wide")
 
-SHEET_ID = "1MJQSE3siwFWmQNdJmbbJ6RsilvcoxWTu-r6h-UdHugE"
+# Load CSS
+def load_css():
+    with open("style.css") as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-URL_BEFORE = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=731741617"
-URL_AFTER  = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=371969335"
+load_css()
 
-@st.cache_data(ttl=30)
-def load_data():
-    df1 = pd.read_csv(URL_BEFORE)
-    df2 = pd.read_csv(URL_AFTER)
+# Load data
+df = pd.read_csv("data.csv")
 
-    # ===== CLEAN COLUMN =====
-    df1.columns = df1.columns.str.strip()
-    df2.columns = df2.columns.str.strip()
+# Sidebar chọn player
+player_names = df["name"].tolist()
+selected = st.sidebar.selectbox("Select Player", player_names)
 
-    # ===== FIX ID (QUAN TRỌNG NHẤT) =====
-    for df in [df1, df2]:
-        df["ID"] = (
-            df["ID"]
-            .astype(str)
-            .str.replace(".0", "", regex=False)
-            .str.strip()
-        )
+player = df[df["name"] == selected].iloc[0]
 
-    # ===== DROP ID RỖNG =====
-    df1 = df1[df1["ID"] != "nan"]
-    df2 = df2[df2["ID"] != "nan"]
+# Layout
+col1, col2 = st.columns([1,1])
 
-    # ===== REMOVE DUP =====
-    df1 = df1.drop_duplicates(subset="ID")
-    df2 = df2.drop_duplicates(subset="ID")
+# LEFT - RANK
+with col1:
+    st.markdown("### 🏆 Rank")
 
-    # ===== MERGE =====
-    df = pd.merge(df1, df2, on="ID", suffixes=("_1", "_2"))
+    # Top 3
+    top3 = df.sort_values("power", ascending=False).head(3)
 
-    # ===== CONVERT NUMBER =====
-    num_cols = [
-        "Tổng Tiêu Diệt_1","Tổng Tiêu Diệt_2",
-        "Điểm Chết_1","Điểm Chết_2",
-        "T4_2","T5_2","Sức Mạnh_2"
-    ]
+    st.markdown('<div class="top3">', unsafe_allow_html=True)
+    for i, row in top3.iterrows():
+        st.markdown(f"""
+        <div class="top-player">
+            <div class="avatar"></div>
+            <div>{row['name']}</div>
+            <div class="score">{row['power']}$</div>
+        </div>
+        """, unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    for c in num_cols:
-        df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0)
+    # List
+    st.markdown("#### Ranking List")
 
-    # ===== CALC =====
-    df["Kill_Up"] = df["Tổng Tiêu Diệt_2"] - df["Tổng Tiêu Diệt_1"]
-    df["Dead_Up"] = df["Điểm Chết_2"] - df["Điểm Chết_1"]
+    ranked = df.sort_values("power", ascending=False)
 
-    # ===== SORT =====
-    df = df.sort_values(by="Kill_Up", ascending=False)
+    for i, row in ranked.iterrows():
+        st.markdown(f"""
+        <div class="row">
+            <div class="left">
+                <div class="avatar small"></div>
+                <span>{row['name']}</span>
+            </div>
+            <div class="right">{row['power']}$</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    df["Rank"] = range(1, len(df)+1)
+# RIGHT - PROFILE
+with col2:
+    st.markdown("### 👤 Profile")
 
-    return df
+    st.markdown(f"""
+    <div class="profile">
+        <div class="avatar big"></div>
+        <h2>{player['name']}</h2>
+        <p>Member since 2025</p>
 
-df = load_data()
+        <div class="stats">
+            <div><span>Last Game</span><b>Today</b></div>
+            <div><span>Winnings</span><b>{player['power']}$</b></div>
+            <div><span>Games</span><b>{player['games']}</b></div>
+        </div>
 
-st.title("TEST LOAD DATA FIXED")
+        <div class="buttons">
+            <button class="follow">Follow</button>
+            <button class="msg">Message</button>
+        </div>
 
-st.write("Rows:", len(df))
-
-st.dataframe(
-    df[[
-        "Rank",
-        "Tên_2",
-        "ID",
-        "Liên Minh_2",
-        "Tổng Tiêu Diệt_2",
-        "Kill_Up",
-        "Sức Mạnh_2",
-        "T4_2",
-        "T5_2",
-        "Điểm Chết_2",
-        "Dead_Up"
-    ]],
-    use_container_width=True
-)
+        <h3>Awards</h3>
+        <div class="badges">
+            <div class="badge"></div>
+            <div class="badge"></div>
+            <div class="badge"></div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
