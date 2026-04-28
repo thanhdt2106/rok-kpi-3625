@@ -1,45 +1,71 @@
 body {
-    background-color: #1f2a3c;
+    background: linear-gradient(135deg, #1f2a3c, #141c2b);
     color: white;
+    font-family: sans-serif;
 }
 
-/* Top 3 */
+/* CARD */
+.card {
+    background: rgba(43, 54, 72, 0.9);
+    padding: 20px;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+/* TOP 3 */
 .top3 {
     display: flex;
     justify-content: space-around;
-    margin-bottom: 20px;
+    margin: 20px 0;
 }
 
 .top-player {
     text-align: center;
 }
 
+.medal {
+    font-size: 20px;
+}
+
+/* AVATAR */
 .avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
     background: linear-gradient(45deg, #6c5ce7, #00cec9);
+    border-radius: 50%;
     margin: auto;
 }
 
 .avatar.small {
-    width: 30px;
-    height: 30px;
+    width: 35px;
+    height: 35px;
 }
 
 .avatar.big {
-    width: 80px;
-    height: 80px;
+    width: 90px;
+    height: 90px;
 }
 
-/* List */
+.glow {
+    box-shadow: 0 0 15px rgba(108,92,231,0.7);
+}
+
+/* LIST */
 .row {
     display: flex;
     justify-content: space-between;
-    padding: 10px;
-    background: #2b3648;
-    margin-bottom: 10px;
-    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: #243044;
+    border-radius: 12px;
+    transition: 0.2s;
+}
+
+.row:hover {
+    background: #2f3d55;
+}
+
+.row.active {
+    border: 2px solid #6c5ce7;
 }
 
 .left {
@@ -48,25 +74,36 @@ body {
     gap: 10px;
 }
 
-/* Profile */
+/* PROFILE */
 .profile {
     text-align: center;
-    background: #2b3648;
-    padding: 20px;
-    border-radius: 20px;
 }
 
+.sub {
+    opacity: 0.6;
+    font-size: 12px;
+}
+
+/* STATS */
 .stats {
     display: flex;
     justify-content: space-around;
     margin: 20px 0;
 }
 
+.stats span {
+    display: block;
+    opacity: 0.6;
+    font-size: 12px;
+}
+
+/* BUTTONS */
 .buttons button {
     padding: 10px;
     margin: 5px;
-    border-radius: 10px;
+    border-radius: 12px;
     border: none;
+    cursor: pointer;
 }
 
 .follow {
@@ -75,10 +112,11 @@ body {
 }
 
 .msg {
-    background: gray;
+    background: #555;
+    color: white;
 }
 
-/* Badges */
+/* BADGES */
 .badges {
     display: flex;
     justify-content: center;
@@ -88,6 +126,10 @@ body {
 .badge {
     width: 50px;
     height: 50px;
-    background: gray;
-    border-radius: 10px;
+    border-radius: 12px;
 }
+
+.gold { background: gold; }
+.green { background: #00b894; }
+.purple { background: #6c5ce7; }
+.gray { background: gray; }
