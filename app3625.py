@@ -12,10 +12,46 @@ body {
     font-family:Arial;
 }
 
-/* energy */
+/* HEADER */
+.header {
+    background: linear-gradient(#f7c948, #e6a700);
+    height:220px;
+    border-radius:0 0 25px 25px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+}
+
+/* AVATAR */
+.avatar {
+    width:110px;
+    height:110px;
+    border-radius:50%;
+    border:5px solid gold;
+    background:url("https://i.pravatar.cc/150") center/cover;
+    box-shadow:0 0 25px gold;
+}
+
+/* BADGES */
+.badges span {
+    display:inline-block;
+    width:18px;
+    height:18px;
+    margin:6px;
+    background:gold;
+    border-radius:50%;
+}
+
+/* CONTENT */
+.container {
+    padding:20px;
+}
+
+/* ENERGY */
 .energy {
     color:white;
-    padding:20px;
+    font-size:14px;
 }
 
 .bar {
@@ -23,6 +59,7 @@ body {
     background:#0a2c3a;
     border-radius:10px;
     overflow:hidden;
+    margin-top:5px;
 }
 
 .fill {
@@ -31,19 +68,19 @@ body {
     background:#39d353;
 }
 
-/* row */
+/* ROW */
 .row {
     display:flex;
     justify-content:space-between;
     color:white;
-    padding:5px 20px;
+    margin:6px 0;
 }
 
-/* medals */
+/* MEDALS */
 .medals {
     display:flex;
     gap:15px;
-    padding:20px;
+    margin-top:20px;
 }
 
 .card {
@@ -61,11 +98,21 @@ body {
     background:gold;
     border-radius:50%;
     margin:auto;
+    box-shadow:0 0 15px gold;
 }
 </style>
 </head>
 
 <body>
+
+<div class="header">
+    <div class="avatar"></div>
+    <div class="badges">
+        <span></span><span></span><span></span><span></span>
+    </div>
+</div>
+
+<div class="container">
 
 <div class="energy">
     Điểm hành động 431 / 1,850
@@ -99,8 +146,10 @@ body {
     </div>
 </div>
 
+</div>
+
 </body>
 </html>
 """
 
-components.html(html_code, height=600)
+components.html(html_code, height=800)
