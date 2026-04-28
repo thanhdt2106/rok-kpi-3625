@@ -1,5 +1,6 @@
-body {
-    background: linear-gradient(135deg, #1f2a3c, #141c2b);
+/* BACKGROUND */
+.stApp {
+    background: radial-gradient(circle at top, #1f2a3c, #0d1117);
     color: white;
     font-family: sans-serif;
 }
@@ -14,12 +15,6 @@ body {
 }
 
 /* TOP 3 */
-.top3 {
-    display: flex;
-    justify-content: space-around;
-    margin: 20px 0;
-}
-
 .top-player {
     text-align: center;
 }
@@ -30,7 +25,7 @@ body {
 
 /* AVATAR */
 .avatar {
-    background: linear-gradient(45deg, #6c5ce7, #00cec9);
+    background: linear-gradient(135deg, #00c6ff, #0072ff);
     border-radius: 50%;
     margin: auto;
 }
@@ -46,7 +41,7 @@ body {
 }
 
 .glow {
-    box-shadow: 0 0 15px rgba(108,92,231,0.7);
+    box-shadow: 0 0 20px rgba(0,114,255,0.8);
 }
 
 /* LIST */
@@ -54,18 +49,20 @@ body {
     display: flex;
     justify-content: space-between;
     padding: 12px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     background: #243044;
     border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.05);
     transition: 0.2s;
 }
 
 .row:hover {
+    transform: scale(1.02);
     background: #2f3d55;
 }
 
 .row.active {
-    border: 2px solid #6c5ce7;
+    border: 2px solid #00c6ff;
 }
 
 .left {
