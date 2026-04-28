@@ -4,9 +4,10 @@ import os
 
 st.set_page_config(layout="wide")
 
-# ===== LOAD CSS =====
+# ===== BASE =====
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# ===== LOAD CSS =====
 with open(os.path.join(BASE_DIR, "style.css")) as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
@@ -14,9 +15,15 @@ with open(os.path.join(BASE_DIR, "style.css")) as f:
 df = pd.read_csv(os.path.join(BASE_DIR, "data.csv"))
 df = df.sort_values("power", ascending=False).reset_index(drop=True)
 
-# ===== SESSION (CLICK PLAYER) =====
+# ===== SESSION =====
 if "selected" not in st.session_state:
     st.session_state.selected = df.iloc[0]["name"]
+
+def get_avatar(i):
+    path = os.path.join(BASE_DIR, f"assets/avatars/{i+1}.png")
+    if os.path.exists(path):
+        return f"background-image:url('data:image/png;base64,{open(path,'rb').read().encode('base64').decode()}')"
+    return ""
 
 # ===== LAYOUT =====
 col1, col2 = st.columns([1.2, 1])
@@ -28,7 +35,7 @@ with col1:
 
     # ===== TOP 3 =====
     top3 = df.head(3)
-    cols = st.columns([1, 1.2, 1])
+    cols = st.columns([1, 1.3, 1])
 
     for i, (col, (_, row)) in enumerate(zip(cols, top3.iterrows())):
         with col:
@@ -43,11 +50,11 @@ with col1:
 
     st.markdown("### All Players")
 
-    # ===== LIST (CLICKABLE) =====
+    # ===== LIST CLICK =====
     for i, row in df.iterrows():
         active = "active" if row["name"] == st.session_state.selected else ""
 
-        if st.button(f"{i+1}. {row['name']}   {row['power']:,}$", key=i):
+        if st.button("", key=f"btn{i}"):
             st.session_state.selected = row["name"]
 
         st.markdown(f"""
@@ -96,6 +103,13 @@ with col2:
         <div class="badge green"></div>
         <div class="badge purple"></div>
         <div class="badge gray"></div>
+    </div>
+
+    <div class="bottom-nav">
+        <div>💬</div>
+        <div>🎮</div>
+        <div class="active">⭐</div>
+        <div>👤</div>
     </div>
     """, unsafe_allow_html=True)
 
