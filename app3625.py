@@ -7,23 +7,40 @@ st.set_page_config(layout="wide")
 with open("style.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
+# LOAD DATA
 df = pd.read_csv("data.csv")
 df.columns = df.columns.str.strip().str.lower()
 df = df.sort_values("power", ascending=False).reset_index(drop=True)
 
+# ===== NAVBAR =====
+st.markdown("""
+<div class="navbar">
+    <div class="logo">⚔️ ROK KPI DASHBOARD</div>
+    <div class="menu">
+        <div class="item active">🏠 Trang chủ</div>
+        <div class="item">👤 Profile</div>
+        <div class="item">👥 Người dùng</div>
+    </div>
+    <div class="user">Admin</div>
+</div>
+""", unsafe_allow_html=True)
+
 # ===== LAYOUT =====
-left, right = st.columns([2.2,1])
+left, right = st.columns([2.3,1])
 
 # ================= LEFT =================
 with left:
-    st.markdown('<div class="card">', unsafe_allow_html=True)
 
-    st.markdown("## 🏆 BẢNG XẾP HẠNG KPI")
+    st.markdown("""
+    <div class="card">
+    <div class="title">🏆 BẢNG XẾP HẠNG KPI</div>
+    """, unsafe_allow_html=True)
 
     # HEADER
     st.markdown("""
     <div class="table-header">
         <div>#</div>
+        <div>ID</div>
         <div>NAME</div>
         <div>POW</div>
         <div>MAX</div>
@@ -36,14 +53,15 @@ with left:
     </div>
     """, unsafe_allow_html=True)
 
-    # ROWS
+    # ROW
     for i,row in df.iterrows():
 
         medal = "🥇" if i==0 else "🥈" if i==1 else "🥉" if i==2 else i+1
 
-        st.markdown(f"""
+        html = f"""
         <div class="row">
             <div class="rank">{medal}</div>
+            <div>{row['id']}</div>
 
             <div class="name">
                 <div class="avatar"></div>
@@ -61,19 +79,21 @@ with left:
             <div class="d5">{row['dead_t5']:,}</div>
             <div class="dead">{row['dead_total']:,}</div>
         </div>
-        """, unsafe_allow_html=True)
+        """
+
+        st.markdown(html, unsafe_allow_html=True)
 
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ================= RIGHT =================
 with right:
+
     st.markdown('<div class="card side">', unsafe_allow_html=True)
 
     st.markdown("## 👤 NGƯỜI DÙNG")
 
     player = st.selectbox("Chọn người chơi", df["name"])
     idx = df[df["name"]==player].index[0]
-
     p = df.loc[idx]
 
     power = st.number_input("POW hiện tại", value=int(p["power"]))
@@ -90,12 +110,12 @@ with right:
 
     st.markdown(f"""
     <div class="summary">
-    Kill: {kill_total:,} <br>
-    Dead: {dead_total:,}
+        Kill: {kill_total:,}<br>
+        Dead: {dead_total:,}
     </div>
     """, unsafe_allow_html=True)
 
-    if st.button("💾 Lưu"):
+    if st.button("💾 Lưu thay đổi"):
         df.loc[idx] = [
             p["id"], player,
             power, power_max,
