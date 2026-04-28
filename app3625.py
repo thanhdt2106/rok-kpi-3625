@@ -163,6 +163,7 @@ st.markdown("""
 
 # PROFILE
 st.markdown("""
+st.markdown("""
 <div class="profile">
     <div class="name">Louis Noob</div>
 
@@ -194,16 +195,3 @@ st.markdown("""
     </div>
 </div>
 """, unsafe_allow_html=True)
-
-# MENU
-st.markdown("""
-<div class="menu">
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
-</div>
-""", unsafe_allow_html=True)
-
-st.markdown('</div>', unsafe_allow_html=True)
