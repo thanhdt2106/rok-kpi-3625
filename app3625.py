@@ -163,7 +163,7 @@ st.markdown("""
 
 # PROFILE
 st.markdown("""
-st.markdown("""
+
 <div class="profile">
     <div class="name">Louis Noob</div>
 
