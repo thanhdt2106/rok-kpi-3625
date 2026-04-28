@@ -163,8 +163,6 @@ st.markdown("""
 
 # PROFILE
 st.markdown("""
-
-st.markdown("""
 <div class="row"><span>Nền văn minh</span><span>Đức</span></div>
 <div class="row"><span>Liên minh</span><span>[FT-D]FIGHT TO DEAD</span></div>
 <div class="row"><span>Sức mạnh</span><span>87.424.868</span></div>
