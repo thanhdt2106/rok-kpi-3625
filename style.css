@@ -1,6 +1,7 @@
 body {
-    background: radial-gradient(circle,#020617,#000);
-    color:white;
+    background: #050b18;
+    color: white;
+    font-family: sans-serif;
 }
 
 /* NAVBAR */
@@ -9,9 +10,8 @@ body {
     justify-content:space-between;
     align-items:center;
     padding:15px 30px;
-    border-radius:20px;
-    background:rgba(255,255,255,0.03);
-    border:1px solid rgba(255,255,255,0.08);
+    background:rgba(255,255,255,0.05);
+    border-radius:12px;
     margin-bottom:20px;
 }
 
@@ -20,76 +20,71 @@ body {
     gap:20px;
 }
 
-.item {
-    padding:10px 20px;
-    border-radius:12px;
+.menu div {
+    padding:8px 18px;
+    border-radius:20px;
     cursor:pointer;
 }
 
-.item.active {
-    background:linear-gradient(90deg,#00c6ff,#7f00ff);
+.menu .active {
+    background:linear-gradient(90deg,#00c6ff,#7b2ff7);
 }
 
-/* CARD */
-.card {
-    background:rgba(255,255,255,0.03);
-    border-radius:20px;
-    padding:20px;
-    border:1px solid rgba(255,255,255,0.08);
+/* TITLE */
+.title {
+    font-size:22px;
+    margin-bottom:10px;
 }
 
 /* TABLE */
-.table-header, .row {
+.table-header, .table-row {
     display:grid;
-    grid-template-columns: 50px 80px 160px repeat(8,120px);
-    padding:10px;
+    grid-template-columns: 40px 80px 200px repeat(8,1fr);
+    padding:12px;
     align-items:center;
 }
 
 .table-header {
-    color:#888;
+    color:#aaa;
     border-bottom:1px solid #333;
 }
 
-.row {
-    border-bottom:1px solid rgba(255,255,255,0.05);
-    transition:0.3s;
+.table-row {
+    background:rgba(255,255,255,0.03);
+    border-radius:10px;
+    margin-top:8px;
+    transition:0.2s;
 }
 
-.row:hover {
-    background:rgba(0,198,255,0.08);
+.table-row:hover {
+    background:rgba(0,200,255,0.08);
 }
 
-/* NAME */
-.name {
+/* NAME CELL */
+.name-cell {
     display:flex;
     align-items:center;
     gap:10px;
 }
 
-/* AVATAR */
 .avatar {
-    width:40px;
-    height:40px;
+    width:35px;
+    height:35px;
     border-radius:50%;
-    border:2px solid #00c6ff;
+    background:linear-gradient(45deg,#00c6ff,#7b2ff7);
 }
 
 /* COLORS */
-.pow {color:#00ff9c;}
-.max {color:#ffd700;}
-.t4,.t5 {color:#b084f5;}
-.kill {color:#00c6ff;}
-.d4,.d5 {color:#ff7675;}
-.dead {color:#ff4d4d;}
+.green { color:#00ff9f; }
+.yellow { color:#ffd700; }
+.purple { color:#b26bff; }
+.blue { color:#00e5ff; }
+.red { color:#ff4d4d; }
 
-/* SIDE */
-.side input {
-    background:#111 !important;
-}
-
+/* SUMMARY */
 .summary {
-    background:#111;
-    padding:10px;
+    margin-top:20px;
+    padding:15px;
+    background:rgba(255,255,255,0.05);
     border-radius:10px;
 }
