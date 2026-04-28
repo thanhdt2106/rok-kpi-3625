@@ -26,7 +26,7 @@ body{
 /* AVATAR */
 .avatar-wrap{
     position:absolute;
-    bottom:-60px;
+    bottom:-70px;
     left:50%;
     transform:translateX(-50%);
     text-align:center;
@@ -48,22 +48,18 @@ body{
     background:url("https://i.pravatar.cc/200") center/cover;
 }
 
-/* BADGE */
-.badges{
-    margin-top:8px;
-}
-.badge{
-    width:20px;
-    height:20px;
-    background:gold;
-    border-radius:50%;
-    display:inline-block;
-    margin:2px;
+/* NAME dưới avatar */
+.name{
+    margin-top:10px;
+    color:white;
+    font-size:20px;
+    font-weight:bold;
+    text-shadow:0 0 10px gold;
 }
 
 /* MAIN */
 .container{
-    margin-top:80px;
+    margin-top:100px;
     padding:15px;
 }
 
@@ -87,18 +83,10 @@ body{
     background:linear-gradient(to right,#00ff87,#00c853);
 }
 
-/* PROFILE BOX */
+/* PROFILE */
 .profile{
     margin-top:15px;
-    background:
-        linear-gradient(#1f6d8c,#15546b),
-        repeating-linear-gradient(
-            0deg,
-            rgba(255,255,255,0.02),
-            rgba(255,255,255,0.02) 2px,
-            transparent 2px,
-            transparent 4px
-        );
+    background:linear-gradient(#1f6d8c,#15546b);
     border-radius:15px;
     padding:15px;
     color:white;
@@ -108,36 +96,18 @@ body{
         0 0 10px rgba(0,0,0,0.8);
 }
 
-/* NAME */
-.name{
-    display:inline-block;
-    background:#0d4f6a;
-    padding:8px 15px;
-    border-radius:10px;
-    font-size:22px;
-    font-weight:bold;
-    box-shadow:inset 0 2px 5px rgba(0,0,0,0.6);
-    margin-bottom:10px;
-}
-
-/* ROW BOX (QUAN TRỌNG) */
+/* ROW BOX */
 .row{
     display:flex;
     justify-content:space-between;
     margin:6px 0;
     padding:8px 10px;
-
     background:rgba(255,255,255,0.05);
     border-radius:8px;
-
     border:1px solid rgba(255,255,255,0.08);
-
-    box-shadow:
-        inset 0 1px 2px rgba(255,255,255,0.05),
-        inset 0 -2px 5px rgba(0,0,0,0.4);
 }
 
-/* VALUE TEXT */
+/* VALUE */
 .row span:last-child{
     color:#ffd54f;
     font-weight:bold;
@@ -159,7 +129,7 @@ body{
     text-align:center;
 }
 
-/* ICON MEDAL */
+/* ICON */
 .icon{
     width:60px;
     height:60px;
@@ -178,21 +148,6 @@ body{
     font-weight:bold;
     margin-top:5px;
 }
-
-/* MENU */
-.menu{
-    display:flex;
-    justify-content:space-around;
-    margin-top:20px;
-}
-
-.menu div{
-    width:45px;
-    height:45px;
-    border-radius:50%;
-    background:#1e6a87;
-    box-shadow:0 4px 10px rgba(0,0,0,0.6);
-}
 </style>
 </head>
 
@@ -203,12 +158,7 @@ body{
         <div class="avatar-frame">
             <div class="avatar"></div>
         </div>
-        <div class="badges">
-            <span class="badge"></span>
-            <span class="badge"></span>
-            <span class="badge"></span>
-            <span class="badge"></span>
-        </div>
+        <div class="name">Louis Noob</div>
     </div>
 </div>
 
@@ -221,43 +171,32 @@ body{
 
 <div class="profile">
 
-<div class="name">Louis Noob</div>
-
-<div class="row"><span>🌍 Nền văn minh</span><span>Đức</span></div>
-<div class="row"><span>🏰 Liên minh</span><span>[FT-D]FIGHT TO DEAD</span></div>
-<div class="row"><span>⚔️ Sức mạnh</span><span>87.424.868</span></div>
-<div class="row"><span>💀 Điểm Tiêu Diệt</span><span>6.119.626.641</span></div>
-<div class="row"><span>🎖️ Điểm Chiến Công</span><span>0</span></div>
-<div class="row"><span>🏆 Điểm Cao Nhất</span><span>0</span></div>
+<div class="row"><span>ID</span><span>71428274</span></div>
+<div class="row"><span>Pow hiện tại</span><span>87.424.868</span></div>
+<div class="row"><span>Tổng kill tăng</span><span>6.119.626.641</span></div>
+<div class="row"><span>Kill T5 tăng</span><span>0</span></div>
+<div class="row"><span>Kill T4 tăng</span><span>0</span></div>
 
 <div class="medals">
     <div class="card">
         <div class="icon"></div>
-        <div class="title">Olympia</div>
-        <div class="value">Thanh Đồng</div>
+        <div class="title">RANK</div>
+        <div class="value">#1</div>
     </div>
 
     <div class="card">
         <div class="icon"></div>
-        <div class="title">Osiris</div>
-        <div class="value">37 Win</div>
+        <div class="title">KPI KILL</div>
+        <div class="value">85%</div>
     </div>
 
     <div class="card">
         <div class="icon"></div>
-        <div class="title">KVK</div>
-        <div class="value">3x Red</div>
+        <div class="title">KPI DEAL</div>
+        <div class="value">92%</div>
     </div>
 </div>
 
-</div>
-
-<div class="menu">
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
 </div>
 
 </div>
