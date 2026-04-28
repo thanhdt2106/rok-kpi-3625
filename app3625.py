@@ -1,101 +1,209 @@
 import streamlit as st
-import pandas as pd
 
-st.set_page_config(layout="wide")
+st.set_page_config(layout="centered")
 
-# Load CSS
-with open("style.css") as f:
-    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-
-# DATA
-df = pd.read_csv("data.csv")
-df = df.sort_values(by="power", ascending=False).reset_index(drop=True)
-
-# NAVBAR
+# CSS custom
 st.markdown("""
-<div class="navbar">
-    <div class="logo">⚔️ ROK KPI DASHBOARD</div>
-    <div class="menu">
-        <div class="active">🏠 Trang chủ</div>
-        <div>👤 Profile</div>
-        <div>👥 Người dùng</div>
+<style>
+
+body {
+    background-color:#0b3b52;
+}
+
+/* HEADER */
+.header {
+    background: radial-gradient(circle at top, #ffd54f, #e6a700);
+    height:200px;
+    border-bottom-left-radius:20px;
+    border-bottom-right-radius:20px;
+    position:relative;
+}
+
+/* AVATAR */
+.avatar-wrap {
+    position:absolute;
+    top:100px;
+    left:50%;
+    transform:translate(-50%, -50%);
+    text-align:center;
+}
+
+.avatar {
+    width:120px;
+    height:120px;
+    border-radius:50%;
+    border:5px solid gold;
+    background:url("https://i.pravatar.cc/150") center/cover;
+    box-shadow:0 0 25px gold;
+    margin:auto;
+}
+
+.badge {
+    display:inline-block;
+    width:30px;
+    height:30px;
+    border-radius:50%;
+    margin:5px 2px;
+    background:gold;
+}
+
+/* CONTAINER */
+.container {
+    margin-top:80px;
+}
+
+/* ENERGY */
+.energy {
+    color:white;
+    font-size:14px;
+}
+
+.bar {
+    background:#0a2c3a;
+    border-radius:10px;
+    overflow:hidden;
+    height:10px;
+    margin-top:5px;
+}
+
+.fill {
+    width:40%;
+    height:100%;
+    background:limegreen;
+}
+
+/* PROFILE */
+.profile {
+    margin-top:15px;
+    background:linear-gradient(#1f6d8c,#15546b);
+    border-radius:15px;
+    padding:15px;
+    color:white;
+}
+
+.name {
+    font-size:24px;
+    font-weight:bold;
+}
+
+/* ROW */
+.row {
+    display:flex;
+    justify-content:space-between;
+    margin-top:8px;
+}
+
+/* MEDALS */
+.medals {
+    display:flex;
+    gap:10px;
+    margin-top:15px;
+}
+
+.card {
+    flex:1;
+    background:rgba(255,255,255,0.05);
+    border-radius:12px;
+    text-align:center;
+    padding:10px;
+}
+
+.icon {
+    width:60px;
+    height:60px;
+    border-radius:50%;
+    background:gold;
+    margin:auto;
+}
+
+/* MENU */
+.menu {
+    display:flex;
+    justify-content:space-around;
+    margin-top:20px;
+}
+
+.menu div {
+    width:50px;
+    height:50px;
+    border-radius:50%;
+    background:#1e6a87;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# HEADER
+st.markdown("""
+<div class="header">
+    <div class="avatar-wrap">
+        <div class="avatar"></div>
+        <div>
+            <span class="badge"></span>
+            <span class="badge"></span>
+            <span class="badge"></span>
+            <span class="badge"></span>
+        </div>
     </div>
-    <div class="user">Admin</div>
 </div>
 """, unsafe_allow_html=True)
 
-# TITLE
-st.markdown('<div class="title">🏆 BẢNG XẾP HẠNG KPI</div>', unsafe_allow_html=True)
+# CONTENT
+st.markdown('<div class="container">', unsafe_allow_html=True)
 
-# HEADER TABLE
+# ENERGY
 st.markdown("""
-<div class="table-header">
-<div>#</div>
-<div>ID</div>
-<div>NAME</div>
-<div>POW</div>
-<div>MAX</div>
-<div>KILL T4</div>
-<div>KILL T5</div>
-<div>KILL</div>
-<div>DEAD T4</div>
-<div>DEAD T5</div>
-<div>DEAD</div>
+<div class="energy">
+    Điểm hành động 431 / 1,850
+    <div class="bar">
+        <div class="fill"></div>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
-# TABLE ROWS
-for i, row in df.iterrows():
-    rank = i + 1
+# PROFILE
+st.markdown("""
+<div class="profile">
+    <div class="name">Louis Noob</div>
 
-    medal = ""
-    if rank == 1:
-        medal = "🥇"
-    elif rank == 2:
-        medal = "🥈"
-    elif rank == 3:
-        medal = "🥉"
+    <div class="row"><span>Nền văn minh</span><span>Đức</span></div>
+    <div class="row"><span>Liên minh</span><span>[FT-D]FIGHT TO DEAD</span></div>
+    <div class="row"><span>Sức mạnh</span><span>87.424.868</span></div>
+    <div class="row"><span>Điểm Tiêu Diệt</span><span>6.119.626.641</span></div>
+    <div class="row"><span>Điểm Chiến Công</span><span>0</span></div>
+    <div class="row"><span>Điểm Cao Nhất</span><span>0</span></div>
 
-    st.markdown(f"""
-    <div class="table-row">
-        <div>{medal}</div>
-        <div>{row['id']}</div>
-
-        <div class="name-cell">
-            <div class="avatar"></div>
-            {row['name']}
+    <div class="medals">
+        <div class="card">
+            <div class="icon"></div>
+            <div>Olympia</div>
+            <div><b>Thanh Đồng</b></div>
         </div>
 
-        <div class="green">{row['power']:,}</div>
-        <div class="yellow">{row['power_max']:,}</div>
-        <div class="purple">{row['kill_t4']:,}</div>
-        <div class="purple">{row['kill_t5']:,}</div>
-        <div class="blue">{row['kill_total']:,}</div>
-        <div class="red">{row['dead_t4']:,}</div>
-        <div class="red">{row['dead_t5']:,}</div>
-        <div class="red">{row['dead_total']:,}</div>
+        <div class="card">
+            <div class="icon"></div>
+            <div>Osiris</div>
+            <div><b>37 Win</b></div>
+        </div>
+
+        <div class="card">
+            <div class="icon"></div>
+            <div>KVK</div>
+            <div><b>3x Red</b></div>
+        </div>
     </div>
-    """, unsafe_allow_html=True)
+</div>
+""", unsafe_allow_html=True)
 
-# SIDEBAR KPI
-with st.sidebar:
-    st.markdown("## 👤 NGƯỜI DÙNG")
+# MENU
+st.markdown("""
+<div class="menu">
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+</div>
+""", unsafe_allow_html=True)
 
-    player = st.selectbox("Chọn người chơi", df["name"])
-    p = df[df["name"] == player].iloc[0]
-
-    power = st.number_input("POW hiện tại", value=int(p["power"]))
-    power_max = st.number_input("POW cao nhất", value=int(p["power_max"]))
-    kill_t4 = st.number_input("Kill T4", value=int(p["kill_t4"]))
-    kill_t5 = st.number_input("Kill T5", value=int(p["kill_t5"]))
-    dead_t4 = st.number_input("Dead T4", value=int(p["dead_t4"]))
-    dead_t5 = st.number_input("Dead T5", value=int(p["dead_t5"]))
-
-    st.markdown(f"""
-    <div class="summary">
-        Kill: {kill_t4 + kill_t5:,}<br>
-        Dead: {dead_t4 + dead_t5:,}
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.button("💾 Lưu")
+st.markdown('</div>', unsafe_allow_html=True)
