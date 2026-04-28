@@ -3,121 +3,106 @@ import pandas as pd
 
 st.set_page_config(layout="wide")
 
-# ================= CONFIG =================
-REQUIRED_COLS = [
-    "id","name","power","power_max",
-    "kill_t4","kill_t5","kill_total",
-    "dead_t4","dead_t5","dead_total"
-]
+# LOAD CSS
+with open("style.css") as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-DATA_FILE = "data.csv"
+df = pd.read_csv("data.csv")
+df.columns = df.columns.str.strip().str.lower()
+df = df.sort_values("power", ascending=False).reset_index(drop=True)
 
-# ================= LOAD DATA =================
-@st.cache_data
-def load_data():
-    df = pd.read_csv(DATA_FILE)
+# ===== LAYOUT =====
+left, right = st.columns([2.2,1])
 
-    # clean column
-    df.columns = df.columns.str.strip().str.lower()
+# ================= LEFT =================
+with left:
+    st.markdown('<div class="card">', unsafe_allow_html=True)
 
-    # check missing
-    missing = [c for c in REQUIRED_COLS if c not in df.columns]
-    if missing:
-        st.error(f"❌ Thiếu cột: {missing}")
-        st.stop()
+    st.markdown("## 🏆 BẢNG XẾP HẠNG KPI")
 
-    return df
+    # HEADER
+    st.markdown("""
+    <div class="table-header">
+        <div>#</div>
+        <div>NAME</div>
+        <div>POW</div>
+        <div>MAX</div>
+        <div>KILL T4</div>
+        <div>KILL T5</div>
+        <div>KILL</div>
+        <div>DEAD T4</div>
+        <div>DEAD T5</div>
+        <div>DEAD</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-df = load_data()
+    # ROWS
+    for i,row in df.iterrows():
 
-# ================= SAVE DATA =================
-def save_data(df):
-    df.to_csv(DATA_FILE, index=False)
-    st.cache_data.clear()
+        medal = "🥇" if i==0 else "🥈" if i==1 else "🥉" if i==2 else i+1
 
-# ================= MENU =================
-if "menu" not in st.session_state:
-    st.session_state.menu = "Trang chủ"
+        st.markdown(f"""
+        <div class="row">
+            <div class="rank">{medal}</div>
 
-col1, col2, col3 = st.columns(3)
+            <div class="name">
+                <div class="avatar"></div>
+                {row['name']}
+            </div>
 
-with col1:
-    if st.button("🏠 Trang chủ"):
-        st.session_state.menu = "Trang chủ"
+            <div class="pow">{row['power']:,}</div>
+            <div class="max">{row['power_max']:,}</div>
 
-with col2:
-    if st.button("👤 Profile"):
-        st.session_state.menu = "Profile"
+            <div class="t4">{row['kill_t4']:,}</div>
+            <div class="t5">{row['kill_t5']:,}</div>
+            <div class="kill">{row['kill_total']:,}</div>
 
-with col3:
-    if st.button("⚙️ Người dùng"):
-        st.session_state.menu = "Người dùng"
+            <div class="d4">{row['dead_t4']:,}</div>
+            <div class="d5">{row['dead_t5']:,}</div>
+            <div class="dead">{row['dead_total']:,}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-# ================= TRANG CHỦ =================
-if st.session_state.menu == "Trang chủ":
+    st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("## 🏆 BẢNG KPI")
+# ================= RIGHT =================
+with right:
+    st.markdown('<div class="card side">', unsafe_allow_html=True)
 
-    df_sorted = df.sort_values("power", ascending=False)
-
-    st.dataframe(df_sorted[REQUIRED_COLS], use_container_width=True)
-
-# ================= PROFILE =================
-elif st.session_state.menu == "Profile":
-
-    player = st.selectbox("Chọn người chơi", df["name"])
-    p = df[df["name"] == player].iloc[0]
-
-    st.markdown(f"## 👤 {p['name']}")
-    st.caption(f"ID: {p['id']}")
-
-    col1, col2, col3, col4 = st.columns(4)
-
-    col1.metric("⚡ Power", f"{p['power']:,}")
-    col2.metric("🏆 Max Power", f"{p['power_max']:,}")
-    col3.metric("⚔️ Kill", f"{p['kill_total']:,}")
-    col4.metric("💀 Dead", f"{p['dead_total']:,}")
-
-# ================= EDIT KPI =================
-elif st.session_state.menu == "Người dùng":
-
-    st.markdown("## ⚙️ CHỈNH KPI")
+    st.markdown("## 👤 NGƯỜI DÙNG")
 
     player = st.selectbox("Chọn người chơi", df["name"])
-    idx = df[df["name"] == player].index[0]
+    idx = df[df["name"]==player].index[0]
 
-    col1, col2 = st.columns(2)
+    p = df.loc[idx]
 
-    with col1:
-        power = st.number_input("Power hiện tại", value=int(df.loc[idx,"power"]))
-        power_max = st.number_input("Power cao nhất", value=int(df.loc[idx,"power_max"]))
+    power = st.number_input("POW hiện tại", value=int(p["power"]))
+    power_max = st.number_input("POW cao nhất", value=int(p["power_max"]))
 
-        kill_t4 = st.number_input("Kill T4", value=int(df.loc[idx,"kill_t4"]))
-        kill_t5 = st.number_input("Kill T5", value=int(df.loc[idx,"kill_t5"]))
+    kill_t4 = st.number_input("Kill T4", value=int(p["kill_t4"]))
+    kill_t5 = st.number_input("Kill T5", value=int(p["kill_t5"]))
 
-    with col2:
-        dead_t4 = st.number_input("Dead T4", value=int(df.loc[idx,"dead_t4"]))
-        dead_t5 = st.number_input("Dead T5", value=int(df.loc[idx,"dead_t5"]))
+    dead_t4 = st.number_input("Dead T4", value=int(p["dead_t4"]))
+    dead_t5 = st.number_input("Dead T5", value=int(p["dead_t5"]))
 
-    # AUTO CALC
     kill_total = kill_t4 + kill_t5
     dead_total = dead_t4 + dead_t5
 
-    st.info(f"⚔️ Kill tổng: {kill_total:,}")
-    st.info(f"💀 Dead tổng: {dead_total:,}")
+    st.markdown(f"""
+    <div class="summary">
+    Kill: {kill_total:,} <br>
+    Dead: {dead_total:,}
+    </div>
+    """, unsafe_allow_html=True)
 
-    if st.button("💾 Lưu thay đổi"):
+    if st.button("💾 Lưu"):
         df.loc[idx] = [
-            df.loc[idx,"id"],
-            player,
-            power,
-            power_max,
-            kill_t4,
-            kill_t5,
-            kill_total,
-            dead_t4,
-            dead_t5,
-            dead_total
+            p["id"], player,
+            power, power_max,
+            kill_t4, kill_t5, kill_total,
+            dead_t4, dead_t5, dead_total
         ]
-        save_data(df)
-        st.success("✅ Đã lưu!")
+        df.to_csv("data.csv", index=False)
+        st.success("Đã lưu!")
+
+    st.markdown("</div>", unsafe_allow_html=True)
