@@ -1,132 +1,157 @@
-/* BACKGROUND */
+/* BACKGROUND GAME */
 .stApp {
-    background: radial-gradient(circle at top, #1f2a3c, #0d1117);
+    background: radial-gradient(circle at 50% 0%, #1b2735, #090a0f 80%);
     color: white;
-    font-family: sans-serif;
+    font-family: 'Segoe UI', sans-serif;
 }
 
-/* CARD */
+/* CARD GLASS */
 .card {
-    background: rgba(43, 54, 72, 0.9);
-    padding: 20px;
-    border-radius: 20px;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border-radius: 25px;
+    padding: 25px;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
 }
 
-/* TOP 3 */
+/* ===== TOP 3 (QUAN TRỌNG) ===== */
 .top-player {
     text-align: center;
+    position: relative;
 }
 
-.medal {
-    font-size: 20px;
+/* CENTER (TOP 1) TO HƠN */
+.top-player:nth-child(2) {
+    transform: scale(1.2);
 }
 
 /* AVATAR */
 .avatar {
-    background: linear-gradient(135deg, #00c6ff, #0072ff);
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     margin: auto;
-}
-
-.avatar.small {
-    width: 35px;
-    height: 35px;
+    background: linear-gradient(135deg, #00f2fe, #4facfe);
+    box-shadow: 0 0 25px rgba(79,172,254,0.9);
 }
 
 .avatar.big {
-    width: 90px;
-    height: 90px;
+    width: 110px;
+    height: 110px;
 }
 
-.glow {
-    box-shadow: 0 0 20px rgba(0,114,255,0.8);
+/* GLOW EFFECT */
+.avatar.big {
+    box-shadow: 0 0 40px rgba(0,150,255,1);
 }
 
-/* LIST */
+/* ===== LIST PLAYER ===== */
 .row {
     display: flex;
     justify-content: space-between;
-    padding: 12px;
+    align-items: center;
+    padding: 14px;
     margin-bottom: 10px;
-    background: #243044;
-    border-radius: 12px;
+    border-radius: 15px;
+
+    background: linear-gradient(
+        145deg,
+        rgba(255,255,255,0.05),
+        rgba(255,255,255,0.02)
+    );
+
     border: 1px solid rgba(255,255,255,0.05);
-    transition: 0.2s;
+
+    transition: all 0.25s ease;
 }
 
+/* HOVER = GAME EFFECT */
 .row:hover {
-    transform: scale(1.02);
-    background: #2f3d55;
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 10px 30px rgba(0,150,255,0.2);
 }
 
+/* ACTIVE PLAYER */
 .row.active {
-    border: 2px solid #00c6ff;
+    border: 1px solid #00c6ff;
+    box-shadow: 0 0 20px rgba(0,198,255,0.6);
 }
 
+/* LEFT */
 .left {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 }
 
-/* PROFILE */
+/* ===== PROFILE ===== */
 .profile {
     text-align: center;
 }
 
+/* NAME */
+.profile h2 {
+    font-size: 28px;
+    margin-top: 10px;
+}
+
+/* SUB */
 .sub {
     opacity: 0.6;
-    font-size: 12px;
+    margin-bottom: 15px;
 }
 
 /* STATS */
 .stats {
     display: flex;
     justify-content: space-around;
-    margin: 20px 0;
+    margin: 25px 0;
 }
 
 .stats span {
-    display: block;
-    opacity: 0.6;
     font-size: 12px;
+    opacity: 0.5;
 }
 
 /* BUTTONS */
 .buttons button {
-    padding: 10px;
-    margin: 5px;
+    padding: 10px 16px;
     border-radius: 12px;
     border: none;
     cursor: pointer;
+    margin: 5px;
 }
 
+/* FOLLOW BUTTON (NEON) */
 .follow {
-    background: #6c5ce7;
+    background: linear-gradient(135deg, #6a5cff, #8f7bff);
+    box-shadow: 0 0 15px rgba(106,92,255,0.8);
     color: white;
 }
 
+/* MESSAGE */
 .msg {
-    background: #555;
+    background: rgba(255,255,255,0.1);
     color: white;
 }
 
-/* BADGES */
+/* ===== BADGES ===== */
 .badges {
     display: flex;
     justify-content: center;
-    gap: 10px;
+    gap: 12px;
+    margin-top: 10px;
 }
 
 .badge {
-    width: 50px;
-    height: 50px;
-    border-radius: 12px;
+    width: 55px;
+    height: 55px;
+    border-radius: 15px;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
 }
 
-.gold { background: gold; }
-.green { background: #00b894; }
-.purple { background: #6c5ce7; }
-.gray { background: gray; }
+.gold { background: linear-gradient(135deg, gold, orange); }
+.green { background: linear-gradient(135deg, #00b894, #55efc4); }
+.purple { background: linear-gradient(135deg, #6c5ce7, #a29bfe); }
+.gray { background: linear-gradient(135deg, #636e72, #b2bec3); }
