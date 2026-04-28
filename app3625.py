@@ -164,34 +164,31 @@ st.markdown("""
 # PROFILE
 st.markdown("""
 
-<div class="profile">
-    <div class="name">Louis Noob</div>
+st.markdown("""
+<div class="row"><span>Nền văn minh</span><span>Đức</span></div>
+<div class="row"><span>Liên minh</span><span>[FT-D]FIGHT TO DEAD</span></div>
+<div class="row"><span>Sức mạnh</span><span>87.424.868</span></div>
+<div class="row"><span>Điểm Tiêu Diệt</span><span>6.119.626.641</span></div>
+<div class="row"><span>Điểm Chiến Công</span><span>0</span></div>
+<div class="row"><span>Điểm Cao Nhất</span><span>0</span></div>
 
-    <div class="row"><span>Nền văn minh</span><span>Đức</span></div>
-    <div class="row"><span>Liên minh</span><span>[FT-D]FIGHT TO DEAD</span></div>
-    <div class="row"><span>Sức mạnh</span><span>87.424.868</span></div>
-    <div class="row"><span>Điểm Tiêu Diệt</span><span>6.119.626.641</span></div>
-    <div class="row"><span>Điểm Chiến Công</span><span>0</span></div>
-    <div class="row"><span>Điểm Cao Nhất</span><span>0</span></div>
+<div class="medals">
+    <div class="card">
+        <div class="icon"></div>
+        <div>Olympia</div>
+        <div><b>Thanh Đồng</b></div>
+    </div>
 
-    <div class="medals">
-        <div class="card">
-            <div class="icon"></div>
-            <div>Olympia</div>
-            <div><b>Thanh Đồng</b></div>
-        </div>
+    <div class="card">
+        <div class="icon"></div>
+        <div>Osiris</div>
+        <div><b>37 Win</b></div>
+    </div>
 
-        <div class="card">
-            <div class="icon"></div>
-            <div>Osiris</div>
-            <div><b>37 Win</b></div>
-        </div>
-
-        <div class="card">
-            <div class="icon"></div>
-            <div>KVK</div>
-            <div><b>3x Red</b></div>
-        </div>
+    <div class="card">
+        <div class="icon"></div>
+        <div>KVK</div>
+        <div><b>3x Red</b></div>
     </div>
 </div>
 """, unsafe_allow_html=True)
