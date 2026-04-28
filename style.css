@@ -1,19 +1,75 @@
 /* nền */
 .stApp {
-    background: linear-gradient(135deg,#0f172a,#020617);
-    color: white;
+    background: radial-gradient(circle at top,#0f172a,#020617);
+    color:white;
 }
 
-/* menu */
-button {
-    border-radius: 12px !important;
-    background: rgba(255,255,255,0.05) !important;
-    color: white !important;
-    padding: 10px 20px !important;
-    transition: 0.3s;
+/* card */
+.card {
+    background: rgba(255,255,255,0.03);
+    border-radius:20px;
+    padding:20px;
+    border:1px solid rgba(255,255,255,0.08);
+    box-shadow:0 0 50px rgba(0,0,0,0.9);
 }
 
-button:hover {
-    background: linear-gradient(90deg,#00c6ff,#0072ff) !important;
-    transform: scale(1.05);
+/* bảng */
+.table-header, .row {
+    display:grid;
+    grid-template-columns: 50px 150px repeat(8,120px);
+    padding:10px;
+    align-items:center;
+}
+
+.table-header {
+    font-weight:bold;
+    color:#888;
+    border-bottom:1px solid #333;
+}
+
+/* row */
+.row {
+    border-bottom:1px solid rgba(255,255,255,0.05);
+    transition:0.3s;
+}
+
+.row:hover {
+    background: rgba(0,198,255,0.08);
+    transform:scale(1.01);
+}
+
+/* avatar */
+.avatar {
+    width:35px;
+    height:35px;
+    border-radius:50%;
+    background:linear-gradient(135deg,#00c6ff,#0072ff);
+}
+
+/* name */
+.name {
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+/* màu chỉ số */
+.pow {color:#00ff9c;}
+.max {color:#ffd700;}
+.t4,.t5 {color:#b084f5;}
+.kill {color:#00c6ff;}
+.d4,.d5 {color:#ff7675;}
+.dead {color:#ff4d4d; font-weight:bold;}
+
+/* side */
+.side input {
+    background:#111 !important;
+}
+
+/* summary */
+.summary {
+    margin-top:10px;
+    padding:10px;
+    background:#111;
+    border-radius:10px;
 }
