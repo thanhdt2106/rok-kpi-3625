@@ -1,131 +1,19 @@
-/* ===== GLOBAL ===== */
-header, footer {visibility:hidden;}
-
+/* nền */
 .stApp {
-    background: radial-gradient(circle at top, #0f172a, #020617);
+    background: linear-gradient(135deg,#0f172a,#020617);
     color: white;
-    font-family: 'Segoe UI', sans-serif;
 }
 
-/* ===== CARD ===== */
-.card {
-    background: rgba(255,255,255,0.03);
-    backdrop-filter: blur(30px);
-    border-radius: 25px;
-    padding: 25px;
-    border: 1px solid rgba(255,255,255,0.08);
-    box-shadow: 0 30px 80px rgba(0,0,0,0.9);
-}
-
-/* ===== PODIUM ===== */
-.podium {
-    text-align:center;
-    position:relative;
-}
-
-.podium .avatar {
-    width:80px;
-    height:80px;
-    border-radius:50%;
-    margin:auto;
-    background:linear-gradient(135deg,#00c6ff,#0072ff);
-}
-
-/* TOP 1 GLOW */
-.podium:nth-child(2) .avatar {
-    transform: scale(1.2);
-    box-shadow: 0 0 40px rgba(255,215,0,0.9);
-}
-
-/* TOP 2-3 */
-.podium:nth-child(1) .avatar {
-    box-shadow: 0 0 20px rgba(180,180,180,0.8);
-}
-
-.podium:nth-child(3) .avatar {
-    box-shadow: 0 0 20px rgba(255,140,0,0.8);
-}
-
-/* ===== PLAYER LIST ===== */
-.row {
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:14px;
-    margin-bottom:12px;
-    border-radius:16px;
-    background: linear-gradient(145deg,#0f172a,#020617);
-    border:1px solid rgba(255,255,255,0.05);
-    transition:0.25s;
-}
-
-.row:hover {
-    transform: translateY(-3px) scale(1.02);
-    box-shadow:0 10px 40px rgba(0,150,255,0.3);
-}
-
-.row.active {
-    border:1px solid #00c6ff;
-    box-shadow:0 0 25px rgba(0,198,255,0.6);
-}
-
-/* ===== PROGRESS BAR ===== */
-.bar {
-    width:140px;
-    height:8px;
-    background:#111;
-    border-radius:10px;
-    overflow:hidden;
-}
-
-.fill {
-    height:100%;
-    background:linear-gradient(90deg,#00c6ff,#0072ff);
-    box-shadow:0 0 10px #00c6ff;
-}
-
-/* ===== PROFILE ===== */
-.profile {
-    text-align:center;
-}
-
-/* AVATAR */
-.avatar.big {
-    width:110px;
-    height:110px;
-    border-radius:50%;
-    margin:auto;
-    background:linear-gradient(135deg,#00c6ff,#0072ff);
-    box-shadow:0 0 40px rgba(0,150,255,0.9);
-}
-
-/* ===== KPI ===== */
-.kpi-grid {
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:12px;
-    margin:20px 0;
-}
-
-.kpi {
-    padding:15px;
-    border-radius:15px;
-    background:linear-gradient(145deg,#111827,#020617);
-    text-align:center;
-    font-weight:bold;
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.6);
-}
-
-/* ===== RADAR BOX ===== */
-.plotly-chart {
-    border-radius:20px;
-    padding:10px;
-    background:#020617;
-    box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
-}
-
-/* ===== BUTTON HIDE ===== */
+/* menu */
 button {
-    opacity:0;
-    height:0;
+    border-radius: 12px !important;
+    background: rgba(255,255,255,0.05) !important;
+    color: white !important;
+    padding: 10px 20px !important;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: linear-gradient(90deg,#00c6ff,#0072ff) !important;
+    transform: scale(1.05);
 }
