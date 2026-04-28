@@ -16,31 +16,30 @@ body{
 
 /* HEADER */
 .header{
-    background: radial-gradient(circle at top, #ffd54f, #e6a700);
+    background: radial-gradient(circle at top, #ffe082, #ffb300);
     height:260px;
     position:relative;
     border-bottom-left-radius:30px;
     border-bottom-right-radius:30px;
 }
 
-/* AVATAR FRAME (ROK STYLE) */
+/* AVATAR */
 .avatar-wrap{
     position:absolute;
-    bottom:-60px;
+    bottom:-65px;
     left:50%;
     transform:translateX(-50%);
-    text-align:center;
 }
 
-/* vòng lửa */
+/* vòng lửa glow mạnh hơn */
 .avatar-frame{
-    width:140px;
-    height:140px;
+    width:150px;
+    height:150px;
     border-radius:50%;
     padding:6px;
-    background: conic-gradient(#ffcc00, #ff6600, #ffcc00);
-    animation:spin 4s linear infinite;
-    box-shadow:0 0 30px gold;
+    background: conic-gradient(#ffcc00, #ff6f00, #ffcc00);
+    animation:spin 5s linear infinite;
+    box-shadow:0 0 40px #ffcc00, 0 0 80px #ff9800;
 }
 
 @keyframes spin{
@@ -48,7 +47,6 @@ body{
     100%{transform:rotate(360deg);}
 }
 
-/* avatar */
 .avatar{
     width:100%;
     height:100%;
@@ -56,30 +54,23 @@ body{
     background:url("https://i.pravatar.cc/200") center/cover;
 }
 
-/* badges */
-.badges{
-    margin-top:10px;
-}
-.badge{
-    width:22px;
-    height:22px;
-    background:gold;
-    display:inline-block;
-    border-radius:50%;
-    margin:3px;
-    box-shadow:0 0 10px gold;
+/* TEXT GLOW */
+.glow-text{
+    color:#fff;
+    text-shadow:0 0 5px #fff, 0 0 10px gold, 0 0 20px gold;
 }
 
-/* MAIN */
+/* CONTAINER */
 .container{
-    margin-top:90px;
+    margin-top:100px;
     padding:20px;
 }
 
 /* ENERGY */
 .energy{
-    color:white;
+    color:#fff;
     font-size:14px;
+    text-shadow:0 0 5px cyan;
 }
 
 .bar{
@@ -87,13 +78,13 @@ body{
     background:#083544;
     border-radius:10px;
     overflow:hidden;
-    margin-top:5px;
 }
 
 .fill{
     width:40%;
     height:100%;
-    background:linear-gradient(to right,#3cff00,#00c853);
+    background:linear-gradient(90deg,#00ff87,#00c853);
+    box-shadow:0 0 10px #00ff87;
 }
 
 /* PROFILE BOX */
@@ -103,21 +94,22 @@ body{
     padding:20px;
     margin-top:15px;
     color:white;
-    box-shadow:0 0 20px rgba(0,0,0,0.6);
-}
-
-/* NAME */
-.name{
-    font-size:26px;
-    font-weight:bold;
-    margin-bottom:10px;
+    box-shadow:
+        inset 0 0 20px rgba(255,255,255,0.1),
+        0 0 20px rgba(0,0,0,0.8);
 }
 
 /* ROW */
 .row{
     display:flex;
     justify-content:space-between;
-    margin:6px 0;
+    margin:8px 0;
+    font-size:15px;
+}
+
+.row span:last-child{
+    color:#ffd54f;
+    text-shadow:0 0 5px gold;
 }
 
 /* MEDALS */
@@ -127,38 +119,61 @@ body{
     margin-top:20px;
 }
 
+/* CARD EFFECT */
 .card{
     flex:1;
-    background:rgba(255,255,255,0.05);
+    background:linear-gradient(#1a4f63,#0d3445);
     border-radius:15px;
     padding:15px;
     text-align:center;
+    position:relative;
+    overflow:hidden;
     transition:0.3s;
 }
 
-.card:hover{
-    transform:translateY(-5px);
-    box-shadow:0 0 20px gold;
+/* viền sáng chạy */
+.card::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:15px;
+    padding:2px;
+    background:linear-gradient(45deg, gold, transparent, gold);
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
 }
 
-/* icon medal */
+/* hover giống game */
+.card:hover{
+    transform:translateY(-6px) scale(1.03);
+    box-shadow:0 0 25px gold;
+}
+
+/* ICON */
 .icon{
     width:70px;
     height:70px;
     border-radius:50%;
     background:radial-gradient(circle,#ffd700,#ff9800);
     margin:auto;
-    box-shadow:0 0 20px gold;
+    box-shadow:0 0 25px gold;
 }
 
-/* text */
+/* TITLE */
 .title{
     margin-top:10px;
     font-size:13px;
+    color:#ccc;
 }
 
+/* VALUE */
 .value{
     font-weight:bold;
+    color:#fff;
+    text-shadow:0 0 10px gold;
     margin-top:5px;
 }
 </style>
@@ -171,25 +186,17 @@ body{
         <div class="avatar-frame">
             <div class="avatar"></div>
         </div>
-        <div class="badges">
-            <span class="badge"></span>
-            <span class="badge"></span>
-            <span class="badge"></span>
-            <span class="badge"></span>
-        </div>
     </div>
 </div>
 
 <div class="container">
 
-<div class="energy">
+<div class="energy glow-text">
     Điểm hành động 431 / 1,850
     <div class="bar"><div class="fill"></div></div>
 </div>
 
 <div class="profile">
-
-<div class="name">Louis Noob</div>
 
 <div class="row"><span>Nền văn minh</span><span>Đức</span></div>
 <div class="row"><span>Liên minh</span><span>[FT-D]FIGHT TO DEAD</span></div>
@@ -227,4 +234,4 @@ body{
 </html>
 """
 
-components.html(html, height=850)
+components.html(html, height=900)
