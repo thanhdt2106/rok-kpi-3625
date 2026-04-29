@@ -4,73 +4,104 @@ import streamlit.components.v1 as components
 
 st.set_page_config(layout="wide")
 
-# ====== LOAD DATA GOOGLE SHEET ======
+# ================= CONFIG =================
 SHEET_ID = "1CzGPseLzdRK1V-6qy7KD5T58sBRSGjQi"
 GID = "855089129"
 
-@st.cache_data(ttl=30)
+# ================= LOAD DATA =================
+@st.cache_data(ttl=60)
 def load_data():
     url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&gid={GID}"
     df = pd.read_csv(url)
+
+    # 🔥 FIX LỖI CỘT
+    df.columns = df.columns.str.strip()
+
     return df
 
 df = load_data()
 
-# ====== SEARCH ======
+# ================= SEARCH =================
 search = st.text_input("🔍 Nhập tên người chơi")
 
 if search:
     df = df[df["Tên"].str.contains(search, case=False, na=False)]
 
+# ================= BUILD HTML =================
 players_html = ""
 
-for i, row in df.head(20).iterrows():
-    name = row["Tên"]
-    power = row["Tổng Tiêu Diệt"]
+for _, row in df.head(30).iterrows():
+    name = str(row.get("Tên", "Unknown"))
+    player_id = str(row.get("ID", ""))
+    alliance = str(row.get("Liên Minh", ""))
+    power = int(row.get("Tổng Tiêu Diệt", 0))
+    dead = int(row.get("Điểm chết", 0))
+
     avatar = f"https://api.dicebear.com/7.x/adventurer/png?seed={name}"
 
     players_html += f"""
-    <div class="card" onclick="openProfile('{name}', '{row['ID']}', '{row['Liên Minh']}', '{power}', '{row['Điểm chết']}')">
+    <div class="card"
+        onclick="openProfile('{name}', '{player_id}', '{alliance}', '{power}', '{dead}', '{avatar}')">
+        
         <img src="{avatar}">
-        <div>{name}</div>
+        <div class="name">{name}</div>
         <small>{power:,}</small>
     </div>
     """
 
+# ================= HTML =================
 html = f"""
 <html>
 <head>
+<meta charset="UTF-8">
+
 <style>
 body {{
-    background:#0b0f1a;
+    margin:0;
+    background:linear-gradient(135deg,#0b0f1a,#05070d);
     font-family:sans-serif;
+    color:white;
+}}
+
+.title {{
+    text-align:center;
+    font-size:32px;
+    margin:20px;
+    font-weight:bold;
 }}
 
 .grid {{
     display:grid;
-    grid-template-columns:repeat(auto-fill,150px);
+    grid-template-columns:repeat(auto-fill,160px);
     gap:20px;
     justify-content:center;
+    padding:20px;
 }}
 
 .card {{
-    background:#111;
+    background:rgba(255,255,255,0.05);
     padding:15px;
-    border-radius:15px;
+    border-radius:20px;
     text-align:center;
     cursor:pointer;
     transition:0.3s;
+    backdrop-filter:blur(10px);
 }}
 
 .card:hover {{
     transform:scale(1.05);
-    box-shadow:0 0 15px gold;
+    box-shadow:0 0 20px gold;
 }}
 
 .card img {{
-    width:70px;
+    width:80px;
     border-radius:50%;
-    border:2px solid gold;
+    border:3px solid gold;
+}}
+
+.name {{
+    margin-top:10px;
+    font-weight:bold;
 }}
 
 .popup {{
@@ -79,11 +110,13 @@ body {{
     left:50%;
     transform:translate(-50%,-50%);
     width:65%;
-    background:#111;
-    border-radius:20px;
+    max-width:900px;
+    background:rgba(0,0,0,0.85);
+    border-radius:25px;
     padding:30px;
     display:none;
-    z-index:999;
+    z-index:1000;
+    box-shadow:0 0 40px gold;
 }}
 
 .overlay {{
@@ -91,22 +124,53 @@ body {{
     width:100%;
     height:100%;
     background:rgba(0,0,0,0.7);
-    display:none;
     top:0;
     left:0;
+    display:none;
+    z-index:999;
 }}
 
 .close {{
     position:absolute;
     right:20px;
     top:10px;
-    font-size:25px;
+    font-size:28px;
     cursor:pointer;
 }}
+
+.profile-top {{
+    display:flex;
+    align-items:center;
+    gap:20px;
+    margin-bottom:20px;
+}}
+
+.profile-top img {{
+    width:100px;
+    border-radius:50%;
+    border:4px solid gold;
+}}
+
+.stats {{
+    display:flex;
+    gap:20px;
+    flex-wrap:wrap;
+}}
+
+.stat {{
+    flex:1;
+    min-width:150px;
+    background:rgba(255,255,255,0.08);
+    padding:15px;
+    border-radius:15px;
+}}
+
 </style>
 </head>
 
 <body>
+
+<div class="title">🔥 ROK MEMBER DASHBOARD</div>
 
 <div class="grid">
 {players_html}
@@ -115,24 +179,32 @@ body {{
 <div class="overlay" id="overlay" onclick="closeProfile()"></div>
 
 <div class="popup" id="popup">
-    <div class="close" onclick="closeProfile()">×</div>
-    <h2 id="p_name"></h2>
-    <p>ID: <span id="p_id"></span></p>
-    <p>Alliance: <span id="p_alliance"></span></p>
-    <p>Power: <span id="p_power"></span></p>
-    <p>Dead: <span id="p_dead"></span></p>
+    <div class="close" onclick="closeProfile()">✖</div>
+
+    <div class="profile-top">
+        <img id="p_avatar">
+        <h2 id="p_name"></h2>
+    </div>
+
+    <div class="stats">
+        <div class="stat">ID<br><b id="p_id"></b></div>
+        <div class="stat">Alliance<br><b id="p_alliance"></b></div>
+        <div class="stat">Power<br><b id="p_power"></b></div>
+        <div class="stat">Dead<br><b id="p_dead"></b></div>
+    </div>
 </div>
 
 <script>
-function openProfile(name,id,alliance,power,dead){{
+function openProfile(name,id,alliance,power,dead,avatar){{
     document.getElementById("popup").style.display="block";
     document.getElementById("overlay").style.display="block";
 
     document.getElementById("p_name").innerText = name;
     document.getElementById("p_id").innerText = id;
     document.getElementById("p_alliance").innerText = alliance;
-    document.getElementById("p_power").innerText = power;
-    document.getElementById("p_dead").innerText = dead;
+    document.getElementById("p_power").innerText = Number(power).toLocaleString();
+    document.getElementById("p_dead").innerText = Number(dead).toLocaleString();
+    document.getElementById("p_avatar").src = avatar;
 }}
 
 function closeProfile(){{
