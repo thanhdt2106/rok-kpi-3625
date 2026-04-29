@@ -85,16 +85,24 @@ html = f"""
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 
-/* ===== GIỮ NGUYÊN STYLE GỐC ===== */
 body {{
     background: radial-gradient(circle at top, #111, #05070d);
     color:white;
     font-family:Arial;
     margin:0;
 }}
-.block-container {{
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
+
+.lang {{
+    position:fixed;
+    top:15px;
+    right:20px;
+    background:gold;
+    color:black;
+    padding:8px 12px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:bold;
+    z-index:999;
 }}
 
 .search {{
@@ -120,13 +128,6 @@ body {{
     border-radius:20px;
     text-align:center;
     cursor:pointer;
-    transition:0.3s;
-    border:1px solid #222;
-}}
-
-.card:hover {{
-    transform:translateY(-8px) scale(1.05);
-    box-shadow:0 0 25px gold;
 }}
 
 .avatar-wrap {{
@@ -136,19 +137,15 @@ body {{
     border-radius:50%;
     padding:3px;
     background:linear-gradient(45deg,gold,orange);
-    box-shadow:0 0 15px gold;
 }}
 
 .avatar-wrap img {{
     width:100%;
-    height:100%;
     border-radius:50%;
 }}
 
 .modal {{
     position:fixed;
-    top:0;
-    left:0;
     width:100%;
     height:100%;
     background:rgba(0,0,0,0.9);
@@ -162,26 +159,6 @@ body {{
     background:linear-gradient(145deg,#0f111a,#1b1f2e);
     border-radius:25px;
     padding:30px;
-}}
-
-.profile-top {{
-    display:flex;
-    align-items:center;
-    gap:20px;
-}}
-
-.avatar-big {{
-    width:90px;
-    height:90px;
-    border-radius:50%;
-    padding:4px;
-    background:linear-gradient(45deg,gold,orange);
-    box-shadow:0 0 20px gold;
-}}
-
-.avatar-big img {{
-    width:100%;
-    border-radius:50%;
 }}
 
 .row {{
@@ -209,7 +186,6 @@ body {{
     background:linear-gradient(90deg,gold,orange);
 }}
 
-/* ===== THÊM FILTER (KHÔNG PHÁ UI) ===== */
 .filters {{
     display:flex;
     gap:10px;
@@ -233,7 +209,9 @@ body {{
 
 <body>
 
-<input class="search" placeholder="🔍 Nhập tên..." onkeyup="search(this.value)">
+<div class="lang" onclick="toggleLang()">EN</div>
+
+<input id="searchInput" class="search" placeholder="🔍 Nhập tên..." onkeyup="search(this.value)">
 
 <div class="filters">
     <div class="filter active" onclick="setMode('power')">⚡ POWER</div>
@@ -249,6 +227,47 @@ body {{
 
 <script>
 
+let lang = "vn"
+
+const TEXT = {{
+    vn: {{
+        search: "🔍 Nhập tên...",
+        power: "⚡ Sức mạnh",
+        kill: "🔥 Tiêu diệt",
+        dead: "💀 Tử trận",
+        id: "🆔 ID",
+        alliance: "🏰 Liên minh",
+        kpiKill: "🔥 KPI Tiêu Diệt",
+        kpiDead: "💀 KPI Tử Trận",
+        exit: "❌ THOÁT"
+    }},
+    en: {{
+        search: "🔍 Search...",
+        power: "⚡ Power",
+        kill: "🔥 Kill",
+        dead: "💀 Dead",
+        id: "🆔 ID",
+        alliance: "🏰 Alliance",
+        kpiKill: "🔥 KPI Kill",
+        kpiDead: "💀 KPI Dead",
+        exit: "❌ EXIT"
+    }}
+}}
+
+function toggleLang(){{
+    lang = lang === "vn" ? "en" : "vn"
+    document.querySelector(".lang").innerText = lang.toUpperCase()
+
+    let t = TEXT[lang]
+
+    document.getElementById("searchInput").placeholder = t.search
+
+    let filters = document.querySelectorAll(".filter")
+    filters[0].innerText = t.power
+    filters[1].innerText = t.kill
+    filters[2].innerText = t.dead
+}}
+
 let mode = "power"
 
 function setMode(m){{
@@ -257,7 +276,6 @@ function setMode(m){{
     event.target.classList.add("active")
 
     let cards = Array.from(document.querySelectorAll(".card"))
-
     cards.sort((a,b)=> b.dataset[mode] - a.dataset[mode])
 
     let grid = document.getElementById("grid")
@@ -279,32 +297,34 @@ function search(val){{
 function openProfile(name,id,alliance,power,kill,dead,kpiK,kpiD,kp,dp,avatar){{
     document.getElementById("modal").style.display="flex"
 
+    let t = TEXT[lang]
+
     document.getElementById("profile").innerHTML = `
     <div class="profile-top">
         <div class="avatar-big"><img src="${{avatar}}"></div>
         <div>
             <h2>${{name}}</h2>
-            <p>🆔 ID: ${{id}}</p>
-            <p>🏰 Alliance: ${{alliance}}</p>
+            <p>${{t.id}}: ${{id}}</p>
+            <p>${{t.alliance}}: ${{alliance}}</p>
         </div>
     </div>
 
     <div class="row">
-        <div class="box">⚡ Power<br>${{Number(power).toLocaleString()}}</div>
-        <div class="box">🔥 Kill<br>${{Number(kill).toLocaleString()}}</div>
-        <div class="box">💀 Dead<br>${{Number(dead).toLocaleString()}}</div>
+        <div class="box">${{t.power}}<br>${{Number(power).toLocaleString()}}</div>
+        <div class="box">${{t.kill}}<br>${{Number(kill).toLocaleString()}}</div>
+        <div class="box">${{t.dead}}<br>${{Number(dead).toLocaleString()}}</div>
     </div>
 
-   <h3>🔥 KPI Kill</h3>
-<div class="bar"><div class="fill" style="width:0%"></div></div>
-<p>0 / ${Number(kpiK).toLocaleString()}</p>
+    <h3>${{t.kpiKill}}</h3>
+    <div class="bar"><div class="fill" style="width:0%"></div></div>
+    <p>0 / ${{Number(kpiK).toLocaleString()}}</p>
 
-<h3>💀 KPI Dead</h3>
-<div class="bar"><div class="fill" style="width:0%"></div></div>
-<p>0 / ${Number(kpiD).toLocaleString()}</p>
+    <h3>${{t.kpiDead}}</h3>
+    <div class="bar"><div class="fill" style="width:0%"></div></div>
+    <p>0 / ${{Number(kpiD).toLocaleString()}}</p>
 
     <br>
-    <button onclick="closeProfile()">❌ EXIT</button>
+    <button onclick="closeProfile()">${{t.exit}}</button>
     `
 }}
 
