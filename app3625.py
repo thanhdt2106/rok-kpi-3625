@@ -4,22 +4,19 @@ import streamlit.components.v1 as components
 
 st.set_page_config(layout="wide")
 
-# ====== LOAD DATA GOOGLE SHEET ======
+# ===== LOAD DATA =====
 @st.cache_data(ttl=60)
 def load_data():
     sheet_id = "1CzGPseLzdRK1V-6qy7KD5T58sBRSGjQi"
     gid = "855089129"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
     df = pd.read_csv(url)
-
-    # chuẩn hóa tên cột
     df.columns = df.columns.str.strip()
-
     return df
 
 df = load_data()
 
-# ====== CLEAN DATA ======
+# ===== CLEAN =====
 def to_int(x):
     try:
         return int(str(x).replace(",", ""))
@@ -46,10 +43,10 @@ def kpi_dead(pow):
     elif pow >= 70_000_000: return 800_000
     else: return 700_000
 
-# ===== BUILD HTML =====
+# ===== BUILD CARD =====
 cards_html = ""
 
-for i, row in df.iterrows():
+for _, row in df.iterrows():
     name = str(row["Tên"])
     id_ = str(row["ID"])
     alliance = str(row["Liên Minh"])
@@ -60,23 +57,28 @@ for i, row in df.iterrows():
     kpiK = kpi_kill(power)
     kpiD = kpi_dead(power)
 
-    kill_percent = min(int(kill / kpiK * 100), 100)
-    dead_percent = min(int(dead / kpiD * 100), 100)
+    kp = min(int(kill / kpiK * 100), 100)
+    dp = min(int(dead / kpiD * 100), 100)
+
+    avatar = f"https://api.dicebear.com/7.x/adventurer/svg?seed={name}"
 
     cards_html += f"""
-    <div class="card" onclick="openProfile('{name}','{id_}','{alliance}','{power}','{kill}','{dead}','{kpiK}','{kpiD}','{kill_percent}','{dead_percent}')">
-        <img src="https://api.dicebear.com/7.x/adventurer/svg?seed={name}">
+    <div class="card" onclick="openProfile('{name}','{id_}','{alliance}','{power}','{kill}','{dead}','{kpiK}','{kpiD}','{kp}','{dp}','{avatar}')">
+        <div class="avatar-wrap">
+            <img src="{avatar}">
+        </div>
         <h3>{name}</h3>
         <p>{power:,}</p>
     </div>
     """
 
+# ===== HTML =====
 html = f"""
 <html>
 <head>
 <style>
 body {{
-    background:#0b0f1a;
+    background: radial-gradient(circle at top, #111, #05070d);
     color:white;
     font-family:Arial;
 }}
@@ -85,36 +87,50 @@ body {{
     width:100%;
     padding:15px;
     font-size:18px;
-    border-radius:10px;
+    border-radius:12px;
     border:none;
-    margin-bottom:20px;
+    margin-bottom:25px;
+    background:#111;
+    color:white;
 }}
 
 .grid {{
     display:grid;
     grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
-    gap:20px;
+    gap:25px;
 }}
 
 .card {{
-    background:#111;
+    background:linear-gradient(145deg,#0f111a,#1b1f2e);
     padding:20px;
-    border-radius:15px;
+    border-radius:20px;
     text-align:center;
     cursor:pointer;
     transition:0.3s;
     border:1px solid #222;
+    position:relative;
 }}
 
 .card:hover {{
-    transform:scale(1.05);
-    box-shadow:0 0 20px gold;
+    transform:translateY(-8px) scale(1.05);
+    box-shadow:0 0 25px gold;
 }}
 
-.card img {{
-    width:70px;
+.avatar-wrap {{
+    width:80px;
+    height:80px;
+    margin:auto;
     border-radius:50%;
-    border:2px solid gold;
+    padding:3px;
+    background:linear-gradient(45deg,gold,orange);
+    box-shadow:0 0 15px gold;
+}}
+
+.avatar-wrap img {{
+    width:100%;
+    height:100%;
+    border-radius:50%;
+    background:#111;
 }}
 
 .modal {{
@@ -130,35 +146,58 @@ body {{
 }}
 
 .profile {{
-    width:800px;
-    background:#111;
-    border-radius:20px;
+    width:850px;
+    background:linear-gradient(145deg,#0f111a,#1b1f2e);
+    border-radius:25px;
     padding:30px;
+    box-shadow:0 0 40px rgba(255,215,0,0.3);
+}}
+
+.profile-top {{
+    display:flex;
+    align-items:center;
+    gap:20px;
+}}
+
+.avatar-big {{
+    width:90px;
+    height:90px;
+    border-radius:50%;
+    padding:4px;
+    background:linear-gradient(45deg,gold,orange);
+    box-shadow:0 0 20px gold;
+}}
+
+.avatar-big img {{
+    width:100%;
+    border-radius:50%;
 }}
 
 .row {{
     display:flex;
-    gap:20px;
-    margin-top:15px;
+    gap:15px;
+    margin-top:20px;
 }}
 
 .box {{
     flex:1;
-    background:#1a1a1a;
+    background:rgba(255,255,255,0.05);
     padding:15px;
-    border-radius:10px;
+    border-radius:12px;
+    backdrop-filter: blur(10px);
+    border:1px solid rgba(255,255,255,0.1);
 }}
 
 .bar {{
     height:10px;
-    background:#333;
-    border-radius:5px;
+    background:#222;
+    border-radius:10px;
     overflow:hidden;
 }}
 
 .fill {{
     height:100%;
-    background:gold;
+    background:linear-gradient(90deg,gold,orange);
 }}
 
 </style>
@@ -166,11 +205,9 @@ body {{
 
 <body>
 
-<input class="search" placeholder="🔍 Nhập tên người chơi..." onkeyup="search(this.value)">
+<input class="search" placeholder="🔍 Nhập tên..." onkeyup="search(this.value)">
 
-<div class="grid" id="grid">
-{cards_html}
-</div>
+<div class="grid">{cards_html}</div>
 
 <div class="modal" id="modal">
 <div class="profile" id="profile"></div>
@@ -184,15 +221,17 @@ function search(val){{
     }})
 }}
 
-function openProfile(name,id,alliance,power,kill,dead,kpiK,kpiD,kp,dp){{
+function openProfile(name,id,alliance,power,kill,dead,kpiK,kpiD,kp,dp,avatar){{
     document.getElementById("modal").style.display="flex"
 
     document.getElementById("profile").innerHTML = `
-    <h2>${{name}}</h2>
-
-    <div class="row">
-        <div class="box">🆔 ${{id}}</div>
-        <div class="box">🏰 ${{alliance}}</div>
+    <div class="profile-top">
+        <div class="avatar-big"><img src="${{avatar}}"></div>
+        <div>
+            <h2>${{name}}</h2>
+            <p>ID: ${{id}}</p>
+            <p>${{alliance}}</p>
+        </div>
     </div>
 
     <div class="row">
