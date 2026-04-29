@@ -31,7 +31,6 @@ def load_and_process_data():
     df["Kill"] = df["Tổng Tiêu Diệt"].apply(to_int)
     df["Dead"] = df["Điểm Chết"].apply(to_int)
     
-    # Tạo Group theo từ đầu tiên trong tên
     df['Group'] = df['Tên'].apply(lambda x: str(x).split()[0].upper() if pd.notnull(x) else "")
     group_dead_totals = df.groupby('Group')['Dead'].transform('sum')
     group_max_power = df.groupby('Group')['Power'].transform('max')
@@ -58,7 +57,7 @@ except Exception as e:
     st.error(f"Lỗi tải dữ liệu: {e}")
     st.stop()
 
-# ===== 3. KPI RULES =====
+# ===== 3. CẬP NHẬT KPI RULES (CHỈ SỬA KPI DEAD) =====
 def kpi_kill(p):
     if p >= 100_000_000: return 600_000_000
     elif p >= 80_000_000: return 450_000_000
@@ -66,8 +65,14 @@ def kpi_kill(p):
 
 def kpi_dead(p):
     if p >= 100_000_000: return 1_500_000
+    elif p >= 90_000_000: return 1_200_000
     elif p >= 80_000_000: return 1_000_000
-    return 800_000
+    elif p >= 70_000_000: return 800_000
+    elif p >= 60_000_000: return 700_000
+    elif p >= 50_000_000: return 600_000
+    elif p >= 40_000_000: return 500_000
+    elif p >= 30_000_000: return 400_000
+    else: return 300_000 # Cho mốc từ 20M-30M như yêu cầu
 
 # ===== 4. BUILD HTML CARDS =====
 cards_html = ""
@@ -93,12 +98,7 @@ html_content = f"""
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {{ background: #05070d; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; }}
-        
-        #langBtn {{ 
-            position: fixed; top: 15px; right: 15px; background: gold; color: black; 
-            padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; z-index: 2000; 
-        }}
-
+        #langBtn {{ position: fixed; top: 15px; right: 15px; background: gold; color: black; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; z-index: 2000; }}
         .avatar-wrap {{
             width: 75px; height: 75px; margin: 0 auto 10px; border-radius: 50%; padding: 3px;
             background: linear-gradient(45deg, #ffd700, #ff8c00);
@@ -111,71 +111,43 @@ html_content = f"""
             100% {{ box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); transform: scale(1); }}
         }}
         .avatar-wrap img {{ width: 100%; height: 100%; border-radius: 50%; background: #111; }}
-
         .search {{ width: 100%; padding: 12px; background: #111; border: 1px solid #333; color: white; border-radius: 12px; margin-bottom: 15px; box-sizing: border-box; }}
-        
         .filters {{ display: flex; gap: 8px; margin-bottom: 15px; }}
         .filter {{ flex: 1; padding: 10px; background: #222; border-radius: 8px; text-align: center; font-size: 11px; cursor: pointer; border: 1px solid #333; }}
         .filter.active {{ background: gold; color: black; font-weight: bold; border-color: gold; }}
-
         .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }}
         .card {{ background: #161b22; padding: 15px; border-radius: 18px; text-align: center; border: 1px solid #222; cursor: pointer; transition: 0.3s; }}
         .card:hover {{ border-color: gold; transform: translateY(-5px); }}
         .card-name {{ font-weight: bold; font-size: 14px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
         .value {{ color: gold; font-family: monospace; font-size: 12px; }}
-
-        /* Profile Layout */
         .modal {{ position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 3000; }}
         .profile-box {{ width: 88%; max-width: 360px; background: #1b1f2e; padding: 25px; border-radius: 25px; border: 1px solid gold; }}
-        
         .stat-row {{ display: flex; gap: 8px; margin: 20px 0; }}
         .stat-card {{ flex: 1; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; text-align: center; font-size: 10px; }}
         .stat-card b {{ font-size: 12px; color: gold; display: block; margin-top: 5px; }}
-
         .kpi-section {{ font-size: 12px; margin-top: 15px; }}
         .kpi-label {{ display: flex; justify-content: space-between; margin-bottom: 5px; }}
         .bar {{ height: 10px; background: #333; border-radius: 5px; margin-bottom: 12px; overflow: hidden; }}
         .fill {{ height: 100%; background: linear-gradient(90deg, gold, orange); width: 0%; }}
-        
         .close-btn {{ width: 100%; padding: 12px; background: #ff4b4b; color: white; border: none; border-radius: 10px; cursor: pointer; margin-top: 15px; font-weight: bold; }}
     </style>
 </head>
 <body>
-
     <div id="langBtn">EN</div>
     <input class="search" id="searchInput" placeholder="🔍 Nhập tên chiến binh..." onkeyup="search(this.value)">
-
     <div class="filters">
         <div class="filter active" id="fPow" onclick="setMode('power', this)">⚡ SỨC MẠNH</div>
         <div class="filter" id="fKill" onclick="setMode('kill', this)">🔥 TIÊU DIỆT</div>
         <div class="filter" id="fDead" onclick="setMode('dead', this)">💀 ĐIỂM CHẾT</div>
     </div>
-
     <div class="grid" id="grid">{cards_html}</div>
-
     <div class="modal" id="modal"><div class="profile-box" id="profileContent"></div></div>
 
 <script>
     let lang = "vn";
     const TEXT = {{
-        vn: {{ 
-            search: "🔍 Nhập tên chiến binh...", 
-            pow: "⚡ SỨC MẠNH", 
-            kill: "🔥 TIÊU DIỆT", 
-            dead: "💀 ĐIỂM CHẾT", 
-            kK_label: "🔥 KPI Tiêu diệt", 
-            kD_label: "💀 KPI Điểm chết",
-            exit: "QUAY LẠI" 
-        }},
-        en: {{ 
-            search: "🔍 Search warrior...", 
-            pow: "⚡ POWER", 
-            kill: "🔥 KILLS", 
-            dead: "💀 DEAD", 
-            kK_label: "🔥 Kills KPI", 
-            kD_label: "💀 Dead KPI",
-            exit: "CLOSE" 
-        }}
+        vn: {{ search: "🔍 Nhập tên chiến binh...", pow: "⚡ SỨC MẠNH", kill: "🔥 TIÊU DIỆT", dead: "💀 ĐIỂM CHẾT", kK_label: "🔥 KPI Tiêu diệt", kD_label: "💀 KPI Điểm chết", exit: "QUAY LẠI" }},
+        en: {{ search: "🔍 Search warrior...", pow: "⚡ POWER", kill: "🔥 KILLS", dead: "💀 DEAD", kK_label: "🔥 Kills KPI", kD_label: "💀 Dead KPI", exit: "CLOSE" }}
     }};
 
     document.getElementById("langBtn").onclick = function() {{
@@ -189,9 +161,7 @@ html_content = f"""
 
     function search(v) {{
         v = v.toLowerCase();
-        document.querySelectorAll('.card').forEach(c => {{
-            c.style.display = c.innerText.toLowerCase().includes(v) ? 'block' : 'none';
-        }});
+        document.querySelectorAll('.card').forEach(c => {{ c.style.display = c.innerText.toLowerCase().includes(v) ? 'block' : 'none'; }});
     }}
 
     function setMode(m, el) {{
@@ -217,27 +187,17 @@ html_content = f"""
                 <h3 style="margin:10px 0 5px 0;">${{name}}</h3>
                 <small style="color:#888;">ID: ${{id}} | ${{all}}</small>
             </center>
-
             <div class="stat-row">
                 <div class="stat-card">⚡ POWER<br><b>${{Number(pow).toLocaleString()}}</b></div>
                 <div class="stat-card">🔥 KILL<br><b>${{Number(kill).toLocaleString()}}</b></div>
                 <div class="stat-card">💀 DEAD<br><b>${{Number(dead).toLocaleString()}}</b></div>
             </div>
-
             <div class="kpi-section">
-                <div class="kpi-label">
-                    <span>${{t.kK_label}}</span>
-                    <span>0 / ${{Number(kK).toLocaleString()}}</span>
-                </div>
+                <div class="kpi-label"><span>${{t.kK_label}}</span><span>0 / ${{Number(kK).toLocaleString()}}</span></div>
                 <div class="bar"><div class="fill"></div></div>
-
-                <div class="kpi-label">
-                    <span>${{t.kD_label}}</span>
-                    <span>0 / ${{Number(kD).toLocaleString()}}</span>
-                </div>
+                <div class="kpi-label"><span>${{t.kD_label}}</span><span>0 / ${{Number(kD).toLocaleString()}}</span></div>
                 <div class="bar"><div class="fill"></div></div>
             </div>
-
             <button class="close-btn" onclick="document.getElementById('modal').style.display='none'">${{t.exit}}</button>
         `;
     }}
