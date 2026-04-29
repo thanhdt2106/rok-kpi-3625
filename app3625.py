@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import streamlit.components.v1 as components
 
-# ===== CẤU HÌNH FULL MÀN HÌNH =====
+# 1. CẤU HÌNH TRANG
 st.set_page_config(page_title="FTD KPI SYSTEM", layout="wide", initial_sidebar_state="collapsed")
 
 st.markdown("""
@@ -13,74 +13,76 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ===== LOAD DATA =====
+# 2. LOAD VÀ XỬ LÝ DỮ LIỆU
 @st.cache_data(ttl=60)
-def load_data():
+def get_processed_data():
     sheet_id = "1CzGPseLzdRK1V-6qy7KD5T58sBRSGjQi"
     gid = "855089129"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
-    df = pd.read_csv(url)
-    df.columns = df.columns.str.strip()
-    return df
+    
+    df_raw = pd.read_csv(url)
+    df_raw.columns = df_raw.columns.str.strip()
 
-# ===== XỬ LÝ LOGIC GỘP DEAD CHO ACC FARM =====
-def process_warriors(df_raw):
-    # Làm sạch số
     def to_int(x):
         try: return int(str(x).replace(",", ""))
         except: return 0
 
-    df_raw["Power"] = df_raw["Sức Mạnh"].apply(to_int)
-    df_raw["Kill"] = df_raw["Tổng Tiêu Diệt"].apply(to_int)
-    df_raw["Dead"] = df_raw["Điểm Chết"].apply(to_int)
-    
-    # Tạo "Gốc tên" (Lấy từ đầu tiên, ví dụ: "Louis 1" -> "Louis")
-    # Nếu tên chỉ có 1 cụm, nó lấy cả tên đó.
-    df_raw['root_name'] = df_raw['Tên'].apply(lambda x: str(x).split()[0].lower() if pd.notnull(x) else "")
+    # Chuyển đổi số liệu
+    data_list = []
+    for _, row in df_raw.iterrows():
+        data_list.append({
+            "Tên": str(row.get("Tên", "")),
+            "ID": str(row.get("ID", "")),
+            "Liên Minh": str(row.get("Liên Minh", "")),
+            "Power": to_int(row.get("Sức Mạnh", 0)),
+            "Kill": to_int(row.get("Tổng Tiêu Diệt", 0)),
+            "Dead": to_int(row.get("Điểm Chết", 0))
+        })
 
-    final_list = []
-    # Gom nhóm theo gốc tên
-    for _, group in df_raw.groupby('root_name'):
-        if len(group) > 1:
-            # Tìm acc chính (Power cao nhất trong nhóm)
-            main_idx = group['Power'].idxmax()
-            main_acc = group.loc[main_idx].copy()
-            # Gộp tổng điểm chết của cả nhóm (chính + farm)
-            main_acc['Dead'] = group['Dead'].sum()
-            final_list.append(main_acc)
+    # LOGIC GỘP: Dùng Dictionary để gom nhóm theo từ đầu tiên của tên
+    merged = {}
+    for item in data_list:
+        name = item["Tên"]
+        # Lấy từ đầu tiên làm gốc (Ví dụ: "Louis 1" -> "louis")
+        root = name.split()[0].lower() if name.split() else name.lower()
+        
+        if root not in merged:
+            merged[root] = item
         else:
-            final_list.append(group.iloc[0])
-            
-    return pd.DataFrame(final_list)
+            # Nếu Power thằng mới to hơn, lấy thằng mới làm acc chính
+            if item["Power"] > merged[root]["Power"]:
+                old_dead = merged[root]["Dead"]
+                merged[root] = item
+                merged[root]["Dead"] += old_dead # Gộp Dead cũ vào acc mới to hơn
+            else:
+                # Nếu thằng mới là acc phụ, cộng dồn Dead vào acc chính hiện tại
+                merged[root]["Dead"] += item["Dead"]
+    
+    return list(merged.values())
 
-# Thực thi xử lý
+# Thực thi lấy dữ liệu
 try:
-    df_raw = load_data()
-    df = process_warriors(df_raw)
+    final_data = get_processed_data()
 except Exception as e:
-    st.error(f"Lỗi dữ liệu: {e}")
+    st.error(f"Lỗi kết nối dữ liệu: {e}")
     st.stop()
 
-# ===== KPI RULES =====
+# 3. KPI RULES
 def kpi_kill(pow):
     if pow >= 100_000_000: return 600_000_000
     elif pow >= 90_000_000: return 550_000_000
     elif pow >= 80_000_000: return 450_000_000
-    elif pow >= 70_000_000: return 300_000_000
-    elif pow >= 60_000_000: return 250_000_000
-    else: return 200_000_000
+    else: return 300_000_000
 
 def kpi_dead(pow):
     if pow >= 100_000_000: return 1_500_000
-    elif pow >= 90_000_000: return 1_200_000
     elif pow >= 80_000_000: return 1_000_000
-    elif pow >= 70_000_000: return 800_000
-    else: return 700_000
+    else: return 800_000
 
-# ===== BUILD CARDS HTML =====
+# 4. TẠO DANH SÁCH THẺ (CARDS)
 cards_html = ""
-for _, row in df.iterrows():
-    name, id_, alliance = str(row["Tên"]), str(row["ID"]), str(row["Liên Minh"])
+for row in final_data:
+    name, id_, alliance = row["Tên"], row["ID"], row["Liên Minh"]
     power, kill, dead = row["Power"], row["Kill"], row["Dead"]
     kK, kD = kpi_kill(power), kpi_dead(power)
     avatar = f"https://api.dicebear.com/7.x/adventurer/svg?seed={name}"
@@ -89,55 +91,48 @@ for _, row in df.iterrows():
     <div class="card" data-power="{power}" data-kill="{kill}" data-dead="{dead}"
         onclick="openProfile('{name}','{id_}','{alliance}','{power}','{kill}','{dead}','{kK}','{kD}','{avatar}')">
         <div class="avatar-wrap"><img src="{avatar}"></div>
-        <h3>{name}</h3>
-        <p class="value">{power:,}</p>
+        <div class="card-name">{name}</div>
+        <div class="value">{power:,}</div>
     </div>
     """
 
-# ===== GIAO DIỆN HTML/CSS/JS =====
+# 5. GIAO DIỆN HTML/CSS/JS
 html_content = f"""
 <!DOCTYPE html>
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body {{ background: radial-gradient(circle at top, #111, #05070d); color: white; font-family: sans-serif; margin: 0; padding: 20px; }}
+        body {{ background: #05070d; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; }}
+        #langBtn {{ position: fixed; top: 15px; right: 15px; background: gold; color: black; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; z-index: 100; }}
         
-        #langBtn {{ position: fixed; top: 15px; right: 15px; background: gold; color: black; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; z-index: 2000; font-size: 14px; }}
-
-        /* Avatar phát sáng */
         .avatar-wrap {{
-            width: 80px; height: 80px; margin: auto; border-radius: 50%; padding: 3px;
-            background: linear-gradient(45deg, gold, #ff8c00);
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
-            animation: pulse-gold 2s infinite;
+            width: 70px; height: 70px; margin: 0 auto 10px; border-radius: 50%; padding: 3px;
+            background: linear-gradient(45deg, #ffd700, #ff8c00);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+            animation: pulse 2s infinite;
         }}
-        @keyframes pulse-gold {{
-            0% {{ box-shadow: 0 0 8px rgba(255, 215, 0, 0.5); transform: scale(1); }}
-            50% {{ box-shadow: 0 0 20px rgba(255, 215, 0, 0.9); transform: scale(1.02); }}
-            100% {{ box-shadow: 0 0 8px rgba(255, 215, 0, 0.5); transform: scale(1); }}
-        }}
-        .avatar-wrap img {{ width: 100%; height: 100%; border-radius: 50%; background: #222; }}
+        @keyframes pulse {{ 0% {{opacity:0.8}} 50% {{opacity:1; box-shadow: 0 0 25px gold;}} 100% {{opacity:0.8}} }}
+        .avatar-wrap img {{ width: 100%; height: 100%; border-radius: 50%; background: #111; }}
 
-        .search {{ width: 100%; padding: 12px; background: #111; border: 1px solid #333; color: white; border-radius: 10px; margin-bottom: 20px; box-sizing: border-box; }}
-        .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }}
-        .card {{ background: #161b22; padding: 15px; border-radius: 15px; text-align: center; border: 1px solid #333; cursor: pointer; transition: 0.3s; }}
-        .card:hover {{ border-color: gold; transform: translateY(-5px); }}
+        .search {{ width: 100%; padding: 12px; background: #111; border: 1px solid #333; color: white; border-radius: 10px; margin-bottom: 15px; box-sizing: border-box; }}
+        .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }}
+        .card {{ background: #161b22; padding: 15px; border-radius: 15px; text-align: center; border: 1px solid #222; cursor: pointer; }}
+        .card-name {{ font-weight: bold; font-size: 14px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; }}
+        .value {{ color: gold; font-family: monospace; font-size: 13px; }}
 
-        .filters {{ display: flex; gap: 8px; margin-bottom: 15px; }}
-        .filter {{ padding: 8px 12px; background: #222; border-radius: 8px; cursor: pointer; font-size: 13px; border: 1px solid #444; }}
-        .filter.active {{ background: gold; color: black; font-weight: bold; }}
+        .filters {{ display: flex; gap: 5px; margin-bottom: 15px; }}
+        .filter {{ flex: 1; padding: 8px; background: #222; border-radius: 6px; text-align: center; font-size: 12px; cursor: pointer; border: 1px solid #333; }}
+        .filter.active {{ background: gold; color: black; font-weight: bold; border-color: gold; }}
 
-        .modal {{ position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 3000; }}
+        .modal {{ position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 1000; }}
+        .profile-box {{ width: 85%; max-width: 350px; background: #1b1f2e; padding: 20px; border-radius: 20px; border: 1px solid gold; }}
         
-        /* Profile nhỏ gọn */
-        .profile-box {{ width: 85%; max-width: 380px; background: #1b1f2e; padding: 20px; border-radius: 20px; border: 1px solid gold; }}
-        
-        .stat-row {{ display: flex; gap: 8px; margin: 15px 0; }}
-        .stat-card {{ flex: 1; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; text-align: center; font-size: 12px; }}
-        .bar {{ height: 10px; background: #333; border-radius: 5px; margin: 8px 0; overflow: hidden; }}
-        .fill {{ height: 100%; background: gold; width: 0%; transition: 1s; }}
-        .close-btn {{ width: 100%; padding: 10px; background: #ff4b4b; border: none; color: white; border-radius: 8px; cursor: pointer; margin-top: 15px; font-weight: bold; }}
+        .stat-row {{ display: flex; gap: 5px; margin: 15px 0; }}
+        .stat-card {{ flex: 1; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; text-align: center; font-size: 11px; }}
+        .bar {{ height: 8px; background: #333; border-radius: 4px; margin: 5px 0; overflow: hidden; }}
+        .fill {{ height: 100%; background: gold; width: 0%; }}
+        .close-btn {{ width: 100%; padding: 10px; background: #ff4b4b; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; font-weight: bold; }}
     </style>
 </head>
 <body>
@@ -146,9 +141,9 @@ html_content = f"""
 <input class="search" id="searchInput" placeholder="🔍 Nhập tên..." onkeyup="search(this.value)">
 
 <div class="filters">
-    <div class="filter active" id="fPow" onclick="setMode('power', this)">⚡ POWER</div>
-    <div class="filter" id="fKill" onclick="setMode('kill', this)">🔥 KILL</div>
-    <div class="filter" id="fDead" onclick="setMode('dead', this)">💀 DEAD</div>
+    <div class="filter active" id="fPow" onclick="setMode('power', this)">SỨC MẠNH</div>
+    <div class="filter" id="fKill" onclick="setMode('kill', this)">TIÊU DIỆT</div>
+    <div class="filter" id="fDead" onclick="setMode('dead', this)">ĐIỂM CHẾT</div>
 </div>
 
 <div class="grid" id="grid">{cards_html}</div>
@@ -160,8 +155,8 @@ html_content = f"""
 <script>
     let lang = "vn";
     const TEXT = {{
-        vn: {{ search: "🔍 Nhập tên...", pow: "⚡ POWER", kill: "🔥 KILL", dead: "💀 DEAD", kpiK: "🔥 KPI Kill", kpiD: "💀 KPI Dead", exit: "ĐÓNG" }},
-        en: {{ search: "🔍 Search name...", pow: "⚡ POWER", kill: "🔥 KILL", dead: "💀 DEAD", kpiK: "🔥 Kill KPI", kpiD: "💀 Dead KPI", exit: "CLOSE" }}
+        vn: {{ search: "🔍 Nhập tên...", pow: "SỨC MẠNH", kill: "TIÊU DIỆT", dead: "ĐIỂM CHẾT", exit: "ĐÓNG" }},
+        en: {{ search: "🔍 Search name...", pow: "POWER", kill: "KILL", dead: "DEAD", exit: "CLOSE" }}
     }};
 
     document.getElementById("langBtn").onclick = function() {{
@@ -175,7 +170,9 @@ html_content = f"""
 
     function search(v) {{
         v = v.toLowerCase();
-        document.querySelectorAll('.card').forEach(c => c.style.display = c.innerText.toLowerCase().includes(v) ? 'block' : 'none');
+        document.querySelectorAll('.card').forEach(c => {{
+            c.style.display = c.innerText.toLowerCase().includes(v) ? 'block' : 'none';
+        }});
     }}
 
     function setMode(m, el) {{
@@ -192,26 +189,25 @@ html_content = f"""
     }}
 
     function openProfile(name, id, all, pow, kill, dead, kpiK, kpiD, avatar) {{
-        let t = TEXT[lang];
         document.getElementById('modal').style.display = 'flex';
         document.getElementById('profileContent').innerHTML = `
             <center>
-                <div class="avatar-wrap" style="width:70px; height:70px;"><img src="${{avatar}}"></div>
-                <h3 style="margin:10px 0 5px 0;">${{name}}</h3>
-                <small style="color:gray;">ID: ${{id}} | ${{all}}</small>
+                <div class="avatar-wrap" style="width:60px; height:60px;"><img src="${{avatar}}"></div>
+                <h3 style="margin:5px 0;">${{name}}</h3>
+                <small style="color:#888;">ID: ${{id}} | ${{all}}</small>
             </center>
             <div class="stat-row">
-                <div class="stat-card">⚡ Power<br><b>${{Number(pow).toLocaleString()}}</b></div>
-                <div class="stat-card">🔥 Kills<br><b>${{Number(kill).toLocaleString()}}</b></div>
-                <div class="stat-card">💀 Dead<br><b>${{Number(dead).toLocaleString()}}</b></div>
+                <div class="stat-card">POWER<br><b>${{Number(pow).toLocaleString()}}</b></div>
+                <div class="stat-card">KILL<br><b>${{Number(kill).toLocaleString()}}</b></div>
+                <div class="stat-card">DEAD<br><b>${{Number(dead).toLocaleString()}}</b></div>
             </div>
-            <div style="font-size: 13px;">
-                <span>${{t.kpiK}}: <b>0</b> / ${{Number(kpiK).toLocaleString()}}</span>
-                <div class="bar"><div class="fill" style="width:0%"></div></div>
-                <span>${{t.kpiD}}: <b>0</b> / ${{Number(kpiD).toLocaleString()}}</span>
-                <div class="bar"><div class="fill" style="width:0%"></div></div>
+            <div style="font-size: 12px;">
+                <p style="margin:5px 0;">🔥 KPI Kill: 0 / ${{Number(kpiK).toLocaleString()}}</p>
+                <div class="bar"><div class="fill"></div></div>
+                <p style="margin:5px 0;">💀 KPI Dead: 0 / ${{Number(kpiD).toLocaleString()}}</p>
+                <div class="bar"><div class="fill"></div></div>
             </div>
-            <button class="close-btn" onclick="document.getElementById('modal').style.display='none'">${{t.exit}}</button>
+            <button class="close-btn" onclick="document.getElementById('modal').style.display='none'">${{TEXT[lang].exit}}</button>
         `;
     }}
 </script>
