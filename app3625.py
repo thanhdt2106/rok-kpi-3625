@@ -62,7 +62,6 @@ if name:
        width:95%;
 max-width:1400px;
 min-height:500px; /* thêm dòng này */
-display:flex;
 
         /* 👉 ẢNH NẰM TRONG CARD */
         background:
