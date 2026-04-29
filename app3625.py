@@ -13,7 +13,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ===== 2. LOAD VÀ XỬ LÝ DỮ LIỆU (GỘP FARM) =====
+# ===== 2. LOAD VÀ XỬ LÝ DỮ LIỆU =====
 @st.cache_data(ttl=60)
 def load_and_process_data():
     sheet_id = "1CzGPseLzdRK1V-6qy7KD5T58sBRSGjQi"
@@ -27,25 +27,18 @@ def load_and_process_data():
         try: return int(str(x).replace(",", ""))
         except: return 0
 
-    # Chuyển đổi dữ liệu số
     df["Power"] = df["Sức Mạnh"].apply(to_int)
     df["Kill"] = df["Tổng Tiêu Diệt"].apply(to_int)
     df["Dead"] = df["Điểm Chết"].apply(to_int)
     
-    # Tạo cột "Gốc tên" để nhận diện gia đình (Ví dụ: "Louis 1" -> "LOUIS")
+    # Tạo Group theo từ đầu tiên trong tên
     df['Group'] = df['Tên'].apply(lambda x: str(x).split()[0].upper() if pd.notnull(x) else "")
-
-    # Tính tổng Dead của cả nhóm farm
     group_dead_totals = df.groupby('Group')['Dead'].transform('sum')
-    # Tìm Power lớn nhất trong nhóm để xác định Acc chính
     group_max_power = df.groupby('Group')['Power'].transform('max')
 
     processed_list = []
     for i, row in df.iterrows():
-        # Tài khoản chính là tài khoản có Power bằng Power lớn nhất trong Group
         is_main = (row['Power'] == group_max_power[i])
-        
-        # Nếu là acc chính, lấy tổng Dead của cả nhóm farm. Nếu là acc farm, giữ nguyên hoặc ẩn.
         final_dead = group_dead_totals[i] if is_main else row['Dead']
         
         processed_list.append({
@@ -79,9 +72,6 @@ def kpi_dead(p):
 # ===== 4. BUILD HTML CARDS =====
 cards_html = ""
 for item in final_data:
-    # Nếu muốn ẩn hoàn toàn các acc farm khỏi danh sách hiển thị, bỏ comment dòng dưới:
-    # if item['is_farm']: continue
-
     kK = kpi_kill(item['pow'])
     kD = kpi_dead(item['pow'])
     avatar = f"https://api.dicebear.com/7.x/adventurer/svg?seed={item['name']}"
@@ -91,7 +81,7 @@ for item in final_data:
         onclick="openProfile('{item['name']}','{item['id']}','{item['alliance']}','{item['pow']}','{item['kill']}','{item['dead']}','{kK}','{kD}','{avatar}')">
         <div class="avatar-wrap"><img src="{avatar}"></div>
         <div class="card-name">{item['name']}</div>
-        <div class="value">{item['pow']:,}</div>
+        <div class="value">⚡ {item['pow']:,}</div>
     </div>
     """
 
@@ -125,27 +115,29 @@ html_content = f"""
         .search {{ width: 100%; padding: 12px; background: #111; border: 1px solid #333; color: white; border-radius: 12px; margin-bottom: 15px; box-sizing: border-box; }}
         
         .filters {{ display: flex; gap: 8px; margin-bottom: 15px; }}
-        .filter {{ flex: 1; padding: 10px; background: #222; border-radius: 8px; text-align: center; font-size: 12px; cursor: pointer; border: 1px solid #333; }}
-        .filter.active {{ background: gold; color: black; font-weight: bold; }}
+        .filter {{ flex: 1; padding: 10px; background: #222; border-radius: 8px; text-align: center; font-size: 11px; cursor: pointer; border: 1px solid #333; }}
+        .filter.active {{ background: gold; color: black; font-weight: bold; border-color: gold; }}
 
         .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }}
         .card {{ background: #161b22; padding: 15px; border-radius: 18px; text-align: center; border: 1px solid #222; cursor: pointer; transition: 0.3s; }}
         .card:hover {{ border-color: gold; transform: translateY(-5px); }}
         .card-name {{ font-weight: bold; font-size: 14px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
-        .value {{ color: gold; font-family: monospace; font-size: 13px; }}
+        .value {{ color: gold; font-family: monospace; font-size: 12px; }}
 
-        /* Profile Thu Nhỏ */
+        /* Profile Layout */
         .modal {{ position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 3000; }}
-        .profile-box {{ width: 85%; max-width: 360px; background: #1b1f2e; padding: 25px; border-radius: 25px; border: 1px solid gold; box-shadow: 0 0 30px rgba(0,0,0,0.5); }}
+        .profile-box {{ width: 88%; max-width: 360px; background: #1b1f2e; padding: 25px; border-radius: 25px; border: 1px solid gold; }}
         
         .stat-row {{ display: flex; gap: 8px; margin: 20px 0; }}
-        .stat-card {{ flex: 1; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; text-align: center; font-size: 11px; }}
-        .stat-card b {{ font-size: 13px; color: gold; }}
+        .stat-card {{ flex: 1; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; text-align: center; font-size: 10px; }}
+        .stat-card b {{ font-size: 12px; color: gold; display: block; margin-top: 5px; }}
 
-        .bar {{ height: 10px; background: #333; border-radius: 5px; margin: 8px 0; overflow: hidden; }}
-        .fill {{ height: 100%; background: linear-gradient(90deg, gold, orange); width: 0%; transition: 1.5s; }}
+        .kpi-section {{ font-size: 12px; margin-top: 15px; }}
+        .kpi-label {{ display: flex; justify-content: space-between; margin-bottom: 5px; }}
+        .bar {{ height: 10px; background: #333; border-radius: 5px; margin-bottom: 12px; overflow: hidden; }}
+        .fill {{ height: 100%; background: linear-gradient(90deg, gold, orange); width: 0%; }}
         
-        .close-btn {{ width: 100%; padding: 12px; background: #ff4b4b; color: white; border: none; border-radius: 10px; cursor: pointer; margin-top: 20px; font-weight: bold; }}
+        .close-btn {{ width: 100%; padding: 12px; background: #ff4b4b; color: white; border: none; border-radius: 10px; cursor: pointer; margin-top: 15px; font-weight: bold; }}
     </style>
 </head>
 <body>
@@ -166,8 +158,24 @@ html_content = f"""
 <script>
     let lang = "vn";
     const TEXT = {{
-        vn: {{ search: "🔍 Nhập tên chiến binh...", pow: "⚡ SỨC MẠNH", kill: "🔥 TIÊU DIỆT", dead: "💀 ĐIỂM CHẾT", exit: "QUAY LẠI" }},
-        en: {{ search: "🔍 Search warrior...", pow: "⚡ POWER", kill: "🔥 KILL", dead: "💀 DEAD", exit: "CLOSE" }}
+        vn: {{ 
+            search: "🔍 Nhập tên chiến binh...", 
+            pow: "⚡ SỨC MẠNH", 
+            kill: "🔥 TIÊU DIỆT", 
+            dead: "💀 ĐIỂM CHẾT", 
+            kK_label: "🔥 KPI Tiêu diệt", 
+            kD_label: "💀 KPI Điểm chết",
+            exit: "QUAY LẠI" 
+        }},
+        en: {{ 
+            search: "🔍 Search warrior...", 
+            pow: "⚡ POWER", 
+            kill: "🔥 KILLS", 
+            dead: "💀 DEAD", 
+            kK_label: "🔥 Kills KPI", 
+            kD_label: "💀 Dead KPI",
+            exit: "CLOSE" 
+        }}
     }};
 
     document.getElementById("langBtn").onclick = function() {{
@@ -194,12 +202,14 @@ html_content = f"""
         cards.sort((a,b) => Number(b.dataset[m]) - Number(a.dataset[m]));
         grid.innerHTML = "";
         cards.forEach(c => {{
-            c.querySelector('.value').innerText = Number(c.dataset[m]).toLocaleString();
+            let prefix = m === 'power' ? '⚡ ' : (m === 'kill' ? '🔥 ' : '💀 ');
+            c.querySelector('.value').innerText = prefix + Number(c.dataset[m]).toLocaleString();
             grid.appendChild(c);
         }});
     }}
 
     function openProfile(name, id, all, pow, kill, dead, kK, kD, avatar) {{
+        let t = TEXT[lang];
         document.getElementById('modal').style.display = 'flex';
         document.getElementById('profileContent').innerHTML = `
             <center>
@@ -209,19 +219,26 @@ html_content = f"""
             </center>
 
             <div class="stat-row">
-                <div class="stat-card">POWER<br><b>${{Number(pow).toLocaleString()}}</b></div>
-                <div class="stat-card">KILL<br><b>${{Number(kill).toLocaleString()}}</b></div>
-                <div class="stat-card">DEAD<br><b>${{Number(dead).toLocaleString()}}</b></div>
+                <div class="stat-card">⚡ POWER<br><b>${{Number(pow).toLocaleString()}}</b></div>
+                <div class="stat-card">🔥 KILL<br><b>${{Number(kill).toLocaleString()}}</b></div>
+                <div class="stat-card">💀 DEAD<br><b>${{Number(dead).toLocaleString()}}</b></div>
             </div>
 
-            <div style="font-size: 13px;">
-                <p style="margin:5px 0;">🔥 KPI Tiêu diệt: 0 / ${{Number(kK).toLocaleString()}}</p>
+            <div class="kpi-section">
+                <div class="kpi-label">
+                    <span>${{t.kK_label}}</span>
+                    <span>0 / ${{Number(kK).toLocaleString()}}</span>
+                </div>
                 <div class="bar"><div class="fill"></div></div>
-                <p style="margin:5px 0;">💀 KPI Điểm chết: 0 / ${{Number(kD).toLocaleString()}}</p>
+
+                <div class="kpi-label">
+                    <span>${{t.kD_label}}</span>
+                    <span>0 / ${{Number(kD).toLocaleString()}}</span>
+                </div>
                 <div class="bar"><div class="fill"></div></div>
             </div>
 
-            <button class="close-btn" onclick="document.getElementById('modal').style.display='none'">${{TEXT[lang].exit}}</button>
+            <button class="close-btn" onclick="document.getElementById('modal').style.display='none'">${{t.exit}}</button>
         `;
     }}
 </script>
