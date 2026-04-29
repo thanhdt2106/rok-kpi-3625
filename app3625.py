@@ -47,31 +47,20 @@ def load_and_process_data():
     df["Power"] = df["Sức Mạnh"].apply(to_int)
     df["Kill"] = df["Tổng Tiêu Diệt"].apply(to_int)
     df["Dead"] = df["Điểm Chết"].apply(to_int)
-    
-    # Tính KPI DEAD cá nhân cho từng acc để chuẩn bị gộp
     df['Indiv_KPI_Dead'] = df['Power'].apply(get_kpi_dead_value)
-    
-    # Nhận diện Group theo tên đầu tiên
     df['Group'] = df['Tên'].apply(lambda x: str(x).split()[0].upper() if pd.notnull(x) else "")
-    
-    # Gộp KPI DEAD: Tổng KPI Dead của cả gia đình
     group_kpi_dead_sum = df.groupby('Group')['Indiv_KPI_Dead'].transform('sum')
-    
-    # Tìm Power lớn nhất để xác định Acc chính
     group_max_power = df.groupby('Group')['Power'].transform('max')
 
     processed_list = []
     for i, row in df.iterrows():
         is_main = (row['Power'] == group_max_power[i])
-        
-        # LOGIC THEO YÊU CẦU:
-        # Chỉ cộng dồn KPI DEAD cho acc chính. KPI KILL giữ nguyên cá nhân.
         final_target_dead = group_kpi_dead_sum[i] if is_main else row['Indiv_KPI_Dead']
-        final_target_kill = get_kpi_kill_value(row['Power']) # Không cộng dồn Kill
+        final_target_kill = get_kpi_kill_value(row['Power'])
         
         processed_list.append({
             "name": row["Tên"],
-            "id": row["ID"],
+            "id": str(row["ID"]), # Chuyển ID sang string để search dễ hơn
             "alliance": row["Liên Minh"],
             "pow": row["Power"],
             "kill": row["Kill"],
@@ -92,8 +81,9 @@ except Exception as e:
 cards_html = ""
 for item in final_data:
     avatar = f"https://api.dicebear.com/7.x/adventurer/svg?seed={item['name']}"
+    # THÊM data-id VÀO ĐÂY
     cards_html += f"""
-    <div class="card" data-power="{item['pow']}" data-kill="{item['kill']}" data-dead="{item['dead']}"
+    <div class="card" data-id="{item['id']}" data-power="{item['pow']}" data-kill="{item['kill']}" data-dead="{item['dead']}"
         onclick="openProfile('{item['name']}','{item['id']}','{item['alliance']}','{item['pow']}','{item['kill']}','{item['dead']}','{item['final_kpi_kill']}','{item['final_kpi_dead']}','{avatar}')">
         <div class="avatar-wrap"><img src="{avatar}"></div>
         <div class="card-name">{item['name']}</div>
@@ -145,7 +135,7 @@ html_content = f"""
 </head>
 <body>
     <div id="langBtn">EN</div>
-    <input class="search" id="searchInput" placeholder="🔍 Nhập tên chiến binh..." onkeyup="search(this.value)">
+    <input class="search" id="searchInput" placeholder="🔍 Nhập tên hoặc ID..." onkeyup="search(this.value)">
     <div class="filters">
         <div class="filter active" id="fPow" onclick="setMode('power', this)">⚡ SỨC MẠNH</div>
         <div class="filter" id="fKill" onclick="setMode('kill', this)">🔥 TIÊU DIỆT</div>
@@ -157,8 +147,8 @@ html_content = f"""
 <script>
     let lang = "vn";
     const TEXT = {{
-        vn: {{ search: "🔍 Nhập tên chiến binh...", pow: "⚡ SỨC MẠNH", kill: "🔥 TIÊU DIỆT", dead: "💀 ĐIỂM CHẾT", kK_label: "🔥 KPI Tiêu diệt", kD_label: "💀 KPI Điểm chết", exit: "QUAY LẠI" }},
-        en: {{ search: "🔍 Search warrior...", pow: "⚡ POWER", kill: "🔥 KILLS", dead: "💀 DEAD", kK_label: "🔥 Kills KPI", kD_label: "💀 Dead KPI", exit: "CLOSE" }}
+        vn: {{ search: "🔍 Nhập tên hoặc ID...", pow: "⚡ SỨC MẠNH", kill: "🔥 TIÊU DIỆT", dead: "💀 ĐIỂM CHẾT", kK_label: "🔥 KPI Tiêu diệt", kD_label: "💀 KPI Điểm chết", exit: "QUAY LẠI" }},
+        en: {{ search: "🔍 Search name or ID...", pow: "⚡ POWER", kill: "🔥 KILLS", dead: "💀 DEAD", kK_label: "🔥 Kills KPI", kD_label: "💀 Dead KPI", exit: "CLOSE" }}
     }};
 
     document.getElementById("langBtn").onclick = function() {{
@@ -170,9 +160,19 @@ html_content = f"""
         document.getElementById("fDead").innerText = TEXT[lang].dead;
     }};
 
+    // CẬP NHẬT HÀM SEARCH TÌM THEO CẢ TÊN VÀ ID
     function search(v) {{
         v = v.toLowerCase();
-        document.querySelectorAll('.card').forEach(c => {{ c.style.display = c.innerText.toLowerCase().includes(v) ? 'block' : 'none'; }});
+        document.querySelectorAll('.card').forEach(c => {{
+            const name = c.querySelector('.card-name').innerText.toLowerCase();
+            const id = c.getAttribute('data-id').toLowerCase();
+            
+            if (name.includes(v) || id.includes(v)) {{
+                c.style.display = 'block';
+            }} else {{
+                c.style.display = 'none';
+            }}
+        }});
     }}
 
     function setMode(m, el) {{
