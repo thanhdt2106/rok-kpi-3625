@@ -76,7 +76,7 @@ body{
 /* ===== AVATAR ===== */
 .avatar-wrap{
     position:absolute;
-    bottom:-40px;
+    bottom:-50px;
     left:50%;
     transform:translateX(-50%);
     z-index:5;
@@ -130,7 +130,7 @@ body{
     font-size:24px;
     font-weight:700;
     color:#FFD700;
-    margin-bottom:25px;
+    margin-bottom:20px;
 }
 
 /* ===== STATS ===== */
