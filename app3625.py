@@ -186,7 +186,7 @@ if name:
     </html>
     """
 
-    components.html(html, height=720)
+    components.html(html, height=900)
 
 else:
     st.info("Nhập tên để tìm player")
