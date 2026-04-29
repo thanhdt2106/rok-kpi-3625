@@ -1,251 +1,265 @@
 import streamlit as st
 import pandas as pd
-import json
 import streamlit.components.v1 as components
 
 st.set_page_config(layout="wide")
 
-SHEET_ID = "1CzGPseLzdRK1V-6qy7KD5T58sBRSGjQi"
-GID = "855089129"
-
+# ===== LOAD DATA =====
 @st.cache_data(ttl=60)
 def load_data():
-    url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={GID}"
+    sheet_id = "1CzGPseLzdRK1V-6qy7KD5T58sBRSGjQi"
+    gid = "855089129"
+    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
     df = pd.read_csv(url)
-
     df.columns = df.columns.str.strip()
-
-    df = df.rename(columns={
-        "Tên": "name",
-        "ID": "id",
-        "Liên Minh": "alliance",
-        "Tổng Tiêu Diệt": "kill",
-        "Điểm Chết": "dead",
-        "Sức Mạnh": "power"
-    })
-
-    for col in ["kill", "dead", "power"]:
-        df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
-
     return df
 
 df = load_data()
-data_json = json.dumps(df.to_dict(orient="records"))
 
-html = """
-<!DOCTYPE html>
+# ===== CLEAN =====
+def to_int(x):
+    try:
+        return int(str(x).replace(",", ""))
+    except:
+        return 0
+
+df["Power"] = df["Tổng Tiêu Diệt"].apply(to_int)
+df["Kill"] = df["Tổng Tiêu Diệt"].apply(to_int)
+df["Dead"] = df["Điểm chết"].apply(to_int)
+
+# ===== KPI =====
+def kpi_kill(pow):
+    if pow >= 100_000_000: return 600_000_000
+    elif pow >= 90_000_000: return 550_000_000
+    elif pow >= 80_000_000: return 450_000_000
+    elif pow >= 70_000_000: return 300_000_000
+    elif pow >= 60_000_000: return 250_000_000
+    else: return 200_000_000
+
+def kpi_dead(pow):
+    if pow >= 100_000_000: return 1_500_000
+    elif pow >= 90_000_000: return 1_200_000
+    elif pow >= 80_000_000: return 1_000_000
+    elif pow >= 70_000_000: return 800_000
+    else: return 700_000
+
+# ===== BUILD CARD =====
+cards_html = ""
+
+for _, row in df.iterrows():
+    name = str(row["Tên"])
+    id_ = str(row["ID"])
+    alliance = str(row["Liên Minh"])
+    power = row["Power"]
+    kill = row["Kill"]
+    dead = row["Dead"]
+
+    kpiK = kpi_kill(power)
+    kpiD = kpi_dead(power)
+
+    kp = min(int(kill / kpiK * 100), 100)
+    dp = min(int(dead / kpiD * 100), 100)
+
+    avatar = f"https://api.dicebear.com/7.x/adventurer/svg?seed={name}"
+
+    cards_html += f"""
+    <div class="card" onclick="openProfile('{name}','{id_}','{alliance}','{power}','{kill}','{dead}','{kpiK}','{kpiD}','{kp}','{dp}','{avatar}')">
+        <div class="avatar-wrap">
+            <img src="{avatar}">
+        </div>
+        <h3>{name}</h3>
+        <p>{power:,}</p>
+    </div>
+    """
+
+# ===== HTML =====
+html = f"""
 <html>
 <head>
-<meta charset="utf-8">
 <style>
-
-body {
-    margin:0;
-    background:#050b18;
+body {{
+    background: radial-gradient(circle at top, #111, #05070d);
     color:white;
     font-family:Arial;
-}
+}}
 
-.container {
-    padding:30px;
-}
-
-.search {
+.search {{
     width:100%;
     padding:15px;
-    border-radius:10px;
+    font-size:18px;
+    border-radius:12px;
     border:none;
+    margin-bottom:25px;
     background:#111;
     color:white;
-    margin-bottom:20px;
-}
+}}
 
-.grid {
+.grid {{
     display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(180px,1fr));
+    grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
     gap:25px;
-}
+}}
 
-.card {
-    background:#0d1425;
+.card {{
+    background:linear-gradient(145deg,#0f111a,#1b1f2e);
     padding:20px;
     border-radius:20px;
     text-align:center;
     cursor:pointer;
     transition:0.3s;
-}
+    border:1px solid #222;
+    position:relative;
+}}
 
-.card:hover {
-    transform:scale(1.05);
+.card:hover {{
+    transform:translateY(-8px) scale(1.05);
     box-shadow:0 0 25px gold;
-}
+}}
 
-.avatar {
-    width:70px;
-    height:70px;
+.avatar-wrap {{
+    width:80px;
+    height:80px;
+    margin:auto;
     border-radius:50%;
-    border:3px solid gold;
-    box-shadow:0 0 20px gold;
-    margin-bottom:10px;
-}
+    padding:3px;
+    background:linear-gradient(45deg,gold,orange);
+    box-shadow:0 0 15px gold;
+}}
 
-.modal {
+.avatar-wrap img {{
+    width:100%;
+    height:100%;
+    border-radius:50%;
+    background:#111;
+}}
+
+.modal {{
     position:fixed;
+    top:0;
+    left:0;
     width:100%;
     height:100%;
     background:rgba(0,0,0,0.9);
     display:none;
     justify-content:center;
     align-items:center;
-}
+}}
 
-.profile {
-    width:85%;
-    max-width:900px;
-    background:#0d1425;
+.profile {{
+    width:850px;
+    background:linear-gradient(145deg,#0f111a,#1b1f2e);
+    border-radius:25px;
     padding:30px;
-    border-radius:20px;
-    position:relative;
-}
+    box-shadow:0 0 40px rgba(255,215,0,0.3);
+}}
 
-.close {
-    position:absolute;
-    right:15px;
-    top:15px;
-    cursor:pointer;
-    font-size:20px;
-}
+.profile-top {{
+    display:flex;
+    align-items:center;
+    gap:20px;
+}}
 
-.box {
-    background:#111;
+.avatar-big {{
+    width:90px;
+    height:90px;
+    border-radius:50%;
+    padding:4px;
+    background:linear-gradient(45deg,gold,orange);
+    box-shadow:0 0 20px gold;
+}}
+
+.avatar-big img {{
+    width:100%;
+    border-radius:50%;
+}}
+
+.row {{
+    display:flex;
+    gap:15px;
+    margin-top:20px;
+}}
+
+.box {{
+    flex:1;
+    background:rgba(255,255,255,0.05);
     padding:15px;
-    border-radius:10px;
-    margin:10px 0;
-}
+    border-radius:12px;
+    backdrop-filter: blur(10px);
+    border:1px solid rgba(255,255,255,0.1);
+}}
 
-.bar {
+.bar {{
     height:10px;
     background:#222;
     border-radius:10px;
     overflow:hidden;
-    margin-top:10px;
-}
+}}
 
-.bar-fill {
+.fill {{
     height:100%;
-    background:gold;
-}
+    background:linear-gradient(90deg,gold,orange);
+}}
 
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<input class="search" placeholder="🔍 Nhập tên..." onkeyup="search(this.value)">
 
-<input class="search" id="search" placeholder="🔍 Nhập tên..." onkeyup="render()">
-
-<div class="grid" id="grid"></div>
-
-</div>
+<div class="grid">{cards_html}</div>
 
 <div class="modal" id="modal">
-<div class="profile">
-<div class="close" onclick="closeProfile()">✖</div>
-<div id="profileContent"></div>
-</div>
+<div class="profile" id="profile"></div>
 </div>
 
 <script>
+function search(val){{
+    val = val.toLowerCase()
+    document.querySelectorAll(".card").forEach(c=>{{
+        c.style.display = c.innerText.toLowerCase().includes(val) ? "block":"none"
+    }})
+}}
 
-let data = DATA_PLACEHOLDER;
+function openProfile(name,id,alliance,power,kill,dead,kpiK,kpiD,kp,dp,avatar){{
+    document.getElementById("modal").style.display="flex"
 
-function getKillTarget(power){
-    if(power >= 100000000) return 600000000;
-    if(power >= 90000000) return 550000000;
-    if(power >= 80000000) return 450000000;
-    if(power >= 70000000) return 300000000;
-    if(power >= 60000000) return 250000000;
-    return 200000000;
-}
-
-function getDeadTarget(power){
-    if(power >= 100000000) return 1500000;
-    if(power >= 90000000) return 1200000;
-    if(power >= 80000000) return 1000000;
-    if(power >= 70000000) return 800000;
-    return 700000;
-}
-
-function render(){
-    let keyword = document.getElementById("search").value.toLowerCase();
-
-    let filtered = data.filter(p =>
-        p.name && p.name.toLowerCase().includes(keyword)
-    );
-
-    let sorted = filtered.sort((a,b)=>b.power-a.power);
-
-    let html = "";
-
-    sorted.forEach((p,i)=>{
-        html += `
-        <div class="card" onclick='openProfile(${JSON.stringify(p)}, ${i+1})'>
-            <img class="avatar" src="https://api.dicebear.com/7.x/adventurer/png?seed=${p.name}">
-            <div>${p.name}</div>
-            <div>${Number(p.power).toLocaleString()}</div>
+    document.getElementById("profile").innerHTML = `
+    <div class="profile-top">
+        <div class="avatar-big"><img src="${{avatar}}"></div>
+        <div>
+            <h2>${{name}}</h2>
+            <p>ID: ${{id}}</p>
+            <p>${{alliance}}</p>
         </div>
-        `;
-    });
+    </div>
 
-    document.getElementById("grid").innerHTML = html;
-}
+    <div class="row">
+        <div class="box">⚡ ${{Number(power).toLocaleString()}}</div>
+        <div class="box">🔥 ${{Number(kill).toLocaleString()}}</div>
+        <div class="box">💀 ${{Number(dead).toLocaleString()}}</div>
+    </div>
 
-function openProfile(p, rank){
+    <h3>🔥 KPI Kill</h3>
+    <div class="bar"><div class="fill" style="width:${{kp}}%"></div></div>
+    <p>${{kill}} / ${{kpiK}} (${{kp}}%)</p>
 
-    let killTarget = getKillTarget(p.power);
-    let deadTarget = getDeadTarget(p.power);
+    <h3>💀 KPI Dead</h3>
+    <div class="bar"><div class="fill" style="width:${{dp}}%"></div></div>
+    <p>${{dead}} / ${{kpiD}} (${{dp}}%)</p>
 
-    let killPercent = Math.min((p.kill / killTarget)*100, 100);
-    let deadPercent = Math.min((p.dead / deadTarget)*100, 100);
+    <br>
+    <button onclick="closeProfile()">Close</button>
+    `
+}}
 
-    document.getElementById("modal").style.display="flex";
-
-    document.getElementById("profileContent").innerHTML = `
-        <div style="text-align:center">
-            <img class="avatar" src="https://api.dicebear.com/7.x/adventurer/png?seed=${p.name}">
-            <h2>${p.name}</h2>
-        </div>
-
-        <div class="box">🆔 ${p.id}</div>
-        <div class="box">🏰 ${p.alliance}</div>
-        <div class="box">🏆 Rank #${rank}</div>
-        <div class="box">⚡ ${Number(p.power).toLocaleString()}</div>
-        <div class="box">🔥 ${Number(p.kill).toLocaleString()}</div>
-        <div class="box">💀 ${Number(p.dead).toLocaleString()}</div>
-
-        <h3>🔥 KPI Kill</h3>
-        <div>${Number(p.kill).toLocaleString()} / ${killTarget.toLocaleString()} (${killPercent.toFixed(0)}%)</div>
-        <div class="bar"><div class="bar-fill" style="width:${killPercent}%"></div></div>
-
-        <h3>💀 KPI Dead</h3>
-        <div>${Number(p.dead).toLocaleString()} / ${deadTarget.toLocaleString()} (${deadPercent.toFixed(0)}%)</div>
-        <div class="bar"><div class="bar-fill" style="width:${deadPercent}%"></div></div>
-    `;
-}
-
-function closeProfile(){
-    document.getElementById("modal").style.display="none";
-}
-
-render();
-
+function closeProfile(){{
+    document.getElementById("modal").style.display="none"
+}}
 </script>
 
 </body>
 </html>
 """
 
-html = html.replace("DATA_PLACEHOLDER", data_json)
-
-components.html(html, height=1000)
+components.html(html, height=900, scrolling=True)
