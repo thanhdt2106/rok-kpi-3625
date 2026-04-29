@@ -64,11 +64,8 @@ if name:
 
     /* ===== CARD (ẢNH NẰM Ở ĐÂY) ===== */
     .card {{
-        width:90%;
-        max-width:1100px;
-        border-radius:30px;
-        padding:40px;
-        color:white;
+       width:95%;
+max-width:1400px;
 
         /* 👉 ẢNH NẰM TRONG CARD */
         background:
