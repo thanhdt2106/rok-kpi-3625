@@ -92,10 +92,10 @@ body {{
     font-family:Arial;
     margin:0;
 }}
-.block-container {
+.block-container {{
     padding-top: 0 !important;
     padding-bottom: 0 !important;
-}
+}}
 
 .search {{
     width:100%;
