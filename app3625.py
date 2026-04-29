@@ -4,120 +4,106 @@ import streamlit.components.v1 as components
 
 st.set_page_config(layout="wide")
 
-# ===== LOAD DATA =====
+# ====== LOAD DATA GOOGLE SHEET ======
 @st.cache_data(ttl=60)
 def load_data():
-    url = "https://docs.google.com/spreadsheets/d/1CzGPseLzdRK1V-6qy7KD5T58sBRSGjQi/export?format=csv&gid=855089129"
+    sheet_id = "1CzGPseLzdRK1V-6qy7KD5T58sBRSGjQi"
+    gid = "855089129"
+    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
     df = pd.read_csv(url)
 
+    # chuẩn hóa tên cột
     df.columns = df.columns.str.strip()
-
-    df = df.rename(columns={
-        "Tên": "Name",
-        "ID": "ID",
-        "Liên Minh": "Alliance",
-        "Tổng Tiêu Diệt": "Kill",
-        "Điểm Chết": "Dead",
-        "Sức Mạnh": "Power"
-    })
-
-    for col in ["Kill","Dead","Power"]:
-        df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
     return df
 
 df = load_data()
 
+# ====== CLEAN DATA ======
+def to_int(x):
+    try:
+        return int(str(x).replace(",", ""))
+    except:
+        return 0
+
+df["Power"] = df["Sức Manh"].apply(to_int)
+df["Kill"] = df["Tổng Tiêu Diệt"].apply(to_int)
+df["Dead"] = df["Điểm chết"].apply(to_int)
+
 # ===== KPI =====
-def get_kpi_kill(p):
-    if p>=100e6: return 600e6
-    elif p>=90e6: return 550e6
-    elif p>=80e6: return 450e6
-    elif p>=70e6: return 300e6
-    elif p>=60e6: return 250e6
-    else: return 200e6
+def kpi_kill(pow):
+    if pow >= 100_000_000: return 600_000_000
+    elif pow >= 90_000_000: return 550_000_000
+    elif pow >= 80_000_000: return 450_000_000
+    elif pow >= 70_000_000: return 300_000_000
+    elif pow >= 60_000_000: return 250_000_000
+    else: return 200_000_000
 
-def get_kpi_dead(p):
-    if p>=100e6: return 1.5e6
-    elif p>=90e6: return 1.2e6
-    elif p>=80e6: return 1e6
-    elif p>=70e6: return 800e3
-    else: return 700e3
+def kpi_dead(pow):
+    if pow >= 100_000_000: return 1_500_000
+    elif pow >= 90_000_000: return 1_200_000
+    elif pow >= 80_000_000: return 1_000_000
+    elif pow >= 70_000_000: return 800_000
+    else: return 700_000
 
-# ===== FARM DEAD =====
-def calc_dead(df):
-    res={}
-    for name in df["Name"].unique():
-        p=df[df["Name"]==name]
-        main=p.sort_values("Power",ascending=False).iloc[0]
-        total=main["Dead"]
+# ===== BUILD HTML =====
+cards_html = ""
 
-        for _,r in p.iterrows():
-            if r["Power"]<main["Power"]:
-                if r["Power"]>=40e6: total+=700000
-                elif r["Power"]>=30e6: total+=500000
-                elif r["Power"]>=20e6: total+=300000
+for i, row in df.iterrows():
+    name = str(row["Tên"])
+    id_ = str(row["ID"])
+    alliance = str(row["Liên Minh"])
+    power = row["Power"]
+    kill = row["Kill"]
+    dead = row["Dead"]
 
-        res[name]=int(total)
-    return res
+    kpiK = kpi_kill(power)
+    kpiD = kpi_dead(power)
 
-dead_map=calc_dead(df)
+    kill_percent = min(int(kill / kpiK * 100), 100)
+    dead_percent = min(int(dead / kpiD * 100), 100)
 
-# ===== PASS DATA TO JS =====
-df_json = df.to_json(orient="records")
+    cards_html += f"""
+    <div class="card" onclick="openProfile('{name}','{id_}','{alliance}','{power}','{kill}','{dead}','{kpiK}','{kpiD}','{kill_percent}','{dead_percent}')">
+        <img src="https://api.dicebear.com/7.x/adventurer/svg?seed={name}">
+        <h3>{name}</h3>
+        <p>{power:,}</p>
+    </div>
+    """
 
-# ===== HTML =====
 html = f"""
 <html>
 <head>
 <style>
 body {{
-    margin:0;
-    background:linear-gradient(135deg,#0b1220,#05070d);
+    background:#0b0f1a;
     color:white;
-    font-family:sans-serif;
+    font-family:Arial;
 }}
-
-.topbar {{
-    display:flex;
-    gap:10px;
-    justify-content:center;
-    padding:15px;
-}}
-
-.btn {{
-    padding:10px 20px;
-    background:#111;
-    border-radius:10px;
-    cursor:pointer;
-}}
-
-.btn:hover {{box-shadow:0 0 15px gold;}}
 
 .search {{
-    display:block;
-    margin:10px auto;
-    padding:10px;
-    width:60%;
+    width:100%;
+    padding:15px;
+    font-size:18px;
     border-radius:10px;
     border:none;
+    margin-bottom:20px;
 }}
 
 .grid {{
     display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
+    grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
     gap:20px;
-    padding:20px;
 }}
 
 .card {{
     background:#111;
-    padding:15px;
-    border-radius:20px;
+    padding:20px;
+    border-radius:15px;
     text-align:center;
     cursor:pointer;
-    position:relative;
     transition:0.3s;
+    border:1px solid #222;
 }}
 
 .card:hover {{
@@ -125,148 +111,116 @@ body {{
     box-shadow:0 0 20px gold;
 }}
 
-.rank {{
-    position:absolute;
-    top:10px;
-    left:10px;
-    color:gold;
-}}
-
 .card img {{
     width:70px;
     border-radius:50%;
-    border:3px solid gold;
+    border:2px solid gold;
 }}
 
-.profile {{
+.modal {{
     position:fixed;
-    top:0;left:0;
-    width:100%;height:100%;
-    background:rgba(0,0,0,0.85);
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.9);
     display:none;
     justify-content:center;
     align-items:center;
 }}
 
-.box {{
-    width:65%;
+.profile {{
+    width:800px;
     background:#111;
+    border-radius:20px;
     padding:30px;
-    border-radius:25px;
+}}
+
+.row {{
+    display:flex;
+    gap:20px;
+    margin-top:15px;
+}}
+
+.box {{
+    flex:1;
+    background:#1a1a1a;
+    padding:15px;
+    border-radius:10px;
 }}
 
 .bar {{
-    height:12px;
+    height:10px;
     background:#333;
-    border-radius:10px;
-    margin:5px 0;
+    border-radius:5px;
+    overflow:hidden;
 }}
 
 .fill {{
     height:100%;
     background:gold;
-    border-radius:10px;
 }}
+
 </style>
 </head>
 
 <body>
 
-<input class="search" placeholder="🔍 Search..." onkeyup="search(this.value)">
+<input class="search" placeholder="🔍 Nhập tên người chơi..." onkeyup="search(this.value)">
 
-<div class="topbar">
-<div class="btn" onclick="sortData('Power')">⚡ Power</div>
-<div class="btn" onclick="sortData('Kill')">🔥 Kill</div>
-<div class="btn" onclick="sortData('Dead')">💀 Dead</div>
+<div class="grid" id="grid">
+{cards_html}
 </div>
 
-<div id="grid" class="grid"></div>
-
-<div id="profile" class="profile">
-<div class="box">
-<div id="content"></div>
-<button onclick="closeProfile()">Close</button>
-</div>
+<div class="modal" id="modal">
+<div class="profile" id="profile"></div>
 </div>
 
 <script>
-
-let data = {df_json};
-let current = [...data];
-
-// ===== SEARCH =====
 function search(val){{
- val=val.toLowerCase();
- current=data.filter(x=>x.Name.toLowerCase().includes(val));
- render();
+    val = val.toLowerCase()
+    document.querySelectorAll(".card").forEach(c=>{{
+        c.style.display = c.innerText.toLowerCase().includes(val) ? "block":"none"
+    }})
 }}
 
-// ===== SORT =====
-function sortData(key){{
- current.sort((a,b)=>b[key]-a[key]);
- render();
-}}
+function openProfile(name,id,alliance,power,kill,dead,kpiK,kpiD,kp,dp){{
+    document.getElementById("modal").style.display="flex"
 
-// ===== RENDER =====
-function render(){{
- let html="";
- current.forEach((x,i)=>{{
- html+=`
- <div class="card" onclick="openProfile('${{x.Name}}',${{i+1}})">
- <div class="rank">#${{i+1}}</div>
- <img src="https://api.dicebear.com/7.x/adventurer/png?seed=${{x.Name}}">
- <h3>${{x.Name}}</h3>
- <p>${{Number(x.Power).toLocaleString()}}</p>
- </div>`;
- }});
- document.getElementById("grid").innerHTML=html;
-}}
+    document.getElementById("profile").innerHTML = `
+    <h2>${{name}}</h2>
 
-// ===== PROFILE =====
-function openProfile(name,rank){{
- let p=data.find(x=>x.Name===name);
+    <div class="row">
+        <div class="box">🆔 ${{id}}</div>
+        <div class="box">🏰 ${{alliance}}</div>
+    </div>
 
- let power=p.Power;
- let kill=p.Kill;
- let dead=p.Dead;
+    <div class="row">
+        <div class="box">⚡ ${{Number(power).toLocaleString()}}</div>
+        <div class="box">🔥 ${{Number(kill).toLocaleString()}}</div>
+        <div class="box">💀 ${{Number(dead).toLocaleString()}}</div>
+    </div>
 
- let kpiK = power>=100e6?600e6:power>=90e6?550e6:power>=80e6?450e6:power>=70e6?300e6:power>=60e6?250e6:200e6;
- let kpiD = power>=100e6?1.5e6:power>=90e6?1.2e6:power>=80e6?1e6:power>=70e6?800000:700000;
+    <h3>🔥 KPI Kill</h3>
+    <div class="bar"><div class="fill" style="width:${{kp}}%"></div></div>
+    <p>${{kill}} / ${{kpiK}} (${{kp}}%)</p>
 
- let kp = Math.min(100, Math.round(kill/kpiK*100));
- let dp = Math.min(100, Math.round(dead/kpiD*100));
+    <h3>💀 KPI Dead</h3>
+    <div class="bar"><div class="fill" style="width:${{dp}}%"></div></div>
+    <p>${{dead}} / ${{kpiD}} (${{dp}}%)</p>
 
- document.getElementById("profile").style.display="flex";
-
- document.getElementById("content").innerHTML=`
- <h2>${{p.Name}}</h2>
- <p>ID: ${{p.ID}}</p>
- <p>Alliance: ${{p.Alliance}}</p>
- <p>Rank: #${{rank}}</p>
- <p>Power: ${{Number(power).toLocaleString()}}</p>
- <p>Kill: ${{Number(kill).toLocaleString()}}</p>
- <p>Dead: ${{Number(dead).toLocaleString()}}</p>
-
- <h3>🔥 KPI Kill</h3>
- <div class="bar"><div class="fill" style="width:${{kp}}%"></div></div>
- <p>${{kill}} / ${{kpiK}} (${{kp}}%)</p>
-
- <h3>💀 KPI Dead</h3>
- <div class="bar"><div class="fill" style="width:${{dp}}%"></div></div>
- <p>${{dead}} / ${{kpiD}} (${{dp}}%)</p>
- `;
+    <br>
+    <button onclick="closeProfile()">Close</button>
+    `
 }}
 
 function closeProfile(){{
- document.getElementById("profile").style.display="none";
+    document.getElementById("modal").style.display="none"
 }}
-
-render();
-
 </script>
 
 </body>
 </html>
 """
 
-components.html(html, height=900)
+components.html(html, height=900, scrolling=True)
