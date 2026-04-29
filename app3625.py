@@ -73,12 +73,7 @@ if name:
         position:relative;
     }}
 
-    .hero::after {{
-        content:"";
-        position:absolute;
-        inset:0;
-        background:linear-gradient(to bottom, rgba(0,0,0,0.2) 40%, #081520 100%);
-    }}
+
 
     .avatar-wrap {{
         position:absolute;
