@@ -4,8 +4,6 @@ import streamlit.components.v1 as components
 
 st.set_page_config(initial_sidebar_state="collapsed")
 
-st.title("Ứng dụng không có sidebar hiển thị sẵn")
-
 # ===== XOÁ SIDEBAR CHUẨN =====
 st.markdown("""
 <style>
