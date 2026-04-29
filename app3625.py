@@ -172,4 +172,4 @@ st.markdown("""
     </div>
 
 </div>
-""", unsafe_allow_html=True)
+""" components.html(html, height=600)
