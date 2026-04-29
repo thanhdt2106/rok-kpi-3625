@@ -8,12 +8,12 @@ st.set_page_config(initial_sidebar_state="collapsed")
 st.markdown(
     """
     <style>
-        [data-testid="stSidebarNav"] {
-            display: none;
+        div[data-testid="collapsedControl"] {
+            visibility: hidden;
         }
     </style>
     """,
-    unsafe_allow_html=True,
+    unsafe_allow_html=True
 )
 
 # ===== LOAD DATA =====
