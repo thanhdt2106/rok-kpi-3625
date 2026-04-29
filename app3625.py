@@ -9,21 +9,24 @@ html = """
 <head>
 <style>
 
+/* ẨN HOÀN TOÀN UI STREAMLIT */
+[data-testid="stSidebar"] {display:none;}
+header {visibility:hidden;}
+footer {visibility:hidden;}
+#MainMenu {visibility:hidden;}
+
+.block-container{
+    padding:0 !important;
+}
+
+/* BODY */
 body{
     margin:0;
     background:#0b0f1a;
     font-family: 'Segoe UI', sans-serif;
 }
 
-/* XÓA padding mặc định Streamlit */
-.block-container{
-    padding:0 !important;
-}
-.main{
-    padding:0 !important;
-}
-
-/* CENTER CARD */
+/* WRAPPER CENTER */
 .wrapper{
     display:flex;
     justify-content:center;
@@ -33,36 +36,41 @@ body{
 
 /* CARD */
 .card{
-    width:65vw;
+    width:70vw;
     height:65vh;
-    border-radius:28px;
+    border-radius:30px;
     overflow:hidden;
     position:relative;
 
-    /* nền ảnh nằm TRONG card */
-    background-image:url("https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true");
+    background:url("https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true");
     background-size:cover;
     background-position:center;
 
     box-shadow:0 0 80px rgba(0,0,0,0.8);
 }
 
-/* overlay giúp chữ nổi */
+/* LÀM CHỮ NỔI HƠN */
 .overlay{
     position:absolute;
     inset:0;
     background:linear-gradient(
         to bottom,
-        rgba(0,0,0,0.3),
+        rgba(0,0,0,0.2),
         rgba(0,0,0,0.75)
     );
 }
 
-/* CONTENT */
+/* CONTENT - FIX BỊ ĐẨY LÊN */
 .content{
     position:relative;
     z-index:2;
-    padding:40px;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;   /* 👈 QUAN TRỌNG */
+    height:100%;
+
+    padding:50px;
     color:white;
 }
 
@@ -71,6 +79,7 @@ body{
     display:flex;
     align-items:center;
     gap:20px;
+    margin-bottom:25px;
 }
 
 /* AVATAR */
@@ -85,22 +94,20 @@ body{
 /* NAME */
 .name{
     font-size:28px;
-    font-weight:500;
     color:#ffd700;
-    letter-spacing:1px;
 }
 
-/* INFO GRID */
+/* INFO */
 .info{
-    margin-top:30px;
     display:grid;
     grid-template-columns: repeat(4, 1fr);
     gap:20px;
+    margin-bottom:35px;
 }
 
 .item{
+    background:rgba(0,0,0,0.45);
     backdrop-filter: blur(6px);
-    background:rgba(0,0,0,0.35);
     padding:12px 16px;
     border-radius:12px;
 }
@@ -111,31 +118,31 @@ body{
 }
 
 .value{
-    font-size:18px;
-    margin-top:4px;
+    font-size:16px;
 }
 
-/* BOX KPI */
+/* KPI */
 .kpi{
-    margin-top:40px;
     display:grid;
     grid-template-columns: repeat(3,1fr);
     gap:20px;
 }
 
+/* BOX */
 .box{
     padding:20px;
     border-radius:18px;
     text-align:center;
     backdrop-filter: blur(10px);
-    background:rgba(0,0,0,0.4);
+    background:rgba(0,0,0,0.5);
     border:1px solid rgba(255,255,255,0.1);
+    transition:0.3s;
 }
 
-/* BOX HIGHLIGHT */
+/* HIGHLIGHT */
 .box.active{
     border:2px solid gold;
-    box-shadow:0 0 20px rgba(255,215,0,0.7);
+    box-shadow:0 0 25px rgba(255,215,0,0.8);
 }
 
 .icon{
