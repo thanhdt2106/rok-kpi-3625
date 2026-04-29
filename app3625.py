@@ -50,13 +50,13 @@ body{
 
 /* ===== HERO ===== */
 .hero{
-    height:230px;
+    height:280px;
     background:url('https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true');
     background-size:cover;
-    background-position:center 70%;
+    background-position:center 50%;
     position:relative;
-    border-top-left-radius:30px;
-    border-top-right-radius:30px;
+    border-top-left-radius:20px;
+    border-top-right-radius:20px;
 }
 
 /* overlay */
