@@ -1,231 +1,176 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import pandas as pd
+import time
 
-# ================= CONFIG =================
-st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="ROK Dashboard", layout="wide")
 
-# ================= HIDE SIDEBAR =================
-st.markdown("""
-<style>
-section[data-testid="stSidebar"] {display:none !important;}
-header {display:none !important;}
-footer {display:none !important;}
-#MainMenu {visibility:hidden;}
-
-.block-container {
-    padding:0 !important;
-    max-width:100% !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# ================= LOAD DATA =================
-SHEET_ID = "1CzGPseLzdRK1V-6qy7KD5T58sBRSGjQi"
-GID = "855089129"
-
-url = f"https://opensheet.elk.sh/{SHEET_ID}/{GID}"
-
+# ================== LOAD DATA ==================
 @st.cache_data(ttl=30)
 def load_data():
-    return pd.read_json(url)
+    sheet_id = "1CzGPseLzdRK1V-6qy7KD5T58sBRSGjQi"
+    gid = "855089129"
+    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
+    df = pd.read_csv(url)
+    return df
 
 df = load_data()
 
-# ================= SEARCH =================
-name_list = df["Tên"].dropna().tolist()
-search = st.text_input("", placeholder="🔍 Nhập tên người chơi...")
-
-player = df.iloc[0]
-
-if search:
-    result = df[df["Tên"].str.contains(search, case=False, na=False)]
-    if not result.empty:
-        player = result.iloc[0]
-
-# ================= DATA =================
-name = player.get("Tên","N/A")
-pid = player.get("ID","N/A")
-alliance = player.get("Liên Minh","N/A")
-
-kill = int(player.get("Tổng Tiêu Diệt",0))
-dead = int(player.get("Điểm Chết",0))
-
-# RANK
-df_sorted = df.sort_values(by="Tổng Tiêu Diệt", ascending=False)
-rank = df_sorted.index.get_loc(player.name) + 1
-
-# KPI (demo target)
-kill_target = 15000000000
-dead_target = 12000000000
-
-kill_percent = min(100, int(kill/kill_target*100))
-dead_percent = min(100, int(dead/dead_target*100))
-
-# FORMAT
-def fmt(n):
-    return f"{n:,}"
-
-def fmtB(n):
-    return f"{n/1e9:.1f}B"
-
-# ================= HTML =================
-html = f"""
-<!DOCTYPE html>
-<html>
-<head>
+# ================== STYLE ==================
+st.markdown("""
 <style>
+html, body, [class*="css"] {
+    font-family: 'Segoe UI', sans-serif;
+    background: #0b1220;
+}
 
-*{{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI;}}
+/* CARD PLAYER */
+.card {
+    width: 100%;
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 15px;
+    background: linear-gradient(145deg, #111827, #0b1220);
+    border: 1px solid rgba(255,255,255,0.05);
+    transition: 0.3s;
+}
 
-body{{
-    height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    background: radial-gradient(circle at top,#0b1a2a,#050b12);
-}}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 25px rgba(255, 200, 0, 0.3);
+}
 
-.card{{
-    width:65vw;
-    height:65vh;
-    border-radius:30px;
-    overflow:hidden;
-    position:relative;
-    box-shadow:0 0 60px rgba(255,180,0,0.2);
-}}
+/* PROFILE CARD */
+.profile {
+    width: 70%;
+    margin: auto;
+    padding: 40px;
+    border-radius: 25px;
+    background-size: cover;
+    background-position: center;
+    color: white;
+    position: relative;
+}
 
-.card::before{{
-    content:"";
+.overlay {
     position:absolute;
     inset:0;
-    background:url("https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true") center/cover;
-    filter:brightness(0.9);
-}}
+    background:rgba(0,0,0,0.6);
+    border-radius:25px;
+}
 
-.card::after{{
-    content:"";
-    position:absolute;
-    inset:0;
-    background:linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.75));
-}}
-
-.content{{
+.content {
     position:relative;
     z-index:2;
-    height:100%;
-    padding:40px;
-    color:white;
-    display:flex;
-    flex-direction:column;
-    justify-content:space-between;
-}}
+}
 
-.top{{
-    display:flex;
-    align-items:center;
-    gap:20px;
-}}
-
-.avatar{{
+/* AVATAR */
+.avatar {
     width:90px;
     height:90px;
     border-radius:50%;
     border:3px solid gold;
-    box-shadow:0 0 25px gold;
-}}
+    margin-right:15px;
+}
 
-.name{{
-    font-size:28px;
-    color:#ffd700;
-}}
-
-.info{{
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:15px;
-}}
-
-.box{{
-    background:rgba(0,0,0,0.4);
-    padding:12px;
-    border-radius:12px;
-    backdrop-filter:blur(6px);
-}}
-
-.label{{font-size:12px;opacity:.6;}}
-.value{{font-size:16px;margin-top:5px;}}
-
-.stats{{
-    display:flex;
-    gap:20px;
-}}
-
-.stat{{
+/* STATS BOX */
+.stat-box {
     flex:1;
-    background:rgba(0,0,0,0.45);
-    padding:25px;
-    border-radius:18px;
+    padding:20px;
+    border-radius:15px;
     text-align:center;
-}}
+    background:rgba(0,0,0,0.5);
+    backdrop-filter: blur(10px);
+}
 
-.rank{{
-    border:2px solid gold;
-    box-shadow:0 0 25px gold;
-}}
-
-.bar{{height:6px;background:#222;border-radius:10px;margin-top:10px;overflow:hidden;}}
-.fill{{height:100%;background:gold;}}
-
+/* SEARCH */
+input {
+    border-radius:10px !important;
+}
 </style>
-</head>
+""", unsafe_allow_html=True)
 
-<body>
+# ================== SEARCH ==================
+st.title("🔥 ROK MEMBER DASHBOARD")
 
-<div class="card">
-<div class="content">
+search = st.text_input("🔍 Nhập tên người chơi")
 
-<div class="top">
-<img src="https://i.pravatar.cc/150" class="avatar">
-<div class="name">{name}</div>
-</div>
+# ================== FILTER ==================
+if search:
+    df_filtered = df[df["Name"].str.contains(search, case=False, na=False)]
+else:
+    df_filtered = df
 
-<div class="info">
-<div class="box"><div class="label">ID</div><div class="value">{pid}</div></div>
-<div class="box"><div class="label">Alliance</div><div class="value">{alliance}</div></div>
-<div class="box"><div class="label">Kill</div><div class="value">{fmt(kill)}</div></div>
-<div class="box"><div class="label">Dead</div><div class="value">{fmt(dead)}</div></div>
-</div>
+# ================== VIEW MODE ==================
+if "view_profile" not in st.session_state:
+    st.session_state.view_profile = None
 
-<div class="stats">
+# ================== LIST MEMBER ==================
+if st.session_state.view_profile is None:
 
-<div class="stat rank">
-<div>🏆</div>
-<div>{rank}</div>
-<div>Rank</div>
-</div>
+    st.subheader("👥 Danh sách thành viên")
 
-<div class="stat">
-<div>🔥</div>
-<div>{fmtB(kill)}</div>
-<div>{kill_percent}%</div>
-<div class="bar"><div class="fill" style="width:{kill_percent}%"></div></div>
-</div>
+    for i, row in df_filtered.iterrows():
+        col1, col2 = st.columns([1, 6])
 
-<div class="stat">
-<div>💀</div>
-<div>{fmtB(dead)}</div>
-<div>{dead_percent}%</div>
-<div class="bar"><div class="fill" style="width:{dead_percent}%"></div></div>
-</div>
+        with col1:
+            st.image(f"https://api.dicebear.com/7.x/adventurer/png?seed={row['Name']}", width=60)
 
-</div>
+        with col2:
+            st.markdown(f"""
+            <div class="card">
+                <b>{row['Name']}</b><br>
+                Power: {row.get('Power','N/A')}<br>
+                Kill: {row.get('Kill','N/A')}
+            </div>
+            """, unsafe_allow_html=True)
 
-</div>
-</div>
+        if st.button(f"Xem profile {row['Name']}", key=i):
+            st.session_state.view_profile = row.to_dict()
+            st.rerun()
 
-</body>
-</html>
-"""
+# ================== PROFILE ==================
+else:
+    p = st.session_state.view_profile
 
-components.html(html, height=900)
+    bg = "https://i.imgur.com/6Iej2c3.jpg"
+
+    st.markdown(f"""
+    <div class="profile" style="background-image:url('{bg}')">
+        <div class="overlay"></div>
+
+        <div class="content">
+
+            <div style="display:flex;align-items:center;margin-bottom:20px;">
+                <img class="avatar" src="https://api.dicebear.com/7.x/adventurer/png?seed={p['Name']}"/>
+                <h2 style="color:gold;">{p['Name']}</h2>
+            </div>
+
+            <div style="display:flex;gap:20px;margin-top:20px;">
+                <div class="stat-box">
+                    <small>ID</small><br>
+                    {p.get('ID','N/A')}
+                </div>
+
+                <div class="stat-box">
+                    <small>Alliance</small><br>
+                    {p.get('Alliance','N/A')}
+                </div>
+
+                <div class="stat-box">
+                    <small>Kill</small><br>
+                    {p.get('Kill','N/A')}
+                </div>
+
+                <div class="stat-box">
+                    <small>Dead</small><br>
+                    {p.get('Dead','N/A')}
+                </div>
+            </div>
+
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if st.button("⬅ Quay lại"):
+        st.session_state.view_profile = None
+        st.rerun()
