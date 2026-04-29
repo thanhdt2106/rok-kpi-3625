@@ -1,241 +1,210 @@
 import streamlit as st
+import pandas as pd
 import streamlit.components.v1 as components
 
 st.set_page_config(layout="wide")
 
-# ẨN UI STREAMLIT
-st.markdown("""
-<style>
-[data-testid="stSidebar"] {display:none;}
-header {visibility:hidden;}
-footer {visibility:hidden;}
-.block-container {padding:0 !important; max-width:100% !important;}
-</style>
-""", unsafe_allow_html=True)
+# ===== LOAD DATA =====
+sheet_id = "1CzGPseLzdRK1V-6qy7KD5T58sBRSGjQi"
+gid = "855089129"
 
-html = """
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<style>
+url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
+df = pd.read_csv(url)
 
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:system-ui;
-}
+# ===== CLEAN DATA =====
+df["Tổng Tiêu Diệt"] = pd.to_numeric(df["Tổng Tiêu Diệt"], errors="coerce")
+df["Sức Mạnh"] = pd.to_numeric(df["Sức Mạnh"], errors="coerce")
 
-/* ===== BODY ===== */
-body{
-    height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    background:#05080c;
-}
+# ===== KPI CALC =====
+df["KPI_KILL"] = df["Tổng Tiêu Diệt"]
+df["KPI_DEAD"] = df["T5"]
 
-/* ===== CARD ===== */
-.card{
-    width:420px;
-    border-radius:30px;
-    background:#081520;
-    box-shadow:0 30px 90px rgba(0,0,0,0.9);
-    border:1px solid rgba(255,215,0,0.2);
-    color:white;
-    overflow:visible;
-    position:relative;
-}
+# rank theo kill
+df = df.sort_values("KPI_KILL", ascending=False)
+df["Rank"] = range(1, len(df)+1)
 
-/* ===== HERO ===== */
-.hero{
-    height:280px;
-    background:url('https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true');
-    background-size:cover;
-    background-position:center 50%;
-    position:relative;
-    border-top-left-radius:20px;
-    border-top-right-radius:20px;
-}
+# ===== SEARCH =====
+player_name = st.text_input("🔍 Nhập tên người chơi")
 
-/* overlay */
-.hero::after{
-    content:"";
-    position:absolute;
-    inset:0;
-    background:linear-gradient(to bottom, rgba(0,0,0,0.4), #081520);
-}
+if player_name:
+    player = df[df["Tên"].str.contains(player_name, case=False, na=False)]
 
-/* ===== AVATAR ===== */
-.avatar-wrap{
-    position:absolute;
-    bottom:-70px;
-    left:50%;
-    transform:translateX(-50%);
-    z-index:10;
-}
+    if len(player) == 0:
+        st.error("Không tìm thấy người chơi")
+        st.stop()
 
-/* 🔥 FIRE AURA */
-.avatar-wrap::before{
-    content:"";
-    position:absolute;
-    top:50%;
-    left:50%;
-    width:200px;
-    height:200px;
-    transform:translate(-50%,-50%);
-    border-radius:50%;
-    background: radial-gradient(circle, rgba(255,180,0,1), rgba(255,80,0,0.4), transparent 70%);
-    filter:blur(25px);
-    animation:fire 1.5s infinite alternate;
-}
+    p = player.iloc[0]
 
-/* RING */
-.avatar{
-    width:120px;
-    height:120px;
-    border-radius:50%;
-    border:4px solid #FFD700;
-    position:relative;
-    z-index:2;
-}
+    # KPI %
+    max_kill = df["KPI_KILL"].max()
+    max_dead = df["KPI_DEAD"].max()
 
-/* ===== FIRE ANIMATION ===== */
-@keyframes fire{
-    0%{transform:translate(-50%,-50%) scale(1); opacity:0.7;}
-    100%{transform:translate(-50%,-50%) scale(1.2); opacity:1;}
-}
+    kill_pct = int(p["KPI_KILL"] / max_kill * 100)
+    dead_pct = int(p["KPI_DEAD"] / max_dead * 100)
 
-/* ===== CONTENT ===== */
-.content{
-    padding-top:100px;
-    padding-bottom:25px;
-    padding-left:25px;
-    padding-right:25px;
-}
+    html = f"""
+    <html>
+    <head>
+    <style>
 
-/* NAME */
-.name{
-    text-align:center;
-    font-size:26px;
-    font-weight:800;
-    color:#FFD700;
-    text-shadow:0 0 15px rgba(255,200,0,0.8);
-    margin-bottom:25px;
-}
+    body {{
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        height:100vh;
+        background:#05080c;
+        font-family:system-ui;
+    }}
 
-/* ===== STATS ===== */
-.stats{
-    border-radius:20px;
-    padding:15px;
-    background:rgba(0,0,0,0.5);
-    border:1px solid rgba(255,215,0,0.15);
-}
+    .card {{
+        width:420px;
+        border-radius:30px;
+        background:#081520;
+        color:white;
+        overflow:visible;
+        position:relative;
+    }}
 
-.row{
-    display:flex;
-    justify-content:space-between;
-    padding:12px 5px;
-    border-bottom:1px solid rgba(255,255,255,0.08);
-}
+    .hero {{
+        height:220px;
+        background:url('https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true');
+        background-size:cover;
+        position:relative;
+    }}
 
-.row:last-child{
-    border-bottom:none;
-}
+    .avatar-wrap {{
+        position:absolute;
+        bottom:-60px;
+        left:50%;
+        transform:translateX(-50%);
+    }}
 
-.row span{
-    color:#aaa;
-}
+    .avatar {{
+        width:110px;
+        height:110px;
+        border-radius:50%;
+        border:3px solid gold;
+    }}
 
-/* ===== FOOTER ===== */
-.footer{
-    display:flex;
-    gap:12px;
-    margin-top:20px;
-}
+    .content {{
+        padding-top:80px;
+        padding:80px 20px 20px;
+    }}
 
-.box{
-    flex:1;
-    padding:18px;
-    border-radius:18px;
-    background:rgba(0,0,0,0.5);
-    border:1px solid rgba(255,215,0,0.2);
-    text-align:center;
-    position:relative;
-}
+    .name {{
+        text-align:center;
+        font-size:24px;
+        color:gold;
+        margin-bottom:20px;
+    }}
 
-/* 🔥 RANK #1 EFFECT */
-.box:first-child{
-    box-shadow:0 0 25px rgba(255,200,0,0.6);
-    border:2px solid #FFD700;
-}
+    .row {{
+        display:flex;
+        justify-content:space-between;
+        padding:10px 0;
+        border-bottom:1px solid rgba(255,255,255,0.1);
+    }}
 
-/* glow animation */
-.box:first-child::before{
-    content:"";
-    position:absolute;
-    inset:-2px;
-    border-radius:18px;
-    background:linear-gradient(45deg, gold, orange, gold);
-    z-index:-1;
-    filter:blur(10px);
-    opacity:0.7;
-    animation:glow 2s infinite linear;
-}
+    .footer {{
+        display:flex;
+        gap:10px;
+        margin-top:20px;
+    }}
 
-@keyframes glow{
-    0%{filter:blur(5px);}
-    50%{filter:blur(15px);}
-    100%{filter:blur(5px);}
-}
+    .box {{
+        flex:1;
+        background:#111;
+        padding:15px;
+        border-radius:15px;
+        text-align:center;
+        position:relative;
+    }}
 
-.dot{
-    width:35px;
-    height:35px;
-    background:#FFD700;
-    border-radius:50%;
-    margin:auto;
-    margin-bottom:10px;
-}
+    .box:first-child {{
+        border:2px solid gold;
+    }}
 
-</style>
-</head>
+    .dot {{
+        width:25px;
+        height:25px;
+        background:gold;
+        border-radius:50%;
+        margin:auto;
+        margin-bottom:8px;
+    }}
 
-<body>
+    .btn {{
+        position:absolute;
+        right:10px;
+        top:10px;
+        background:red;
+        width:20px;
+        height:20px;
+        border-radius:50%;
+        font-size:12px;
+        color:white;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        cursor:pointer;
+    }}
 
-<div class="card">
+    </style>
+    </head>
 
-    <div class="hero">
-        <div class="avatar-wrap">
-            <img src="https://i.pravatar.cc/150?img=12" class="avatar">
-        </div>
-    </div>
+    <body>
 
-    <div class="content">
+    <div class="card">
 
-        <div class="name">Louis Noob</div>
-
-        <div class="stats">
-            <div class="row"><span>ID</span><b>71428274</b></div>
-            <div class="row"><span>Alliance</span><b>[FT-D]</b></div>
-            <div class="row"><span>Power</span><b>87M</b></div>
-            <div class="row"><span>Kill</span><b>6.1B</b></div>
-            <div class="row"><span>Dead</span><b>1.2B</b></div>
+        <div class="hero">
+            <div class="avatar-wrap">
+                <img src="https://i.pravatar.cc/150?u={p["Tên"]}" class="avatar">
+            </div>
         </div>
 
-        <div class="footer">
-            <div class="box"><div class="dot"></div>#1</div>
-            <div class="box"><div class="dot"></div>85%</div>
-            <div class="box"><div class="dot"></div>92%</div>
+        <div class="content">
+
+            <div class="name">{p["Tên"]}</div>
+
+            <div class="row"><span>ID</span><b>{int(p["ID"])}</b></div>
+            <div class="row"><span>Alliance</span><b>{p["Liên Minh"]}</b></div>
+            <div class="row">
+                <span>Kill</span>
+                <b>{p["KPI_KILL"]:,}</b>
+                <div class="btn">!</div>
+            </div>
+            <div class="row">
+                <span>Dead</span>
+                <b>{p["KPI_DEAD"]:,}</b>
+                <div class="btn">!</div>
+            </div>
+
+            <div class="footer">
+                <div class="box">
+                    <div class="dot"></div>
+                    #{p["Rank"]}
+                </div>
+
+                <div class="box">
+                    <div class="dot"></div>
+                    {p["KPI_KILL"]:,}<br>{kill_pct}%
+                </div>
+
+                <div class="box">
+                    <div class="dot"></div>
+                    {p["KPI_DEAD"]:,}<br>{dead_pct}%
+                </div>
+            </div>
+
         </div>
 
     </div>
 
-</div>
+    </body>
+    </html>
+    """
 
-</body>
-</html>
-"""
+    components.html(html, height=750)
 
-components.html(html, height=900)
+else:
+    st.info("Nhập tên để tìm player")
