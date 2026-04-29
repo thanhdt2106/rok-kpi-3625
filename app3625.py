@@ -1,48 +1,39 @@
 import streamlit as st
+import streamlit.components.v1 as components
 
-st.set_page_config(layout="centered")
-
-st.markdown("""
+html_code = """
+<!DOCTYPE html>
+<html>
+<head>
 <style>
 
-/* FIX STREAMLIT DEFAULT */
-.block-container {
-    max-width: 100% !important;
-    padding: 0 !important;
+body {
+    margin: 0;
+    font-family: Arial;
+    background: url("https://i.imgur.com/YOUR_IMAGE.jpg") no-repeat center;
+    background-size: cover;
 }
 
-/* BACKGROUND */
-.bg {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: url("https://i.imgur.com/YOUR_IMAGE.jpg") center/cover no-repeat;
-    z-index: -2;
-}
-
+/* OVERLAY */
 .overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0,0,0,0.65);
-    z-index: -1;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
 }
 
 /* CARD */
-.content {
+.card {
     width: 400px;
     margin: 60px auto;
     padding: 25px;
     border-radius: 20px;
-    background: rgba(0, 40, 50, 0.85);
-    backdrop-filter: blur(10px);
-    box-shadow: 0 0 30px rgba(0,255,200,0.2);
+    background: rgba(0, 40, 50, 0.9);
+    box-shadow: 0 0 30px rgba(0,255,200,0.3);
     text-align: center;
     color: white;
+    position: relative;
+    z-index: 2;
 }
 
 /* TITLE */
@@ -50,11 +41,6 @@ st.markdown("""
     font-size: 26px;
     font-weight: bold;
     color: gold;
-    text-shadow: 0 0 10px orange;
-}
-
-.title span {
-    font-size: 18px;
 }
 
 /* AVATAR */
@@ -67,12 +53,6 @@ st.markdown("""
     margin-top: 15px;
 }
 
-/* NAME */
-.name {
-    margin-top: 10px;
-    font-size: 20px;
-}
-
 /* INFO */
 .row {
     display: flex;
@@ -81,15 +61,6 @@ st.markdown("""
     margin-top: 8px;
     border-radius: 10px;
     background: rgba(255,255,255,0.05);
-}
-
-.label {
-    color: #aaa;
-}
-
-.value {
-    color: gold;
-    font-weight: bold;
 }
 
 /* KPI */
@@ -111,84 +82,42 @@ st.markdown("""
     height: 45px;
     margin: auto;
     border-radius: 50%;
-    background: radial-gradient(circle, gold, orange);
-    box-shadow: 0 0 15px gold;
-}
-
-.box p {
-    font-size: 12px;
-    color: #ccc;
-    margin: 5px 0;
-}
-
-.box b {
-    color: white;
+    background: gold;
 }
 
 </style>
-""", unsafe_allow_html=True)
+</head>
 
-st.markdown("""
-<div class="bg"></div>
+<body>
+
 <div class="overlay"></div>
 
-<div class="content">
+<div class="card">
 
     <div class="title">
-        FIGHT TO DEAD<br>
-        <span>3625</span>
+        FIGHT TO DEAD<br>3625
     </div>
 
     <img src="https://i.pravatar.cc/150" class="avatar">
 
-    <h2 class="name">Louis Noob</h2>
+    <h2>Louis Noob</h2>
 
-    <div class="row">
-        <div class="label">ID</div>
-        <div class="value">71428274</div>
-    </div>
-
-    <div class="row">
-        <div class="label">LIÊN MINH</div>
-        <div class="value">[FT-D]FIGHT TO DEAD</div>
-    </div>
-
-    <div class="row">
-        <div class="label">POWER</div>
-        <div class="value">87.424.868</div>
-    </div>
-
-    <div class="row">
-        <div class="label">KILL</div>
-        <div class="value">6.119.626.641</div>
-    </div>
-
-    <div class="row">
-        <div class="label">DEAD</div>
-        <div class="value">1.245.678.910</div>
-    </div>
+    <div class="row"><span>ID</span><span>71428274</span></div>
+    <div class="row"><span>ALLIANCE</span><span>[FT-D]</span></div>
+    <div class="row"><span>POWER</span><span>87M</span></div>
+    <div class="row"><span>KILL</span><span>6.1B</span></div>
+    <div class="row"><span>DEAD</span><span>1.2B</span></div>
 
     <div class="kpi">
-
-        <div class="box">
-            <div class="circle"></div>
-            <p>RANK</p>
-            <b>#1</b>
-        </div>
-
-        <div class="box">
-            <div class="circle"></div>
-            <p>KPI KILL</p>
-            <b>85%</b>
-        </div>
-
-        <div class="box">
-            <div class="circle"></div>
-            <p>KPI DEAL</p>
-            <b>92%</b>
-        </div>
-
+        <div class="box"><div class="circle"></div><p>#1</p></div>
+        <div class="box"><div class="circle"></div><p>85%</p></div>
+        <div class="box"><div class="circle"></div><p>92%</p></div>
     </div>
 
 </div>
-""", unsafe_allow_html=True)
+
+</body>
+</html>
+"""
+
+components.html(html_code, height=700)
