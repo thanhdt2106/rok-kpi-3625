@@ -1,45 +1,42 @@
 import streamlit as st
+import streamlit.components.v1 as components
 
 st.set_page_config(layout="wide")
 
-# ✅ GLOBAL CSS (xoá toàn bộ style mặc định Streamlit)
-st.markdown("""
+html = """
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
 <style>
 
-/* ===== REMOVE STREAMLIT DEFAULT ===== */
-.block-container {
-    padding: 0 !important;
-    max-width: 100% !important;
+/* ===== RESET ===== */
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:system-ui;
 }
 
-header, footer {
-    visibility: hidden;
-}
-
-/* ===== BACKGROUND FULL SCREEN ===== */
-.stApp {
-    background: radial-gradient(circle at top, #0f2a33, #05080c);
-}
-
-/* ===== CENTER WRAP ===== */
-.wrapper{
+/* ===== BACKGROUND ===== */
+body{
     height:100vh;
     display:flex;
     justify-content:center;
     align-items:center;
+    background: radial-gradient(circle at top, #0f2a33, #05080c);
 }
 
 /* ===== CARD ===== */
 .card{
-    width:420px;
+    width:400px;
     padding:35px;
     border-radius:24px;
-    background: rgba(15, 30, 40, 0.85);
+    background: rgba(15, 30, 40, 0.9);
     backdrop-filter: blur(12px);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+    box-shadow: 0 25px 70px rgba(0,0,0,0.8);
     border:1px solid rgba(255,255,255,0.05);
     color:white;
-    font-family:system-ui;
 }
 
 /* ===== HEADER ===== */
@@ -54,6 +51,7 @@ header, footer {
 .server{
     text-align:center;
     color:#7f8c8d;
+    margin-top:5px;
     margin-bottom:20px;
 }
 
@@ -137,39 +135,39 @@ header, footer {
 }
 
 </style>
-""", unsafe_allow_html=True)
+</head>
 
+<body>
 
-# ✅ HTML UI
-st.markdown("""
-<div class="wrapper">
+<div class="card">
 
-    <div class="card">
+    <div class="title">FIGHT TO DEAD</div>
+    <div class="server">#3625</div>
 
-        <div class="title">FIGHT TO DEAD</div>
-        <div class="server">#3625</div>
+    <div class="avatar-wrap">
+        <img src="https://i.pravatar.cc/150?img=12" class="avatar">
+    </div>
 
-        <div class="avatar-wrap">
-            <img src="https://i.pravatar.cc/150?img=12" class="avatar">
-        </div>
+    <div class="name">Louis Noob</div>
 
-        <div class="name">Louis Noob</div>
+    <div class="stats">
+        <div class="row"><span>ID</span><b>71428274</b></div>
+        <div class="row"><span>Alliance</span><b>[FT-D]</b></div>
+        <div class="row"><span>Power</span><b>87M</b></div>
+        <div class="row"><span>Kill</span><b>6.1B</b></div>
+        <div class="row"><span>Dead</span><b>1.2B</b></div>
+    </div>
 
-        <div class="stats">
-            <div class="row"><span>ID</span><b>71428274</b></div>
-            <div class="row"><span>Alliance</span><b>[FT-D]</b></div>
-            <div class="row"><span>Power</span><b>87M</b></div>
-            <div class="row"><span>Kill</span><b>6.1B</b></div>
-            <div class="row"><span>Dead</span><b>1.2B</b></div>
-        </div>
-
-        <div class="footer">
-            <div class="box"><div class="dot"></div>#1</div>
-            <div class="box"><div class="dot"></div>85%</div>
-            <div class="box"><div class="dot"></div>92%</div>
-        </div>
-
+    <div class="footer">
+        <div class="box"><div class="dot"></div>#1</div>
+        <div class="box"><div class="dot"></div>85%</div>
+        <div class="box"><div class="dot"></div>92%</div>
     </div>
 
 </div>
-""" components.html(html, height=600)
+
+</body>
+</html>
+"""
+
+components.html(html, height=700)
