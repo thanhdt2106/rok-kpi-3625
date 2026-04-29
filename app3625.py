@@ -13,7 +13,24 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ===== 2. LOAD VÀ XỬ LÝ DỮ LIỆU =====
+# ===== 2. KPI RULES (Định nghĩa hàm trước để dùng trong xử lý dữ liệu) =====
+def get_kpi_kill_value(p):
+    if p >= 100_000_000: return 600_000_000
+    elif p >= 80_000_000: return 450_000_000
+    return 300_000_000
+
+def get_kpi_dead_value(p):
+    if p >= 100_000_000: return 1_500_000
+    elif p >= 90_000_000: return 1_200_000
+    elif p >= 80_000_000: return 1_000_000
+    elif p >= 70_000_000: return 800_000
+    elif p >= 60_000_000: return 700_000
+    elif p >= 50_000_000: return 600_000
+    elif p >= 40_000_000: return 500_000
+    elif p >= 30_000_000: return 400_000
+    else: return 300_000
+
+# ===== 3. LOAD VÀ XỬ LÝ DỮ LIỆU =====
 @st.cache_data(ttl=60)
 def load_and_process_data():
     sheet_id = "1CzGPseLzdRK1V-6qy7KD5T58sBRSGjQi"
@@ -31,14 +48,29 @@ def load_and_process_data():
     df["Kill"] = df["Tổng Tiêu Diệt"].apply(to_int)
     df["Dead"] = df["Điểm Chết"].apply(to_int)
     
+    # Tính KPI cá nhân cho từng dòng dựa trên Power
+    df['Individual_KPI_Dead'] = df['Power'].apply(get_kpi_dead_value)
+    df['Individual_KPI_Kill'] = df['Power'].apply(get_kpi_kill_value)
+    
+    # Nhận diện Group (Tên đầu tiên)
     df['Group'] = df['Tên'].apply(lambda x: str(x).split()[0].upper() if pd.notnull(x) else "")
-    group_dead_totals = df.groupby('Group')['Dead'].transform('sum')
+    
+    # Gộp KPI: Tính tổng KPI Dead/Kill của cả gia đình
+    group_kpi_dead = df.groupby('Group')['Individual_KPI_Dead'].transform('sum')
+    group_kpi_kill = df.groupby('Group')['Individual_KPI_Kill'].transform('sum')
+    
+    # Tìm Power lớn nhất để xác định Acc chính
     group_max_power = df.groupby('Group')['Power'].transform('max')
 
     processed_list = []
     for i, row in df.iterrows():
         is_main = (row['Power'] == group_max_power[i])
-        final_dead = group_dead_totals[i] if is_main else row['Dead']
+        
+        # LOGIC MỚI: 
+        # Nếu là acc chính: KPI hiển thị = Tổng KPI của cả nhóm farm cộng lại
+        # Điểm chết (Dead) thực tế: Vẫn giữ nguyên của từng acc (không cộng dồn điểm chết nữa)
+        display_kpi_dead = group_kpi_dead[i] if is_main else row['Individual_KPI_Dead']
+        display_kpi_kill = group_kpi_kill[i] if is_main else row['Individual_KPI_Kill']
         
         processed_list.append({
             "name": row["Tên"],
@@ -46,7 +78,9 @@ def load_and_process_data():
             "alliance": row["Liên Minh"],
             "pow": row["Power"],
             "kill": row["Kill"],
-            "dead": final_dead,
+            "dead": row["Dead"], # Giữ nguyên điểm thực tế
+            "final_kpi_dead": display_kpi_dead,
+            "final_kpi_kill": display_kpi_kill,
             "is_farm": not is_main
         })
     return processed_list
@@ -54,36 +88,16 @@ def load_and_process_data():
 try:
     final_data = load_and_process_data()
 except Exception as e:
-    st.error(f"Lỗi tải dữ liệu: {e}")
+    st.error(f"Lỗi: {e}")
     st.stop()
-
-# ===== 3. CẬP NHẬT KPI RULES (CHỈ SỬA KPI DEAD) =====
-def kpi_kill(p):
-    if p >= 100_000_000: return 600_000_000
-    elif p >= 80_000_000: return 450_000_000
-    return 300_000_000
-
-def kpi_dead(p):
-    if p >= 100_000_000: return 1_500_000
-    elif p >= 90_000_000: return 1_200_000
-    elif p >= 80_000_000: return 1_000_000
-    elif p >= 70_000_000: return 800_000
-    elif p >= 60_000_000: return 700_000
-    elif p >= 50_000_000: return 600_000
-    elif p >= 40_000_000: return 500_000
-    elif p >= 30_000_000: return 400_000
-    else: return 300_000 # Cho mốc từ 20M-30M như yêu cầu
 
 # ===== 4. BUILD HTML CARDS =====
 cards_html = ""
 for item in final_data:
-    kK = kpi_kill(item['pow'])
-    kD = kpi_dead(item['pow'])
     avatar = f"https://api.dicebear.com/7.x/adventurer/svg?seed={item['name']}"
-
     cards_html += f"""
     <div class="card" data-power="{item['pow']}" data-kill="{item['kill']}" data-dead="{item['dead']}"
-        onclick="openProfile('{item['name']}','{item['id']}','{item['alliance']}','{item['pow']}','{item['kill']}','{item['dead']}','{kK}','{kD}','{avatar}')">
+        onclick="openProfile('{item['name']}','{item['id']}','{item['alliance']}','{item['pow']}','{item['kill']}','{item['dead']}','{item['final_kpi_kill']}','{item['final_kpi_dead']}','{avatar}')">
         <div class="avatar-wrap"><img src="{avatar}"></div>
         <div class="card-name">{item['name']}</div>
         <div class="value">⚡ {item['pow']:,}</div>
@@ -114,7 +128,7 @@ html_content = f"""
         .search {{ width: 100%; padding: 12px; background: #111; border: 1px solid #333; color: white; border-radius: 12px; margin-bottom: 15px; box-sizing: border-box; }}
         .filters {{ display: flex; gap: 8px; margin-bottom: 15px; }}
         .filter {{ flex: 1; padding: 10px; background: #222; border-radius: 8px; text-align: center; font-size: 11px; cursor: pointer; border: 1px solid #333; }}
-        .filter.active {{ background: gold; color: black; font-weight: bold; border-color: gold; }}
+        .filter.active {{ background: gold; color: black; font-weight: bold; }}
         .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }}
         .card {{ background: #161b22; padding: 15px; border-radius: 18px; text-align: center; border: 1px solid #222; cursor: pointer; transition: 0.3s; }}
         .card:hover {{ border-color: gold; transform: translateY(-5px); }}
