@@ -3,7 +3,6 @@ import pandas as pd
 import streamlit.components.v1 as components
 
 st.set_page_config(page_title="FTD KPI SYSTEM", layout="wide", initial_sidebar_state="collapsed")
-# ===== XOÁ SIDEBAR CHUẨN =====
 
 # ===== LOAD DATA =====
 @st.cache_data(ttl=60)
@@ -17,7 +16,6 @@ def load_data():
 
 df = load_data()
 
-# ===== CLEAN =====
 def to_int(x):
     try:
         return int(str(x).replace(",", ""))
@@ -44,7 +42,7 @@ def kpi_dead(pow):
     elif pow >= 70_000_000: return 800_000
     else: return 700_000
 
-# ===== BUILD CARD (GIỮ NGUYÊN UI, CHỈ THÊM DATA) =====
+# ===== BUILD CARD =====
 cards_html = ""
 
 for _, row in df.iterrows():
@@ -58,9 +56,6 @@ for _, row in df.iterrows():
     kpiK = kpi_kill(power)
     kpiD = kpi_dead(power)
 
-    kp = min(int(kill / kpiK * 100), 100)
-    dp = min(int(dead / kpiD * 100), 100)
-
     avatar = f"https://api.dicebear.com/7.x/adventurer/svg?seed={name}"
 
     cards_html += f"""
@@ -68,7 +63,7 @@ for _, row in df.iterrows():
         data-power="{power}"
         data-kill="{kill}"
         data-dead="{dead}"
-        onclick="openProfile('{name}','{id_}','{alliance}','{power}','{kill}','{dead}','{kpiK}','{kpiD}','{kp}','{dp}','{avatar}')">
+        onclick="openProfile('{name}','{id_}','{alliance}','{power}','{kill}','{dead}','{kpiK}','{kpiD}','{avatar}')">
 
         <div class="avatar-wrap">
             <img src="{avatar}">
@@ -102,7 +97,6 @@ body {{
     border-radius:10px;
     cursor:pointer;
     font-weight:bold;
-    z-index:999;
 }}
 
 .search {{
@@ -159,6 +153,26 @@ body {{
     background:linear-gradient(145deg,#0f111a,#1b1f2e);
     border-radius:25px;
     padding:30px;
+}}
+
+.profile-top {{
+    display:flex;
+    align-items:center;
+    gap:20px;
+}}
+
+.avatar-big {{
+    width:90px;
+    height:90px;
+    border-radius:50%;
+    padding:4px;
+    background:linear-gradient(45deg,gold,orange);
+    box-shadow:0 0 20px gold;
+}}
+
+.avatar-big img {{
+    width:100%;
+    border-radius:50%;
 }}
 
 .row {{
@@ -232,25 +246,25 @@ let lang = "vn"
 const TEXT = {{
     vn: {{
         search: "🔍 Nhập tên...",
-        power: "⚡ Sức mạnh",
-        kill: "🔥 Tiêu diệt",
-        dead: "💀 Tử trận",
+        power: "Power",
+        kill: "Kill",
+        dead: "Dead",
         id: "🆔 ID",
         alliance: "🏰 Liên minh",
         kpiKill: "🔥 KPI Tiêu Diệt",
         kpiDead: "💀 KPI Tử Trận",
-        exit: "❌ THOÁT"
+        exit: "THOÁT"
     }},
     en: {{
         search: "🔍 Search...",
-        power: "⚡ Power",
-        kill: "🔥 Kill",
-        dead: "💀 Dead",
+        power: "Power",
+        kill: "Kill",
+        dead: "Dead",
         id: "🆔 ID",
         alliance: "🏰 Alliance",
         kpiKill: "🔥 KPI Kill",
         kpiDead: "💀 KPI Dead",
-        exit: "❌ EXIT"
+        exit: "EXIT"
     }}
 }}
 
@@ -259,13 +273,12 @@ function toggleLang(){{
     document.querySelector(".lang").innerText = lang.toUpperCase()
 
     let t = TEXT[lang]
-
     document.getElementById("searchInput").placeholder = t.search
 
-    let filters = document.querySelectorAll(".filter")
-    filters[0].innerText = t.power
-    filters[1].innerText = t.kill
-    filters[2].innerText = t.dead
+    let f = document.querySelectorAll(".filter")
+    f[0].innerText = t.power
+    f[1].innerText = t.kill
+    f[2].innerText = t.dead
 }}
 
 let mode = "power"
@@ -294,37 +307,37 @@ function search(val){{
     }})
 }}
 
-function openProfile(name,id,alliance,power,kill,dead,kpiK,kpiD,kp,dp,avatar){{
+function openProfile(name,id,alliance,power,kill,dead,kpiK,kpiD,avatar){{
     document.getElementById("modal").style.display="flex"
 
     let t = TEXT[lang]
 
     document.getElementById("profile").innerHTML = `
     <div class="profile-top">
-        <div class="avatar-big"><img src="${{avatar}}"></div>
+        <div class="avatar-big"><img src="${avatar}"></div>
         <div>
-            <h2>${{name}}</h2>
-            <p>${{t.id}}: ${{id}}</p>
-            <p>${{t.alliance}}: ${{alliance}}</p>
+            <h2>${name}</h2>
+            <p>${t.id}: ${id}</p>
+            <p>${t.alliance}: ${alliance}</p>
         </div>
     </div>
 
     <div class="row">
-        <div class="box">${{t.power}}<br>${{Number(power).toLocaleString()}}</div>
-        <div class="box">${{t.kill}}<br>${{Number(kill).toLocaleString()}}</div>
-        <div class="box">${{t.dead}}<br>${{Number(dead).toLocaleString()}}</div>
+        <div class="box">⚡ ${t.power}<br>${Number(power).toLocaleString()}</div>
+        <div class="box">🔥 ${t.kill}<br>${Number(kill).toLocaleString()}</div>
+        <div class="box">💀 ${t.dead}<br>${Number(dead).toLocaleString()}</div>
     </div>
 
-    <h3>${{t.kpiKill}}</h3>
+    <h3>${t.kpiKill}</h3>
     <div class="bar"><div class="fill" style="width:0%"></div></div>
-    <p>0 / ${{Number(kpiK).toLocaleString()}}</p>
+    <p>0 / ${Number(kpiK).toLocaleString()}</p>
 
-    <h3>${{t.kpiDead}}</h3>
+    <h3>${t.kpiDead}</h3>
     <div class="bar"><div class="fill" style="width:0%"></div></div>
-    <p>0 / ${{Number(kpiD).toLocaleString()}}</p>
+    <p>0 / ${Number(kpiD).toLocaleString()}</p>
 
     <br>
-    <button onclick="closeProfile()">${{t.exit}}</button>
+    <button onclick="closeProfile()">❌ ${t.exit}</button>
     `
 }}
 
@@ -338,4 +351,4 @@ function closeProfile(){{
 </html>
 """
 
-components.html(html, height=850, scrolling=True)
+components.html(html, height=900, scrolling=True)
