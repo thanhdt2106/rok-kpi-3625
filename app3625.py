@@ -1,45 +1,45 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-html_code = """
+html = """
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
 <style>
 
 body{
     margin:0;
-    background:#0b0f14;
+    height:100vh;
     display:flex;
     justify-content:center;
     align-items:center;
-    height:100vh;
     font-family:system-ui;
+    background: radial-gradient(circle at top, #0f2a33, #05080c);
 }
 
 /* CARD */
 .card{
     width:380px;
-    background:linear-gradient(180deg,#0f2027,#0b1218);
-    border-radius:20px;
-    padding:30px 25px;
-    box-shadow:0 10px 40px rgba(0,0,0,0.6);
+    padding:30px;
+    border-radius:24px;
+    background: rgba(15, 30, 40, 0.85);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
     color:white;
 }
 
 /* HEADER */
 .title{
     text-align:center;
-    font-size:22px;
-    font-weight:700;
+    font-size:24px;
+    font-weight:800;
     color:#FFD700;
+    letter-spacing:1px;
 }
 
 .server{
     text-align:center;
-    font-size:14px;
-    color:#aaa;
+    color:#7f8c8d;
     margin-bottom:20px;
 }
 
@@ -47,14 +47,14 @@ body{
 .avatar-wrap{
     display:flex;
     justify-content:center;
-    margin:15px 0;
+    margin:20px 0;
 }
 
 .avatar{
-    width:90px;
-    height:90px;
+    width:95px;
+    height:95px;
     border-radius:50%;
-    border:3px solid #FFD700;
+    border:2px solid #FFD700;
 }
 
 /* NAME */
@@ -62,51 +62,58 @@ body{
     text-align:center;
     font-size:20px;
     font-weight:600;
-    margin-bottom:20px;
+    margin-bottom:25px;
 }
 
-/* STATS */
+/* STATS LIST */
 .stats{
-    display:flex;
-    flex-direction:column;
-    gap:10px;
+    border-top:1px solid rgba(255,255,255,0.05);
+    border-bottom:1px solid rgba(255,255,255,0.05);
 }
 
 .row{
     display:flex;
     justify-content:space-between;
-    background:#111a22;
-    padding:10px 15px;
-    border-radius:10px;
+    padding:12px 5px;
+    border-bottom:1px solid rgba(255,255,255,0.05);
+}
+
+.row:last-child{
+    border-bottom:none;
 }
 
 .row span{
-    color:#888;
+    color:#9aa4ad;
 }
 
 .row b{
     font-weight:600;
 }
 
-/* FOOT */
+/* FOOTER CARDS */
 .footer{
     display:flex;
-    justify-content:space-between;
+    gap:10px;
     margin-top:20px;
 }
 
 .box{
     flex:1;
-    background:#111a22;
-    border-radius:12px;
     padding:15px;
-    margin:5px;
+    border-radius:14px;
+    background: rgba(255,255,255,0.03);
     text-align:center;
+    transition:0.2s;
+}
+
+.box:hover{
+    transform:translateY(-3px);
+    background: rgba(255,255,255,0.06);
 }
 
 .dot{
-    width:30px;
-    height:30px;
+    width:28px;
+    height:28px;
     background:#FFD700;
     border-radius:50%;
     margin:auto;
@@ -124,7 +131,7 @@ body{
     <div class="server">#3625</div>
 
     <div class="avatar-wrap">
-        <img src="https://i.pravatar.cc/150" class="avatar">
+        <img src="https://i.pravatar.cc/150?img=5" class="avatar">
     </div>
 
     <div class="name">Louis Noob</div>
@@ -149,4 +156,4 @@ body{
 </html>
 """
 
-components.html(html_code, height=600)
+components.html(html, height=650)
