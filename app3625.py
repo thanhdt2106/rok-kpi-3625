@@ -25,8 +25,8 @@ def load_data():
         "ID": "ID",
         "Liên Minh": "Alliance",
         "Tổng Tiêu Diệt": "Kill",
-        "Tổng Chết": "Dead",
-        "Tổng Sức Mạnh": "Power"
+        "Điểm Chết": "Dead",
+        "Sức Mạnh": "Power"
     })
 
     for col in ["Kill","Dead","Power"]:
