@@ -4,12 +4,13 @@ import streamlit.components.v1 as components
 
 st.set_page_config(layout="wide")
 
-# ===== XOÁ SIDEBAR CHUẨN =====
+# ===== XOÁ SIDEBAR + FULL SCREEN =====
 st.markdown("""
 <style>
 [data-testid="stSidebar"] {display:none !important;}
 [data-testid="collapsedControl"] {display:none !important;}
 section[data-testid="stSidebar"] {display:none !important;}
+.block-container {padding:0 !important;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -25,7 +26,6 @@ def load_data():
 
 df = load_data()
 
-# ===== CLEAN =====
 def to_int(x):
     try:
         return int(str(x).replace(",", ""))
@@ -52,7 +52,7 @@ def kpi_dead(pow):
     elif pow >= 70_000_000: return 800_000
     else: return 700_000
 
-# ===== BUILD CARD (GIỮ NGUYÊN UI, CHỈ THÊM DATA) =====
+# ===== BUILD CARD =====
 cards_html = ""
 
 for _, row in df.iterrows():
@@ -93,7 +93,6 @@ html = f"""
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 
-/* ===== GIỮ NGUYÊN STYLE GỐC ===== */
 body {{
     background: radial-gradient(circle at top, #111, #05070d);
     color:white;
@@ -102,20 +101,34 @@ body {{
 }}
 
 .search {{
-    width:100%;
-    padding:15px;
-    font-size:18px;
+    width:80%;
+    margin:20px auto;
+    display:block;
+    padding:12px;
+    font-size:16px;
     border-radius:12px;
     border:none;
-    margin-bottom:25px;
     background:#111;
     color:white;
+}}
+
+.lang {{
+    position:absolute;
+    top:15px;
+    right:20px;
+    background:gold;
+    color:black;
+    padding:8px 12px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:bold;
 }}
 
 .grid {{
     display:grid;
     grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
     gap:25px;
+    padding:20px;
 }}
 
 .card {{
@@ -124,13 +137,6 @@ body {{
     border-radius:20px;
     text-align:center;
     cursor:pointer;
-    transition:0.3s;
-    border:1px solid #222;
-}}
-
-.card:hover {{
-    transform:translateY(-8px) scale(1.05);
-    box-shadow:0 0 25px gold;
 }}
 
 .avatar-wrap {{
@@ -140,19 +146,15 @@ body {{
     border-radius:50%;
     padding:3px;
     background:linear-gradient(45deg,gold,orange);
-    box-shadow:0 0 15px gold;
 }}
 
 .avatar-wrap img {{
     width:100%;
-    height:100%;
     border-radius:50%;
 }}
 
 .modal {{
     position:fixed;
-    top:0;
-    left:0;
     width:100%;
     height:100%;
     background:rgba(0,0,0,0.9);
@@ -163,73 +165,9 @@ body {{
 
 .profile {{
     width:850px;
-    background:linear-gradient(145deg,#0f111a,#1b1f2e);
-    border-radius:25px;
-    padding:30px;
-}}
-
-.profile-top {{
-    display:flex;
-    align-items:center;
-    gap:20px;
-}}
-
-.avatar-big {{
-    width:90px;
-    height:90px;
-    border-radius:50%;
-    padding:4px;
-    background:linear-gradient(45deg,gold,orange);
-    box-shadow:0 0 20px gold;
-}}
-
-.avatar-big img {{
-    width:100%;
-    border-radius:50%;
-}}
-
-.row {{
-    display:flex;
-    gap:15px;
-    margin-top:20px;
-}}
-
-.box {{
-    flex:1;
-    background:rgba(255,255,255,0.05);
-    padding:15px;
-    border-radius:12px;
-}}
-
-.bar {{
-    height:10px;
-    background:#222;
-    border-radius:10px;
-    overflow:hidden;
-}}
-
-.fill {{
-    height:100%;
-    background:linear-gradient(90deg,gold,orange);
-}}
-
-/* ===== THÊM FILTER (KHÔNG PHÁ UI) ===== */
-.filters {{
-    display:flex;
-    gap:10px;
-    margin-bottom:15px;
-}}
-
-.filter {{
-    padding:10px 15px;
     background:#111;
-    border-radius:10px;
-    cursor:pointer;
-}}
-
-.filter.active {{
-    background:gold;
-    color:black;
+    padding:30px;
+    border-radius:20px;
 }}
 
 </style>
@@ -237,15 +175,11 @@ body {{
 
 <body>
 
-<input class="search" placeholder="🔍 Nhập tên..." onkeyup="search(this.value)">
+<div class="lang" onclick="toggleLang()">EN</div>
 
-<div class="filters">
-    <div class="filter active" onclick="setMode('power')">⚡ POWER</div>
-    <div class="filter" onclick="setMode('kill')">🔥 KILL</div>
-    <div class="filter" onclick="setMode('dead')">💀 DEAD</div>
-</div>
+<input class="search" id="searchInput" placeholder="🔍 Nhập tên..." onkeyup="search(this.value)">
 
-<div class="grid" id="grid">{cards_html}</div>
+<div class="grid">{cards_html}</div>
 
 <div class="modal" id="modal">
 <div class="profile" id="profile"></div>
@@ -253,24 +187,14 @@ body {{
 
 <script>
 
-let mode = "power"
+let lang = "vn"
 
-function setMode(m){{
-    mode = m
-    document.querySelectorAll(".filter").forEach(f=>f.classList.remove("active"))
-    event.target.classList.add("active")
+function toggleLang(){{
+    lang = lang === "vn" ? "en" : "vn"
+    document.querySelector(".lang").innerText = lang.toUpperCase()
 
-    let cards = Array.from(document.querySelectorAll(".card"))
-
-    cards.sort((a,b)=> b.dataset[mode] - a.dataset[mode])
-
-    let grid = document.getElementById("grid")
-    grid.innerHTML=""
-
-    cards.forEach(c=>{{
-        c.querySelector(".value").innerText = Number(c.dataset[mode]).toLocaleString()
-        grid.appendChild(c)
-    }})
+    document.getElementById("searchInput").placeholder =
+        lang==="vn" ? "🔍 Nhập tên..." : "🔍 Search..."
 }}
 
 function search(val){{
@@ -283,32 +207,27 @@ function search(val){{
 function openProfile(name,id,alliance,power,kill,dead,kpiK,kpiD,kp,dp,avatar){{
     document.getElementById("modal").style.display="flex"
 
+    let t = {{
+        vn: ["ID","Liên Minh","Sức Mạnh","Tiêu Diệt","Tử Trận","KPI Tiêu Diệt","KPI Tử Trận","ĐÓNG"],
+        en: ["ID","Alliance","Power","Kill","Dead","KPI Kill","KPI Dead","CLOSE"]
+    }}[lang]
+
     document.getElementById("profile").innerHTML = `
-    <div class="profile-top">
-        <div class="avatar-big"><img src="${{avatar}}"></div>
-        <div>
-            <h2>${{name}}</h2>
-            <p>🆔 ID: ${{id}}</p>
-            <p>🏰 Alliance: ${{alliance}}</p>
-        </div>
-    </div>
+    <h2>${{name}}</h2>
+    <p>${{t[0]}}: ${{id}}</p>
+    <p>${{t[1]}}: ${{alliance}}</p>
 
-    <div class="row">
-        <div class="box">⚡ Power<br>${{Number(power).toLocaleString()}}</div>
-        <div class="box">🔥 Kill<br>${{Number(kill).toLocaleString()}}</div>
-        <div class="box">💀 Dead<br>${{Number(dead).toLocaleString()}}</div>
-    </div>
+    <p>⚡ ${{t[2]}}: ${{power}}</p>
+    <p>🔥 ${{t[3]}}: ${{kill}}</p>
+    <p>💀 ${{t[4]}}: ${{dead}}</p>
 
-    <h3>🔥 KPI Kill</h3>
-    <div class="bar"><div class="fill" style="width:0%"></div></div>
-    <p>0 / ${{kpiK.toLocaleString()}}</p>
+    <h3>${{t[5]}}</h3>
+    <p>0 / ${{kpiK}}</p>
 
-    <h3>💀 KPI Dead</h3>
-    <div class="bar"><div class="fill" style="width:0%"></div></div>
-    <p>0 / ${{kpiD.toLocaleString()}}</p>
+    <h3>${{t[6]}}</h3>
+    <p>0 / ${{kpiD}}</p>
 
-    <br>
-    <button onclick="closeProfile()">❌ EXIT</button>
+    <button onclick="closeProfile()">❌ ${{t[7]}}</button>
     `
 }}
 
