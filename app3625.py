@@ -290,7 +290,4 @@ function closeProfile(){{
 </html>
 """
 
-# ===== HANDLE CLICK =====
-msg = st.experimental_get_query_params()
-
 components.html(html, height=900)
