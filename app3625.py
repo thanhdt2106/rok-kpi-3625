@@ -126,7 +126,13 @@ html_content = f"""
             background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; z-index: 1000;
         }}
         .profile-box {{
-            width: 90%; max-width: 500px; background: #1b1f2e; padding: 30px; border-radius: 25px; border: 1px solid gold;
+    width: 85%;            /* Chiếm 85% chiều rộng màn hình điện thoại */
+    max-width: 400px;      /* Giảm từ 500px xuống 400px để khung hẹp lại */
+    padding: 20px;         /* Giảm từ 30px xuống 20px để các phần tử sát nhau hơn */
+    border-radius: 20px;   /* Bo góc nhỏ lại một chút cho cân đối */
+    background: #1b1f2e; 
+    border: 1px solid gold;
+}}
         }}
         .bar {{ height: 12px; background: #333; border-radius: 10px; margin: 10px 0; overflow: hidden; }}
         .fill {{ height: 100%; background: linear-gradient(90deg, gold, #ffa500); width: 0%; transition: 1s; }}
