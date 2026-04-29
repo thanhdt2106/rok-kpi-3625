@@ -57,7 +57,7 @@ if name:
     }}
 
   .card {{
-    width:1000px;
+    width:700px;
     border-radius:25px;
     overflow:hidden;
 
