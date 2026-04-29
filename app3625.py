@@ -3,6 +3,36 @@ import streamlit.components.v1 as components
 
 st.set_page_config(layout="wide")
 
+# 🔥 ẨN TOÀN BỘ UI STREAMLIT (sidebar + header + menu)
+st.markdown("""
+<style>
+
+/* ẨN SIDEBAR */
+[data-testid="stSidebar"] {
+    display: none;
+}
+
+/* ẨN HEADER (nút share, menu, ...) */
+header {
+    visibility: hidden;
+}
+
+/* ẨN FOOTER */
+footer {
+    visibility: hidden;
+}
+
+/* FULL WIDTH */
+.block-container {
+    padding: 0 !important;
+    max-width: 100% !important;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+
+# 🔥 HTML UI
 html = """
 <!DOCTYPE html>
 <html>
@@ -36,19 +66,27 @@ body{
     color:white;
 }
 
-/* ===== HERO (ẢNH NỀN CỦA BẠN) ===== */
+/* ===== HERO ===== */
 .hero{
     height:260px;
-    background:url('https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true') center/cover no-repeat;
+    background:url('https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true');
+    background-size:cover;
+    background-position:center 75%;
+    background-repeat:no-repeat;
     position:relative;
 }
 
-/* overlay cho dễ nhìn */
+/* overlay */
 .hero::after{
     content:"";
     position:absolute;
     inset:0;
-    background:linear-gradient(to bottom, rgba(0,0,0,0.2), #0b1a22 90%);
+    background:linear-gradient(
+        to bottom,
+        rgba(0,0,0,0.6),
+        rgba(0,0,0,0.3),
+        #0b1a22 95%
+    );
 }
 
 /* ===== AVATAR ===== */
