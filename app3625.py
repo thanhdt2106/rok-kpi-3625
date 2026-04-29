@@ -35,7 +35,7 @@ for _, row in df.head(30).iterrows():
     player_id = str(row.get("ID", ""))
     alliance = str(row.get("Liên Minh", ""))
     power = int(row.get("Tổng Tiêu Diệt", 0))
-    dead = int(row.get("Điểm chết", 0))
+    dead = int(row.get("Điểm Chết", 0))
 
     avatar = f"https://api.dicebear.com/7.x/adventurer/png?seed={name}"
 
