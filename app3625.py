@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import streamlit.components.v1 as components
 
-st.set_page_config(initial_sidebar_state="collapsed")
+st.set_page_config(layout="wide")
 
 # ===== XOÁ SIDEBAR CHUẨN =====
 st.markdown("""
