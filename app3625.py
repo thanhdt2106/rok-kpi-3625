@@ -58,7 +58,7 @@ if name:
 
   .card {{
     width:1000px;
-    border-radius:50px;
+    border-radius:25px;
     overflow:hidden;
 
     background:
