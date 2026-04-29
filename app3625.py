@@ -27,7 +27,7 @@ html = """
     font-family:system-ui;
 }
 
-/* ===== BACKGROUND NGOÀI ===== */
+/* ===== BODY ===== */
 body{
     height:100vh;
     display:flex;
@@ -40,37 +40,24 @@ body{
 .card{
     width:420px;
     border-radius:30px;
-    overflow:hidden;
-    background:rgba(10,20,30,0.85);
-    backdrop-filter:blur(12px);
+    background:#081520;
     box-shadow:0 30px 80px rgba(0,0,0,0.9);
-    border:1px solid rgba(255,215,0,0.15);
+    border:1px solid rgba(255,215,0,0.1);
     color:white;
+    overflow:visible; /* 🔥 QUAN TRỌNG */
     position:relative;
 }
 
-/* ===== HERO (ẢNH) ===== */
+/* ===== HERO ===== */
 .hero{
-    height:230px;
+    height:240px;
     background:url('https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true');
     background-size:cover;
     background-position:center 70%;
     position:relative;
-    overflow:hidden;
-}
-
-/* ===== GOD LIGHT ===== */
-.hero::before{
-    content:"";
-    position:absolute;
-    top:-50%;
-    left:50%;
-    transform:translateX(-50%);
-    width:300px;
-    height:400px;
-    background:radial-gradient(circle, rgba(255,215,0,0.35), transparent 70%);
-    filter:blur(40px);
-    animation:lightMove 4s ease-in-out infinite;
+    z-index:1;
+    border-top-left-radius:30px;
+    border-top-right-radius:30px;
 }
 
 /* overlay */
@@ -82,32 +69,33 @@ body{
         to bottom,
         rgba(0,0,0,0.5),
         rgba(0,0,0,0.2),
-        rgba(10,20,30,1)
+        #081520
     );
 }
 
 /* ===== AVATAR ===== */
 .avatar-wrap{
     position:absolute;
-    bottom:-55px;
+    bottom:-60px;
     left:50%;
     transform:translateX(-50%);
-    z-index:2;
+    z-index:5;
 }
 
-/* GLOW MẠNH */
+/* glow */
 .avatar-wrap::before{
     content:"";
     position:absolute;
     top:50%;
     left:50%;
-    width:160px;
-    height:160px;
+    width:150px;
+    height:150px;
     transform:translate(-50%,-50%);
     border-radius:50%;
-    background: radial-gradient(circle, rgba(255,215,0,1), transparent 70%);
-    filter:blur(20px);
+    background: radial-gradient(circle, rgba(255,215,0,0.9), transparent 70%);
+    filter:blur(15px);
     animation:pulse 2s infinite;
+    z-index:-1;
 }
 
 .avatar{
@@ -122,29 +110,26 @@ body{
 /* ===== ANIMATION ===== */
 @keyframes pulse{
     0%{opacity:0.6; transform:translate(-50%,-50%) scale(1);}
-    50%{opacity:1; transform:translate(-50%,-50%) scale(1.2);}
+    50%{opacity:1; transform:translate(-50%,-50%) scale(1.15);}
     100%{opacity:0.6; transform:translate(-50%,-50%) scale(1);}
-}
-
-@keyframes lightMove{
-    0%{opacity:0.4; transform:translateX(-50%) translateY(0);}
-    50%{opacity:0.8; transform:translateX(-50%) translateY(20px);}
-    100%{opacity:0.4; transform:translateX(-50%) translateY(0);}
 }
 
 /* ===== CONTENT ===== */
 .content{
-    padding:75px 25px 25px;
+    padding-top:90px; /* 🔥 tạo chỗ cho avatar */
+    padding-bottom:25px;
+    padding-left:25px;
+    padding-right:25px;
+    position:relative;
+    z-index:2;
 }
 
 /* NAME */
 .name{
     text-align:center;
-    font-size:26px;
+    font-size:24px;
     font-weight:700;
-    background:linear-gradient(#FFD700,#ffae00);
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
+    color:#FFD700;
     margin-bottom:25px;
 }
 
