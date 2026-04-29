@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import streamlit.components.v1 as components
+import json
 
 st.set_page_config(layout="wide")
 
@@ -24,20 +25,17 @@ if search:
 else:
     df_filtered = df
 
-# ===== BUILD MEMBER GRID =====
+# ===== GRID MEMBER =====
 cards_html = ""
-
-for _, row in df_filtered.head(20).iterrows():
+for _, row in df_filtered.head(30).iterrows():
     cards_html += f"""
     <div class="member" onclick="showProfile('{row['Tên']}')">
         <img src="https://api.dicebear.com/7.x/adventurer/png?seed={row['Tên']}"/>
         <div class="m-name">{row['Tên']}</div>
-        <div class="m-power">{row['Tổng Tiêu Diệt']:,}</div>
+        <div class="m-power">{int(row['Tổng Tiêu Diệt']):,}</div>
     </div>
     """
 
-# ===== PROFILE DATA (JS) =====
-import json
 data_json = df.to_json(orient="records", force_ascii=False)
 
 # ===== HTML =====
@@ -53,7 +51,7 @@ body {{
     color:white;
 }}
 
-/* ===== HEADER ===== */
+/* HEADER */
 .header {{
     padding:20px 40px;
     font-size:28px;
@@ -61,7 +59,7 @@ body {{
     color:gold;
 }}
 
-/* ===== GRID ===== */
+/* GRID */
 .grid {{
     display:grid;
     grid-template-columns:repeat(auto-fill, minmax(180px,1fr));
@@ -100,36 +98,40 @@ body {{
     opacity:0.7;
 }}
 
-/* ===== PROFILE MODAL ===== */
+/* ===== MODAL PROFILE ===== */
 .modal {{
     position:fixed;
     inset:0;
-    background:rgba(0,0,0,0.8);
+    background:rgba(0,0,0,0.85);
     display:none;
     justify-content:center;
     align-items:center;
+    z-index:9999;
+    animation:fadeIn 0.3s;
 }}
 
 .card {{
-    width:70%;
-    height:65%;
+    width:65%;
+    height:70%;
     border-radius:25px;
-    background:url("https://i.imgur.com/6Iej2c3.jpg") center/cover;
+    background:url("https://i.imgur.com/6Iej2c3.jpg") center/cover no-repeat;
     position:relative;
     overflow:hidden;
+    box-shadow:0 0 80px rgba(255,215,0,0.3);
+    animation:zoomIn 0.3s;
 }}
 
 .overlay {{
     position:absolute;
     inset:0;
-    background:rgba(0,0,0,0.65);
+    background:linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.85));
 }}
 
 .content {{
     position:relative;
     z-index:2;
-    padding:30px;
     height:100%;
+    padding:40px;
     display:flex;
     flex-direction:column;
     justify-content:space-between;
@@ -138,25 +140,27 @@ body {{
 .top {{
     display:flex;
     align-items:center;
-    gap:15px;
+    gap:20px;
 }}
 
 .avatar {{
-    width:80px;
-    height:80px;
+    width:90px;
+    height:90px;
     border-radius:50%;
     border:3px solid gold;
+    box-shadow:0 0 20px gold;
 }}
 
 .name {{
-    font-size:26px;
+    font-size:30px;
     color:gold;
+    font-weight:bold;
 }}
 
 .info {{
     display:flex;
-    gap:15px;
-    margin-top:15px;
+    gap:20px;
+    margin-top:20px;
 }}
 
 .box {{
@@ -164,6 +168,7 @@ body {{
     background:rgba(255,255,255,0.08);
     padding:15px;
     border-radius:12px;
+    backdrop-filter:blur(10px);
 }}
 
 .stats {{
@@ -173,23 +178,35 @@ body {{
 
 .stat {{
     flex:1;
-    background:rgba(0,0,0,0.6);
-    padding:20px;
+    background:rgba(0,0,0,0.7);
+    padding:25px;
     border-radius:15px;
     text-align:center;
+    font-size:18px;
 }}
 
 .highlight {{
     border:2px solid gold;
-    box-shadow:0 0 20px gold;
+    box-shadow:0 0 25px gold;
 }}
 
 .close {{
     position:absolute;
     top:15px;
     right:20px;
+    font-size:22px;
     cursor:pointer;
-    font-size:20px;
+}
+
+/* ANIMATION */
+@keyframes fadeIn {{
+    from {{opacity:0}}
+    to {{opacity:1}}
+}}
+
+@keyframes zoomIn {{
+    from {{transform:scale(0.8)}}
+    to {{transform:scale(1)}}
 }}
 
 </style>
@@ -229,15 +246,26 @@ function showProfile(name) {{
             <div class="info">
                 <div class="box">ID<br><b>${{player["ID"]}}</b></div>
                 <div class="box">Alliance<br><b>${{player["Liên Minh"]}}</b></div>
-                <div class="box">Power<br><b>${{player["Tổng Tiêu Diệt"]}}</b></div>
-                <div class="box">Dead<br><b>${{player["Điểm Chết"]}}</b></div>
+                <div class="box">Power<br><b>${{Number(player["Tổng Tiêu Diệt"]).toLocaleString()}}</b></div>
+                <div class="box">Dead<br><b>${{Number(player["Điểm Chết"]).toLocaleString()}}</b></div>
             </div>
         </div>
 
         <div class="stats">
-            <div class="stat highlight">🏆<br>#${{player["STT"]}}</div>
-            <div class="stat">🔥<br>${{player["T5"]}}</div>
-            <div class="stat">💀<br>${{player["Điểm Chết"]}}</div>
+            <div class="stat highlight">
+                🏆<br><b>#${{player["STT"]}}</b><br>
+                <small>Rank</small>
+            </div>
+
+            <div class="stat">
+                🔥<br><b>${{Number(player["T5"]).toLocaleString()}}</b><br>
+                <small>T5 Kill</small>
+            </div>
+
+            <div class="stat">
+                💀<br><b>${{Number(player["Điểm Chết"]).toLocaleString()}}</b><br>
+                <small>Dead</small>
+            </div>
         </div>
     `;
 
