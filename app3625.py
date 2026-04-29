@@ -19,9 +19,12 @@ def load_data():
     sheet_id = "1CzGPseLzdRK1V-6qy7KD5T58sBRSGjQi"
     gid = "855089129"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
-    df = pd.read_csv(url)
-    df.columns = df.columns.str.strip()
-    return df
+    try:
+        df = pd.read_csv(url)
+        df.columns = df.columns.str.strip()
+        return df
+    except:
+        return pd.DataFrame(columns=["Tên", "ID", "Liên Minh", "Sức Mạnh", "Tổng Tiêu Diệt", "Điểm Chết"])
 
 df = load_data()
 
@@ -79,6 +82,13 @@ html_content = f"""
             color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px;
         }}
         
+        /* Nút chuyển ngôn ngữ */
+        #langBtn {{
+            position: fixed; top: 20px; right: 20px; background: gold; color: black;
+            padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: bold;
+            z-index: 2000; box-shadow: 0 0 10px rgba(255,215,0,0.5);
+        }}
+
         /* Hiệu ứng hào quang cho Avatar */
         .avatar-wrap {{
             width: 85px; height: 85px; margin: auto; border-radius: 50%; padding: 3px;
@@ -132,12 +142,14 @@ html_content = f"""
 </head>
 <body>
 
+    <div id="langBtn">EN</div>
+
     <input class="search" id="searchInput" placeholder="🔍 Nhập tên chiến binh..." onkeyup="search(this.value)">
 
     <div class="filters">
-        <div class="filter active" onclick="setMode('power', this)">⚡ SỨC MẠNH</div>
-        <div class="filter" onclick="setMode('kill', this)">🔥 TIÊU DIỆT</div>
-        <div class="filter" onclick="setMode('dead', this)">💀 ĐIỂM CHẾT</div>
+        <div class="filter active" id="btnPower" onclick="setMode('power', this)">⚡ SỨC MẠNH</div>
+        <div class="filter" id="btnKill" onclick="setMode('kill', this)">🔥 TIÊU DIỆT</div>
+        <div class="filter" id="btnDead" onclick="setMode('dead', this)">💀 ĐIỂM CHẾT</div>
     </div>
 
     <div class="grid" id="grid">{cards_html}</div>
@@ -147,6 +159,37 @@ html_content = f"""
     </div>
 
     <script>
+        let lang = "vn";
+        const TEXT = {{
+            vn: {{
+                search: "🔍 Nhập tên chiến binh...",
+                power: "⚡ SỨC MẠNH",
+                kill: "🔥 TIÊU DIỆT",
+                dead: "💀 ĐIỂM CHẾT",
+                kpiK: "🔥 KPI Tiêu diệt",
+                kpiD: "💀 KPI Điểm chết",
+                exit: "QUAY LẠI"
+            }},
+            en: {{
+                search: "🔍 Search warrior...",
+                power: "⚡ POWER",
+                kill: "🔥 KILLS",
+                dead: "💀 DEAD",
+                kpiK: "🔥 Kill KPI",
+                kpiD: "💀 Dead KPI",
+                exit: "CLOSE"
+            }}
+        }};
+
+        document.getElementById("langBtn").onclick = function() {{
+            lang = lang === "vn" ? "en" : "vn";
+            this.innerText = lang.toUpperCase();
+            document.getElementById("searchInput").placeholder = TEXT[lang].search;
+            document.getElementById("btnPower").innerText = TEXT[lang].power;
+            document.getElementById("btnKill").innerText = TEXT[lang].kill;
+            document.getElementById("btnDead").innerText = TEXT[lang].dead;
+        }};
+
         function search(val) {{
             val = val.toLowerCase();
             document.querySelectorAll('.card').forEach(c => {{
@@ -168,8 +211,8 @@ html_content = f"""
         }}
 
         function openProfile(name, id, all, pow, kill, dead, kpiK, kpiD, avatar) {{
+            let t = TEXT[lang];
             document.getElementById('modal').style.display = 'flex';
-            // TIẾN ĐỘ ĐƯỢC SET VỀ 0 NHƯ YÊU CẦU
             document.getElementById('profileContent').innerHTML = `
                 <center>
                     <div class="avatar-wrap" style="width:100px; height:100px;">
@@ -186,16 +229,16 @@ html_content = f"""
                 </div>
 
                 <div style="margin-top:20px;">
-                    <span>🔥 KPI Tiêu diệt: <b>0</b> / ${{Number(kpiK).toLocaleString()}}</span>
+                    <span>${{t.kpiK}}: <b>0</b> / ${{Number(kpiK).toLocaleString()}}</span>
                     <div class="bar"><div class="fill" style="width: 0%"></div></div>
                 </div>
 
                 <div style="margin-top:15px;">
-                    <span>💀 KPI Điểm chết: <b>0</b> / ${{Number(kpiD).toLocaleString()}}</span>
+                    <span>${{t.kpiD}}: <b>0</b> / ${{Number(kpiD).toLocaleString()}}</span>
                     <div class="bar"><div class="fill" style="width: 0%"></div></div>
                 </div>
 
-                <button class="close-btn" onclick="closeProfile()">QUAY LẠI</button>
+                <button class="close-btn" onclick="closeProfile()">${{t.exit}}</button>
             `;
         }}
 
@@ -207,4 +250,4 @@ html_content = f"""
 </html>
 """
 
-components.html(html_content, height=1000, scrolling=True)
+components.html(html_content, height=800, scrolling=True)
