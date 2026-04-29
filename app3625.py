@@ -55,21 +55,18 @@ if name:
     }}
 
     /* ===== CENTER ===== */
-    .wrap {{
-        display:flex;
-        justify-content:center;
-        align-items:center;
-        height:100vh;
-    }}
+    
 
     /* ===== CARD (ẢNH NẰM Ở ĐÂY) ===== */
     .card {{
        width:95%;
 max-width:1400px;
 
+    min-height:500px; /* thêm dòng này */
+
         /* 👉 ẢNH NẰM TRONG CARD */
         background:
-        linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.8)),
+       linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.6)),
         url('https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true');
 
         background-size:cover;
@@ -207,4 +204,4 @@ max-width:1400px;
     </html>
     """
 
-    components.html(html, height=850)
+    components.html(html, height=700)
