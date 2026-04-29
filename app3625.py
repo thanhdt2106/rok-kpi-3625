@@ -16,6 +16,7 @@ def load_data():
 
 df = load_data()
 
+# ===== CLEAN =====
 def to_int(x):
     try:
         return int(str(x).replace(",", ""))
@@ -87,25 +88,18 @@ body {{
     margin:0;
 }}
 
-.lang {{
-    position:fixed;
-    top:15px;
-    right:20px;
-    background:gold;
-    color:black;
-    padding:8px 12px;
-    border-radius:10px;
-    cursor:pointer;
-    font-weight:bold;
+.block-container {{
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
 }}
 
 .search {{
     width:100%;
-    padding:15px;
-    font-size:18px;
+    padding:12px;
+    font-size:16px;
     border-radius:12px;
     border:none;
-    margin-bottom:25px;
+    margin-bottom:20px;
     background:#111;
     color:white;
 }}
@@ -122,6 +116,13 @@ body {{
     border-radius:20px;
     text-align:center;
     cursor:pointer;
+    transition:0.3s;
+    border:1px solid #222;
+}}
+
+.card:hover {{
+    transform:translateY(-8px) scale(1.05);
+    box-shadow:0 0 25px gold;
 }}
 
 .avatar-wrap {{
@@ -131,15 +132,19 @@ body {{
     border-radius:50%;
     padding:3px;
     background:linear-gradient(45deg,gold,orange);
+    box-shadow:0 0 15px gold;
 }}
 
 .avatar-wrap img {{
     width:100%;
+    height:100%;
     border-radius:50%;
 }}
 
 .modal {{
     position:fixed;
+    top:0;
+    left:0;
     width:100%;
     height:100%;
     background:rgba(0,0,0,0.9);
@@ -218,14 +223,27 @@ body {{
     color:black;
 }}
 
+#langBtn {{
+position:fixed;
+top:10px;
+right:15px;
+background:gold;
+color:black;
+padding:5px 10px;
+border-radius:8px;
+cursor:pointer;
+z-index:999;
+font-size:12px;
+}}
+
 </style>
 </head>
 
 <body>
 
-<div class="lang" onclick="toggleLang()">EN</div>
+<div id="langBtn">EN</div>
 
-<input id="searchInput" class="search" placeholder="🔍 Nhập tên..." onkeyup="search(this.value)">
+<input class="search" placeholder="🔍 Nhập tên..." onkeyup="search(this.value)">
 
 <div class="filters">
     <div class="filter active" onclick="setMode('power')">⚡ POWER</div>
@@ -241,47 +259,33 @@ body {{
 
 <script>
 
+let mode = "power"
 let lang = "vn"
 
 const TEXT = {{
     vn: {{
         search: "🔍 Nhập tên...",
-        power: "Power",
-        kill: "Kill",
-        dead: "Dead",
-        id: "🆔 ID",
-        alliance: "🏰 Liên minh",
-        kpiKill: "🔥 KPI Tiêu Diệt",
-        kpiDead: "💀 KPI Tử Trận",
-        exit: "THOÁT"
-    }},
-    en: {{
-        search: "🔍 Search...",
-        power: "Power",
-        kill: "Kill",
-        dead: "Dead",
         id: "🆔 ID",
         alliance: "🏰 Alliance",
         kpiKill: "🔥 KPI Kill",
         kpiDead: "💀 KPI Dead",
-        exit: "EXIT"
+        exit: "❌ EXIT"
+    }},
+    en: {{
+        search: "🔍 Search...",
+        id: "🆔 ID",
+        alliance: "🏰 Alliance",
+        kpiKill: "🔥 KPI Kill",
+        kpiDead: "💀 KPI Dead",
+        exit: "❌ EXIT"
     }}
 }}
 
-function toggleLang(){{
+document.getElementById("langBtn").onclick = function(){{
     lang = lang === "vn" ? "en" : "vn"
-    document.querySelector(".lang").innerText = lang.toUpperCase()
-
-    let t = TEXT[lang]
-    document.getElementById("searchInput").placeholder = t.search
-
-    let f = document.querySelectorAll(".filter")
-    f[0].innerText = t.power
-    f[1].innerText = t.kill
-    f[2].innerText = t.dead
+    this.innerText = lang.toUpperCase()
+    document.querySelector(".search").placeholder = TEXT[lang].search
 }}
-
-let mode = "power"
 
 function setMode(m){{
     mode = m
@@ -289,6 +293,7 @@ function setMode(m){{
     event.target.classList.add("active")
 
     let cards = Array.from(document.querySelectorAll(".card"))
+
     cards.sort((a,b)=> b.dataset[mode] - a.dataset[mode])
 
     let grid = document.getElementById("grid")
@@ -308,36 +313,36 @@ function search(val){{
 }}
 
 function openProfile(name,id,alliance,power,kill,dead,kpiK,kpiD,avatar){{
-    document.getElementById("modal").style.display="flex"
-
     let t = TEXT[lang]
+
+    document.getElementById("modal").style.display="flex"
 
     document.getElementById("profile").innerHTML = `
     <div class="profile-top">
-        <div class="avatar-big"><img src="${avatar}"></div>
+        <div class="avatar-big"><img src="${{avatar}}"></div>
         <div>
-            <h2>${name}</h2>
-            <p>${t.ID}: ${id}</p>
-            <p>${t.alliance}: ${alliance}</p>
+            <h2>${{name}}</h2>
+            <p>${{t.id}}: ${{id}}</p>
+            <p>${{t.alliance}}: ${{alliance}}</p>
         </div>
     </div>
 
     <div class="row">
-        <div class="box">⚡ ${t.power}<br>${Number(power).toLocaleString()}</div>
-        <div class="box">🔥 ${t.kill}<br>${Number(kill).toLocaleString()}</div>
-        <div class="box">💀 ${t.dead}<br>${Number(dead).toLocaleString()}</div>
+        <div class="box">⚡ Power<br>${{Number(power).toLocaleString()}}</div>
+        <div class="box">🔥 Kill<br>${{Number(kill).toLocaleString()}}</div>
+        <div class="box">💀 Dead<br>${{Number(dead).toLocaleString()}}</div>
     </div>
 
-    <h3>${t.kpiKill}</h3>
+    <h3>${{t.kpiKill}}</h3>
     <div class="bar"><div class="fill" style="width:0%"></div></div>
-    <p>0 / ${Number(kpiK).toLocaleString()}</p>
+    <p>0 / ${{Number(kpiK).toLocaleString()}}</p>
 
-    <h3>${t.kpiDead}</h3>
+    <h3>${{t.kpiDead}}</h3>
     <div class="bar"><div class="fill" style="width:0%"></div></div>
-    <p>0 / ${Number(kpiD).toLocaleString()}</p>
+    <p>0 / ${{Number(kpiD).toLocaleString()}}</p>
 
     <br>
-    <button onclick="closeProfile()">❌ ${t.exit}</button>
+    <button onclick="closeProfile()">${{t.exit}}</button>
     `
 }}
 
@@ -351,4 +356,4 @@ function closeProfile(){{
 </html>
 """
 
-components.html(html, height=900, scrolling=True)
+components.html(html, height=850, scrolling=True)
