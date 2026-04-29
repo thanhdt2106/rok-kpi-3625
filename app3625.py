@@ -199,7 +199,7 @@ function render() {{
 
     sorted.forEach((p,i)=>{{
         html += `
-        <div class="card" onclick='openProfile(${JSON.stringify(p)}, ${i+1})'>
+        onclick='openProfile(${{JSON.stringify(p)}}, ${{i+1}})'
             <img class="avatar" src="https://api.dicebear.com/7.x/adventurer/png?seed=${{p.name}}">
             <div class="name">${{p.name}}</div>
             <div class="value">${{p[mode].toLocaleString()}}</div>
