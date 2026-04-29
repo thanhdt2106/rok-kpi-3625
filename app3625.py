@@ -38,28 +38,29 @@ if name:
     <head>
     <style>
 
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap');
+
     body {{
         background:#05080c;
         display:flex;
         justify-content:center;
         align-items:center;
         height:100vh;
-        font-family:system-ui;
+        font-family:'Orbitron', sans-serif;
     }}
 
     .card {{
         width:420px;
-        border-radius:30px;
+        border-radius:28px;
         overflow:hidden;
-        background:rgba(10,20,30,0.9);
-        backdrop-filter:blur(12px);
-        box-shadow:0 25px 80px rgba(0,0,0,0.8);
+        background:linear-gradient(180deg,#0b1a26,#081520);
+        box-shadow:0 30px 80px rgba(0,0,0,0.9);
         border:1px solid rgba(255,215,0,0.2);
         color:white;
     }}
 
     .hero {{
-        height:220px;
+        height:210px;
         background:url('https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true') center/cover;
         position:relative;
     }}
@@ -68,12 +69,12 @@ if name:
         content:"";
         position:absolute;
         inset:0;
-        background:linear-gradient(to bottom, rgba(0,0,0,0.5), #081520);
+        background:linear-gradient(to bottom, rgba(0,0,0,0.4), #081520);
     }}
 
     .avatar-wrap {{
         position:absolute;
-        bottom:-60px;
+        bottom:-55px;
         left:50%;
         transform:translateX(-50%);
     }}
@@ -83,6 +84,7 @@ if name:
         height:110px;
         border-radius:50%;
         border:3px solid gold;
+        box-shadow:0 0 25px rgba(255,215,0,0.7);
     }}
 
     .content {{
@@ -95,6 +97,7 @@ if name:
         font-weight:700;
         color:#FFD700;
         margin-bottom:25px;
+        letter-spacing:1px;
     }}
 
     .row {{
@@ -102,39 +105,58 @@ if name:
         justify-content:space-between;
         padding:12px 0;
         border-bottom:1px solid rgba(255,255,255,0.08);
+        font-size:14px;
     }}
 
+    .row span {{
+        color:#aaa;
+    }}
+
+    .row b {{
+        color:white;
+    }}
+
+    /* ===== BOX ===== */
     .footer {{
         display:flex;
         gap:12px;
-        margin-top:20px;
+        margin-top:22px;
     }}
 
     .box {{
         flex:1;
-        padding:15px;
-        border-radius:16px;
-        background:rgba(255,255,255,0.03);
+        padding:16px 10px;
+        border-radius:18px;
+        background:linear-gradient(180deg,#111,#0a0f14);
+        border:1px solid rgba(255,215,0,0.2);
         text-align:center;
+        transition:0.3s;
     }}
 
-    .box.rank {{
-        border:2px solid gold;
-        box-shadow:0 0 15px rgba(255,215,0,0.5);
+    .box:hover {{
+        transform:translateY(-4px);
+        box-shadow:0 0 20px rgba(255,215,0,0.3);
     }}
 
-    .dot {{
-        width:30px;
-        height:30px;
-        background:#FFD700;
-        border-radius:50%;
-        margin:auto;
-        margin-bottom:8px;
+    .icon {{
+        font-size:20px;
+        margin-bottom:6px;
+    }}
+
+    .value {{
+        font-size:14px;
+        font-weight:600;
+        margin-bottom:4px;
     }}
 
     .percent {{
+        font-size:12px;
         color:#aaa;
-        font-size:13px;
+    }}
+
+    .rank {{
+        border:2px solid gold;
+        box-shadow:0 0 20px rgba(255,215,0,0.6);
     }}
 
     </style>
@@ -160,22 +182,24 @@ if name:
             <div class="row"><span>Dead</span><b>{p["KPI_DEAD"]:,}</b></div>
 
             <div class="footer">
+
                 <div class="box rank">
-                    <div class="dot"></div>
-                    #{p["Rank"]}
+                    <div class="icon">🏆</div>
+                    <div class="value">#{p["Rank"]}</div>
                 </div>
 
                 <div class="box">
-                    <div class="dot"></div>
-                    {p["KPI_KILL"]:,}
+                    <div class="icon">🔥</div>
+                    <div class="value">{p["KPI_KILL"]:,}</div>
                     <div class="percent">{kill_pct}%</div>
                 </div>
 
                 <div class="box">
-                    <div class="dot"></div>
-                    {p["KPI_DEAD"]:,}
+                    <div class="icon">💀</div>
+                    <div class="value">{p["KPI_DEAD"]:,}</div>
                     <div class="percent">{dead_pct}%</div>
                 </div>
+
             </div>
 
         </div>
@@ -186,7 +210,7 @@ if name:
     </html>
     """
 
-    components.html(html, height=900)
+    components.html(html, height=720)
 
 else:
     st.info("Nhập tên để tìm player")
