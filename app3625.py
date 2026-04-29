@@ -317,7 +317,7 @@ function openProfile(name,id,alliance,power,kill,dead,kpiK,kpiD,avatar){{
         <div class="avatar-big"><img src="${avatar}"></div>
         <div>
             <h2>${name}</h2>
-            <p>${t.id}: ${id}</p>
+            <p>${t.ID}: ${id}</p>
             <p>${t.alliance}: ${alliance}</p>
         </div>
     </div>
