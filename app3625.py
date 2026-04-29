@@ -1,123 +1,149 @@
 import streamlit as st
-import streamlit.components.v1 as components
 
-html_code = """
-<!DOCTYPE html>
-<html>
-<head>
+st.set_page_config(layout="centered")
+
+st.markdown("""
 <style>
-
-body {
-    margin: 0;
-    font-family: Arial;
-    background: url("https://i.imgur.com/YOUR_IMAGE.jpg") no-repeat center;
-    background-size: cover;
-}
-
-/* OVERLAY */
-.overlay {
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.6);
+body{
+    background:#0b0f14;
 }
 
 /* CARD */
-.card {
-    width: 400px;
-    margin: 60px auto;
-    padding: 25px;
-    border-radius: 20px;
-    background: rgba(0, 40, 50, 0.9);
-    box-shadow: 0 0 30px rgba(0,255,200,0.3);
-    text-align: center;
-    color: white;
-    position: relative;
-    z-index: 2;
+.card{
+    width:420px;
+    margin:auto;
+    background:linear-gradient(180deg,#0f2027,#0b1218);
+    border-radius:20px;
+    padding:30px 25px;
+    box-shadow:0 10px 40px rgba(0,0,0,0.6);
+    color:white;
+    font-family:system-ui;
 }
 
-/* TITLE */
-.title {
-    font-size: 26px;
-    font-weight: bold;
-    color: gold;
+/* HEADER */
+.title{
+    text-align:center;
+    font-size:22px;
+    font-weight:700;
+    color:#FFD700;
+}
+
+.server{
+    text-align:center;
+    font-size:16px;
+    color:#aaa;
+    margin-bottom:20px;
 }
 
 /* AVATAR */
-.avatar {
-    width: 110px;
-    height: 110px;
-    border-radius: 50%;
-    border: 4px solid gold;
-    box-shadow: 0 0 20px gold;
-    margin-top: 15px;
+.avatar-wrap{
+    display:flex;
+    justify-content:center;
+    margin:15px 0;
 }
 
-/* INFO */
-.row {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px;
-    margin-top: 8px;
-    border-radius: 10px;
-    background: rgba(255,255,255,0.05);
+.avatar{
+    width:90px;
+    height:90px;
+    border-radius:50%;
+    border:3px solid #FFD700;
 }
 
-/* KPI */
-.kpi {
-    display: flex;
-    gap: 10px;
-    margin-top: 20px;
+/* NAME */
+.name{
+    text-align:center;
+    font-size:20px;
+    font-weight:600;
+    margin-bottom:20px;
 }
 
-.box {
-    flex: 1;
-    background: rgba(255,255,255,0.05);
-    border-radius: 15px;
-    padding: 10px;
+/* STATS */
+.stats{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
 }
 
-.circle {
-    width: 45px;
-    height: 45px;
-    margin: auto;
-    border-radius: 50%;
-    background: gold;
+.row{
+    display:flex;
+    justify-content:space-between;
+    background:#111a22;
+    padding:10px 15px;
+    border-radius:10px;
+}
+
+.row span{
+    color:#888;
+    font-size:14px;
+}
+
+.row b{
+    font-size:15px;
+}
+
+/* FOOT */
+.footer{
+    display:flex;
+    justify-content:space-between;
+    margin-top:20px;
+}
+
+.box{
+    flex:1;
+    background:#111a22;
+    border-radius:12px;
+    padding:15px;
+    margin:5px;
+    text-align:center;
+}
+
+.dot{
+    width:30px;
+    height:30px;
+    background:#FFD700;
+    border-radius:50%;
+    margin:auto;
+    margin-bottom:8px;
 }
 
 </style>
-</head>
+""", unsafe_allow_html=True)
 
-<body>
 
-<div class="overlay"></div>
-
+st.markdown("""
 <div class="card">
 
-    <div class="title">
-        FIGHT TO DEAD<br>3625
+    <div class="title">FIGHT TO DEAD</div>
+    <div class="server">#3625</div>
+
+    <div class="avatar-wrap">
+        <img src="https://i.pravatar.cc/150" class="avatar">
     </div>
 
-    <img src="https://i.pravatar.cc/150" class="avatar">
+    <div class="name">Louis Noob</div>
 
-    <h2>Louis Noob</h2>
+    <div class="stats">
+        <div class="row"><span>ID</span><b>71428274</b></div>
+        <div class="row"><span>Alliance</span><b>[FT-D]</b></div>
+        <div class="row"><span>Power</span><b>87M</b></div>
+        <div class="row"><span>Kill</span><b>6.1B</b></div>
+        <div class="row"><span>Dead</span><b>1.2B</b></div>
+    </div>
 
-    <div class="row"><span>ID</span><span>71428274</span></div>
-    <div class="row"><span>ALLIANCE</span><span>[FT-D]</span></div>
-    <div class="row"><span>POWER</span><span>87M</span></div>
-    <div class="row"><span>KILL</span><span>6.1B</span></div>
-    <div class="row"><span>DEAD</span><span>1.2B</span></div>
-
-    <div class="kpi">
-        <div class="box"><div class="circle"></div><p>#1</p></div>
-        <div class="box"><div class="circle"></div><p>85%</p></div>
-        <div class="box"><div class="circle"></div><p>92%</p></div>
+    <div class="footer">
+        <div class="box">
+            <div class="dot"></div>
+            #1
+        </div>
+        <div class="box">
+            <div class="dot"></div>
+            85%
+        </div>
+        <div class="box">
+            <div class="dot"></div>
+            92%
+        </div>
     </div>
 
 </div>
-
-</body>
-</html>
-"""
-
-components.html(html_code, height=700)
+""", unsafe_allow_html=True)
