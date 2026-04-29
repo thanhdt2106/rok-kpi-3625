@@ -75,7 +75,7 @@ if name:
 
 
     .avatar-wrap {{
-         margin-top:30px;
+         margin-top:20px;
     display:flex;
     justify-content:center;
     }}
