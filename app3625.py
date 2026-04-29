@@ -322,4 +322,4 @@ function closeProfile(){{
 </html>
 """
 
-components.html(html, height=1000, scrolling=True)
+components.html(html, height=800, scrolling=True)
