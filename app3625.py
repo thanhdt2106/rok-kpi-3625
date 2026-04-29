@@ -4,14 +4,21 @@ import streamlit.components.v1 as components
 
 st.set_page_config(layout="wide")
 
+# ===== HIDE SIDEBAR + BACKGROUND =====
+st.markdown("""
+<style>
+[data-testid="stSidebar"] {display:none;}
+.block-container {padding:0;}
+body {background:#000;}
+</style>
+""", unsafe_allow_html=True)
+
 # ===== LOAD DATA =====
 sheet_id = "1CzGPseLzdRK1V-6qy7KD5T58sBRSGjQi"
 gid = "855089129"
 url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
-
 df = pd.read_csv(url)
 
-# ===== CLEAN =====
 df["Tổng Tiêu Diệt"] = pd.to_numeric(df["Tổng Tiêu Diệt"], errors="coerce")
 df["T5"] = pd.to_numeric(df["T5"], errors="coerce")
 
@@ -25,13 +32,7 @@ df["Rank"] = range(1, len(df)+1)
 name = st.text_input("🔍 Nhập tên người chơi")
 
 if name:
-    player = df[df["Tên"].str.contains(name, case=False, na=False)]
-
-    if len(player) == 0:
-        st.error("Không tìm thấy")
-        st.stop()
-
-    p = player.iloc[0]
+    p = df[df["Tên"].str.contains(name, case=False, na=False)].iloc[0]
 
     max_kill = df["KPI_KILL"].max()
     max_dead = df["KPI_DEAD"].max()
@@ -48,116 +49,113 @@ if name:
 
     body {{
         margin:0;
-        background:#05080c;
         font-family:'Inter', sans-serif;
+        background:black;
+    }}
+
+    .wrapper {{
+        width:100%;
+        height:100vh;
+        background:url('https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true') center/cover no-repeat;
         display:flex;
         justify-content:center;
         align-items:center;
-        height:100vh;
     }}
 
-  .card {{
-    width:700px;
-    border-radius:25px;
-    overflow:hidden;
+    /* ===== CARD FULL WIDTH ===== */
+    .card {{
+        width:90%;
+        max-width:1200px;
+        border-radius:30px;
+        padding:40px;
+        color:white;
 
-    background:
-        linear-gradient(to bottom, rgba(5,10,15,0.6), rgba(5,10,15,0.95)),
-        url('https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true');
+        background:rgba(0,0,0,0.45);
+        backdrop-filter:blur(6px);
+        border:1px solid rgba(255,215,0,0.3);
 
-    background-size:cover;
-    background-position:center;
+        box-shadow:0 40px 100px rgba(0,0,0,0.9);
+    }}
 
-    backdrop-filter:blur(10px);
-    border:1px solid rgba(255,215,0,0.15);
-    box-shadow:0 20px 60px rgba(0,0,0,0.8);
-}}
-
-
-    .avatar-wrap {{
-         margin-top:20px;
-    display:flex;
-    justify-content:center;
+    /* ===== HEADER ===== */
+    .top {{
+        display:flex;
+        align-items:center;
+        gap:30px;
     }}
 
     .avatar {{
-        width:100px;
-        height:100px;
+        width:110px;
+        height:110px;
         border-radius:50%;
-        border:2px solid #d4af37;
-        box-shadow:0 0 20px rgba(212,175,55,0.5);
-    }}
-
-    .content {{
-        padding:20px 24px 24px;
+        border:3px solid gold;
+        box-shadow:0 0 30px rgba(255,215,0,0.8);
     }}
 
     .name {{
-        text-align:center;
-        font-size:20px;
+        font-size:28px;
+        color:#FFD700;
         font-weight:500;
-        color:#d4af37;
-        margin-bottom:20px;
-        letter-spacing:0.5px;
+    }}
+
+    /* ===== INFO GRID ===== */
+    .grid {{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        margin-top:25px;
+        gap:15px 40px;
+        font-size:14px;
+    }}
+
+    .label {{
+        color:#bbb;
+    }}
+
+    .value {{
+        text-align:right;
+        color:#fff;
     }}
 
     .row {{
         display:flex;
         justify-content:space-between;
-        padding:10px 0;
-        border-bottom:1px solid rgba(255,255,255,0.06);
-        font-size:13px;
+        border-bottom:1px solid rgba(255,255,255,0.1);
+        padding:8px 0;
     }}
 
-    .row span {{
-        color:#9aa4ad;
-    }}
-
-    .row div {{
-        color:#eaeaea;
-    }}
-
+    /* ===== FOOTER ===== */
     .footer {{
         display:flex;
-        gap:10px;
-        margin-top:20px;
+        gap:20px;
+        margin-top:30px;
     }}
 
     .box {{
         flex:1;
-        padding:14px 10px;
-        border-radius:14px;
-        background:rgba(255,255,255,0.03);
-        border:1px solid rgba(255,255,255,0.06);
+        padding:20px;
+        border-radius:18px;
+        background:rgba(0,0,0,0.5);
         text-align:center;
-        transition:0.25s;
-    }}
-
-    .box:hover {{
-        transform:translateY(-3px);
-        border-color:#d4af37;
+        border:1px solid rgba(255,255,255,0.1);
     }}
 
     .box.rank {{
-        border:1px solid #d4af37;
-        background:rgba(212,175,55,0.05);
+        border:2px solid gold;
+        box-shadow:0 0 25px rgba(255,215,0,0.5);
     }}
 
     .icon {{
-        font-size:16px;
-        margin-bottom:6px;
-        opacity:0.8;
+        font-size:20px;
+        margin-bottom:8px;
     }}
 
-    .value {{
-        font-size:13px;
-        font-weight:400;
-        margin-bottom:4px;
+    .big {{
+        font-size:16px;
     }}
 
     .percent {{
-        font-size:11px;
-        color:#8c949c;
+        font-size:12px;
+        color:#aaa;
     }}
 
     </style>
@@ -165,39 +163,38 @@ if name:
 
     <body>
 
-    <div class="card">
+    <div class="wrapper">
 
-        <div class="hero">
-            <div class="avatar-wrap">
+        <div class="card">
+
+            <div class="top">
                 <img src="https://i.pravatar.cc/150?u={p["Tên"]}" class="avatar">
+                <div class="name">{p["Tên"]}</div>
             </div>
-        </div>
 
-        <div class="content">
-
-            <div class="name">{p["Tên"]}</div>
-
-            <div class="row"><span>ID</span><div>{int(p["ID"])}</div></div>
-            <div class="row"><span>Alliance</span><div>{p["Liên Minh"]}</div></div>
-            <div class="row"><span>Kill</span><div>{p["KPI_KILL"]:,}</div></div>
-            <div class="row"><span>Dead</span><div>{p["KPI_DEAD"]:,}</div></div>
+            <div class="grid">
+                <div class="row"><span class="label">ID</span><span class="value">{int(p["ID"])}</span></div>
+                <div class="row"><span class="label">Alliance</span><span class="value">{p["Liên Minh"]}</span></div>
+                <div class="row"><span class="label">Kill</span><span class="value">{p["KPI_KILL"]:,}</span></div>
+                <div class="row"><span class="label">Dead</span><span class="value">{p["KPI_DEAD"]:,}</span></div>
+            </div>
 
             <div class="footer">
 
                 <div class="box rank">
                     <div class="icon">🏆</div>
-                    <div class="value">#{p["Rank"]}</div>
+                    <div class="big">#{p["Rank"]}</div>
                 </div>
 
                 <div class="box">
                     <div class="icon">🔥</div>
-                    <div class="value">{p["KPI_KILL"]:,}</div>
+                    <div class="big">{p["KPI_KILL"]:,}</div>
                     <div class="percent">{kill_pct}%</div>
                 </div>
 
                 <div class="box">
                     <div class="icon">💀</div>
-                    <div class="value">{p["KPI_DEAD"]:,}</div>
+                    <div class="big">{p["KPI_DEAD"]:,}</div>
                     <div class="percent">{dead_pct}%</div>
                 </div>
 
