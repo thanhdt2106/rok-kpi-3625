@@ -7,35 +7,26 @@ st.set_page_config(layout="wide")
 # ===== LOAD DATA =====
 sheet_id = "1CzGPseLzdRK1V-6qy7KD5T58sBRSGjQi"
 gid = "855089129"
-
 url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
+
 df = pd.read_csv(url)
 
-# ===== CLEAN DATA =====
+# ===== CLEAN =====
 df["Tổng Tiêu Diệt"] = pd.to_numeric(df["Tổng Tiêu Diệt"], errors="coerce")
-df["Sức Mạnh"] = pd.to_numeric(df["Sức Mạnh"], errors="coerce")
+df["T5"] = pd.to_numeric(df["T5"], errors="coerce")
 
-# ===== KPI CALC =====
 df["KPI_KILL"] = df["Tổng Tiêu Diệt"]
 df["KPI_DEAD"] = df["T5"]
 
-# rank theo kill
 df = df.sort_values("KPI_KILL", ascending=False)
 df["Rank"] = range(1, len(df)+1)
 
 # ===== SEARCH =====
-player_name = st.text_input("🔍 Nhập tên người chơi")
+name = st.text_input("🔍 Nhập tên người chơi")
 
-if player_name:
-    player = df[df["Tên"].str.contains(player_name, case=False, na=False)]
+if name:
+    p = df[df["Tên"].str.contains(name, case=False, na=False)].iloc[0]
 
-    if len(player) == 0:
-        st.error("Không tìm thấy người chơi")
-        st.stop()
-
-    p = player.iloc[0]
-
-    # KPI %
     max_kill = df["KPI_KILL"].max()
     max_dead = df["KPI_DEAD"].max()
 
@@ -48,28 +39,36 @@ if player_name:
     <style>
 
     body {{
+        background:#05080c;
         display:flex;
         justify-content:center;
         align-items:center;
         height:100vh;
-        background:#05080c;
         font-family:system-ui;
     }}
 
     .card {{
         width:420px;
         border-radius:30px;
-        background:#081520;
+        overflow:hidden;
+        background:rgba(10,20,30,0.9);
+        backdrop-filter:blur(12px);
+        box-shadow:0 25px 80px rgba(0,0,0,0.8);
+        border:1px solid rgba(255,215,0,0.2);
         color:white;
-        overflow:visible;
-        position:relative;
     }}
 
     .hero {{
         height:220px;
-        background:url('https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true');
-        background-size:cover;
+        background:url('https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true') center/cover;
         position:relative;
+    }}
+
+    .hero::after {{
+        content:"";
+        position:absolute;
+        inset:0;
+        background:linear-gradient(to bottom, rgba(0,0,0,0.5), #081520);
     }}
 
     .avatar-wrap {{
@@ -87,66 +86,55 @@ if player_name:
     }}
 
     .content {{
-        padding-top:80px;
-        padding:80px 20px 20px;
+        padding:80px 25px 25px;
     }}
 
     .name {{
         text-align:center;
         font-size:24px;
-        color:gold;
-        margin-bottom:20px;
+        font-weight:700;
+        color:#FFD700;
+        margin-bottom:25px;
     }}
 
     .row {{
         display:flex;
         justify-content:space-between;
-        padding:10px 0;
-        border-bottom:1px solid rgba(255,255,255,0.1);
+        padding:12px 0;
+        border-bottom:1px solid rgba(255,255,255,0.08);
     }}
 
     .footer {{
         display:flex;
-        gap:10px;
+        gap:12px;
         margin-top:20px;
     }}
 
     .box {{
         flex:1;
-        background:#111;
         padding:15px;
-        border-radius:15px;
+        border-radius:16px;
+        background:rgba(255,255,255,0.03);
         text-align:center;
-        position:relative;
     }}
 
-    .box:first-child {{
+    .box.rank {{
         border:2px solid gold;
+        box-shadow:0 0 15px rgba(255,215,0,0.5);
     }}
 
     .dot {{
-        width:25px;
-        height:25px;
-        background:gold;
+        width:30px;
+        height:30px;
+        background:#FFD700;
         border-radius:50%;
         margin:auto;
         margin-bottom:8px;
     }}
 
-    .btn {{
-        position:absolute;
-        right:10px;
-        top:10px;
-        background:red;
-        width:20px;
-        height:20px;
-        border-radius:50%;
-        font-size:12px;
-        color:white;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        cursor:pointer;
+    .percent {{
+        color:#aaa;
+        font-size:13px;
     }}
 
     </style>
@@ -168,31 +156,25 @@ if player_name:
 
             <div class="row"><span>ID</span><b>{int(p["ID"])}</b></div>
             <div class="row"><span>Alliance</span><b>{p["Liên Minh"]}</b></div>
-            <div class="row">
-                <span>Kill</span>
-                <b>{p["KPI_KILL"]:,}</b>
-                <div class="btn">!</div>
-            </div>
-            <div class="row">
-                <span>Dead</span>
-                <b>{p["KPI_DEAD"]:,}</b>
-                <div class="btn">!</div>
-            </div>
+            <div class="row"><span>Kill</span><b>{p["KPI_KILL"]:,}</b></div>
+            <div class="row"><span>Dead</span><b>{p["KPI_DEAD"]:,}</b></div>
 
             <div class="footer">
-                <div class="box">
+                <div class="box rank">
                     <div class="dot"></div>
                     #{p["Rank"]}
                 </div>
 
                 <div class="box">
                     <div class="dot"></div>
-                    {p["KPI_KILL"]:,}<br>{kill_pct}%
+                    {p["KPI_KILL"]:,}
+                    <div class="percent">{kill_pct}%</div>
                 </div>
 
                 <div class="box">
                     <div class="dot"></div>
-                    {p["KPI_DEAD"]:,}<br>{dead_pct}%
+                    {p["KPI_DEAD"]:,}
+                    <div class="percent">{dead_pct}%</div>
                 </div>
             </div>
 
@@ -204,7 +186,7 @@ if player_name:
     </html>
     """
 
-    components.html(html, height=750)
+    components.html(html, height=720)
 
 else:
     st.info("Nhập tên để tìm player")
