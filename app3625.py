@@ -1,23 +1,31 @@
 import streamlit as st
+import streamlit.components.v1 as components
 
-st.set_page_config(layout="centered")
-
-st.markdown("""
+html_code = """
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
 <style>
+
 body{
+    margin:0;
     background:#0b0f14;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    font-family:system-ui;
 }
 
 /* CARD */
 .card{
-    width:420px;
-    margin:auto;
+    width:380px;
     background:linear-gradient(180deg,#0f2027,#0b1218);
     border-radius:20px;
     padding:30px 25px;
     box-shadow:0 10px 40px rgba(0,0,0,0.6);
     color:white;
-    font-family:system-ui;
 }
 
 /* HEADER */
@@ -30,7 +38,7 @@ body{
 
 .server{
     text-align:center;
-    font-size:16px;
+    font-size:14px;
     color:#aaa;
     margin-bottom:20px;
 }
@@ -74,11 +82,10 @@ body{
 
 .row span{
     color:#888;
-    font-size:14px;
 }
 
 .row b{
-    font-size:15px;
+    font-weight:600;
 }
 
 /* FOOT */
@@ -107,10 +114,10 @@ body{
 }
 
 </style>
-""", unsafe_allow_html=True)
+</head>
 
+<body>
 
-st.markdown("""
 <div class="card">
 
     <div class="title">FIGHT TO DEAD</div>
@@ -131,19 +138,15 @@ st.markdown("""
     </div>
 
     <div class="footer">
-        <div class="box">
-            <div class="dot"></div>
-            #1
-        </div>
-        <div class="box">
-            <div class="dot"></div>
-            85%
-        </div>
-        <div class="box">
-            <div class="dot"></div>
-            92%
-        </div>
+        <div class="box"><div class="dot"></div>#1</div>
+        <div class="box"><div class="dot"></div>85%</div>
+        <div class="box"><div class="dot"></div>92%</div>
     </div>
 
 </div>
-""", unsafe_allow_html=True)
+
+</body>
+</html>
+"""
+
+components.html(html_code, height=600)
