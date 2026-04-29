@@ -4,12 +4,13 @@ import streamlit.components.v1 as components
 
 st.set_page_config(layout="wide")
 
-# ===== HIDE SIDEBAR + BACKGROUND =====
+# ===== FIX UI =====
 st.markdown("""
 <style>
-[data-testid="stSidebar"] {display:none;}
+section[data-testid="stSidebar"] {display: none !important;}
+header {visibility: hidden;}
 .block-container {padding:0;}
-body {background:#000;}
+html, body {background:transparent;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -17,6 +18,7 @@ body {background:#000;}
 sheet_id = "1CzGPseLzdRK1V-6qy7KD5T58sBRSGjQi"
 gid = "855089129"
 url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
+
 df = pd.read_csv(url)
 
 df["Tổng Tiêu Diệt"] = pd.to_numeric(df["Tổng Tiêu Diệt"], errors="coerce")
@@ -45,85 +47,85 @@ if name:
     <head>
     <style>
 
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap');
 
     body {{
         margin:0;
         font-family:'Inter', sans-serif;
-        background:black;
     }}
 
-    .wrapper {{
-        width:100%;
-        height:100vh;
-        background:url('https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true') center/cover no-repeat;
+    /* ===== CENTER ===== */
+    .wrap {{
         display:flex;
         justify-content:center;
         align-items:center;
+        height:100vh;
     }}
 
-    /* ===== CARD FULL WIDTH ===== */
+    /* ===== CARD (ẢNH NẰM Ở ĐÂY) ===== */
     .card {{
         width:90%;
-        max-width:1200px;
+        max-width:1100px;
         border-radius:30px;
         padding:40px;
         color:white;
 
-        background:rgba(0,0,0,0.45);
-        backdrop-filter:blur(6px);
-        border:1px solid rgba(255,215,0,0.3);
+        /* 👉 ẢNH NẰM TRONG CARD */
+        background:
+        linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.8)),
+        url('https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true');
 
-        box-shadow:0 40px 100px rgba(0,0,0,0.9);
+        background-size:cover;
+        background-position:center;
+
+        box-shadow:0 30px 80px rgba(0,0,0,0.8);
     }}
 
     /* ===== HEADER ===== */
     .top {{
         display:flex;
         align-items:center;
-        gap:30px;
+        gap:20px;
     }}
 
     .avatar {{
-        width:110px;
-        height:110px;
+        width:90px;
+        height:90px;
         border-radius:50%;
         border:3px solid gold;
-        box-shadow:0 0 30px rgba(255,215,0,0.8);
+        box-shadow:0 0 25px gold;
     }}
 
     .name {{
-        font-size:28px;
+        font-size:26px;
         color:#FFD700;
-        font-weight:500;
     }}
 
-    /* ===== INFO GRID ===== */
+    /* ===== GRID ===== */
     .grid {{
+        margin-top:25px;
         display:grid;
         grid-template-columns:1fr 1fr;
-        margin-top:25px;
         gap:15px 40px;
-        font-size:14px;
-    }}
-
-    .label {{
-        color:#bbb;
-    }}
-
-    .value {{
-        text-align:right;
-        color:#fff;
     }}
 
     .row {{
         display:flex;
         justify-content:space-between;
-        border-bottom:1px solid rgba(255,255,255,0.1);
+        border-bottom:1px solid rgba(255,255,255,0.2);
         padding:8px 0;
+        font-size:14px;
     }}
 
-    /* ===== FOOTER ===== */
+    .label {{
+        color:#ccc;
+    }}
+
+    .value {{
+        color:white;
+    }}
+
+    /* ===== BOX ===== */
     .footer {{
         display:flex;
         gap:20px;
@@ -134,28 +136,28 @@ if name:
         flex:1;
         padding:20px;
         border-radius:18px;
-        background:rgba(0,0,0,0.5);
+        background:rgba(0,0,0,0.6);
         text-align:center;
-        border:1px solid rgba(255,255,255,0.1);
+        border:1px solid rgba(255,255,255,0.2);
     }}
 
-    .box.rank {{
+    .rank {{
         border:2px solid gold;
-        box-shadow:0 0 25px rgba(255,215,0,0.5);
+        box-shadow:0 0 20px gold;
     }}
 
     .icon {{
         font-size:20px;
-        margin-bottom:8px;
     }}
 
     .big {{
-        font-size:16px;
+        font-size:15px;
+        margin-top:5px;
     }}
 
     .percent {{
         font-size:12px;
-        color:#aaa;
+        color:#bbb;
     }}
 
     </style>
@@ -163,7 +165,7 @@ if name:
 
     <body>
 
-    <div class="wrapper">
+    <div class="wrap">
 
         <div class="card">
 
@@ -173,10 +175,10 @@ if name:
             </div>
 
             <div class="grid">
-                <div class="row"><span class="label">ID</span><span class="value">{int(p["ID"])}</span></div>
-                <div class="row"><span class="label">Alliance</span><span class="value">{p["Liên Minh"]}</span></div>
-                <div class="row"><span class="label">Kill</span><span class="value">{p["KPI_KILL"]:,}</span></div>
-                <div class="row"><span class="label">Dead</span><span class="value">{p["KPI_DEAD"]:,}</span></div>
+                <div class="row"><span class="label">ID</span><span>{int(p["ID"])}</span></div>
+                <div class="row"><span class="label">Alliance</span><span>{p["Liên Minh"]}</span></div>
+                <div class="row"><span class="label">Kill</span><span>{p["KPI_KILL"]:,}</span></div>
+                <div class="row"><span class="label">Dead</span><span>{p["KPI_DEAD"]:,}</span></div>
             </div>
 
             <div class="footer">
@@ -208,7 +210,4 @@ if name:
     </html>
     """
 
-    components.html(html, height=900)
-
-else:
-    st.info("Nhập tên để tìm player")
+    components.html(html, height=850)
