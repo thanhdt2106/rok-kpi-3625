@@ -5,7 +5,6 @@ import streamlit.components.v1 as components
 
 st.set_page_config(layout="wide")
 
-# ===== CONFIG =====
 SHEET_ID = "1CzGPseLzdRK1V-6qy7KD5T58sBRSGjQi"
 GID = "855089129"
 
@@ -14,7 +13,6 @@ def load_data():
     url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={GID}"
     df = pd.read_csv(url)
 
-    # Fix tên cột
     df.columns = df.columns.str.strip()
 
     df = df.rename(columns={
@@ -27,17 +25,13 @@ def load_data():
     })
 
     for col in ["kill", "dead", "power"]:
-        if col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
+        df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
     return df
 
 df = load_data()
-
-# 👉 convert sang JSON (quan trọng)
 data_json = json.dumps(df.to_dict(orient="records"))
 
-# ===== HTML =====
 html = """
 <!DOCTYPE html>
 <html>
@@ -63,28 +57,7 @@ body {
     border:none;
     background:#111;
     color:white;
-    font-size:16px;
     margin-bottom:20px;
-}
-
-.filters {
-    display:flex;
-    gap:20px;
-    margin-bottom:30px;
-}
-
-.filter {
-    flex:1;
-    padding:20px;
-    text-align:center;
-    border-radius:15px;
-    background:#111;
-    cursor:pointer;
-    font-weight:bold;
-}
-
-.filter:hover {
-    box-shadow:0 0 20px gold;
 }
 
 .grid {
@@ -112,15 +85,12 @@ body {
     height:70px;
     border-radius:50%;
     border:3px solid gold;
-    margin:auto;
-    margin-bottom:10px;
     box-shadow:0 0 20px gold;
+    margin-bottom:10px;
 }
 
 .modal {
     position:fixed;
-    top:0;
-    left:0;
     width:100%;
     height:100%;
     background:rgba(0,0,0,0.9);
@@ -130,7 +100,7 @@ body {
 }
 
 .profile {
-    width:80%;
+    width:85%;
     max-width:900px;
     background:#0d1425;
     padding:30px;
@@ -140,10 +110,10 @@ body {
 
 .close {
     position:absolute;
-    top:15px;
     right:15px;
-    font-size:22px;
+    top:15px;
     cursor:pointer;
+    font-size:20px;
 }
 
 .box {
@@ -151,6 +121,19 @@ body {
     padding:15px;
     border-radius:10px;
     margin:10px 0;
+}
+
+.bar {
+    height:10px;
+    background:#222;
+    border-radius:10px;
+    overflow:hidden;
+    margin-top:10px;
+}
+
+.bar-fill {
+    height:100%;
+    background:gold;
 }
 
 </style>
@@ -161,12 +144,6 @@ body {
 <div class="container">
 
 <input class="search" id="search" placeholder="🔍 Nhập tên..." onkeyup="render()">
-
-<div class="filters">
-<div class="filter" onclick="setMode('power')">⚡ POWER</div>
-<div class="filter" onclick="setMode('kill')">🔥 KILL</div>
-<div class="filter" onclick="setMode('dead')">💀 DEAD</div>
-</div>
 
 <div class="grid" id="grid"></div>
 
@@ -182,17 +159,32 @@ body {
 <script>
 
 let data = DATA_PLACEHOLDER;
-let mode = "power";
 
-function render() {
+function getKillTarget(power){
+    if(power >= 100000000) return 600000000;
+    if(power >= 90000000) return 550000000;
+    if(power >= 80000000) return 450000000;
+    if(power >= 70000000) return 300000000;
+    if(power >= 60000000) return 250000000;
+    return 200000000;
+}
 
+function getDeadTarget(power){
+    if(power >= 100000000) return 1500000;
+    if(power >= 90000000) return 1200000;
+    if(power >= 80000000) return 1000000;
+    if(power >= 70000000) return 800000;
+    return 700000;
+}
+
+function render(){
     let keyword = document.getElementById("search").value.toLowerCase();
 
-    let filtered = data.filter(p => 
+    let filtered = data.filter(p =>
         p.name && p.name.toLowerCase().includes(keyword)
     );
 
-    let sorted = filtered.sort((a,b)=>b[mode]-a[mode]);
+    let sorted = filtered.sort((a,b)=>b.power-a.power);
 
     let html = "";
 
@@ -201,7 +193,7 @@ function render() {
         <div class="card" onclick='openProfile(${JSON.stringify(p)}, ${i+1})'>
             <img class="avatar" src="https://api.dicebear.com/7.x/adventurer/png?seed=${p.name}">
             <div>${p.name}</div>
-            <div>${Number(p[mode]).toLocaleString()}</div>
+            <div>${Number(p.power).toLocaleString()}</div>
         </div>
         `;
     });
@@ -209,28 +201,36 @@ function render() {
     document.getElementById("grid").innerHTML = html;
 }
 
-function setMode(m){
-    mode = m;
-    render();
-}
-
 function openProfile(p, rank){
+
+    let killTarget = getKillTarget(p.power);
+    let deadTarget = getDeadTarget(p.power);
+
+    let killPercent = Math.min((p.kill / killTarget)*100, 100);
+    let deadPercent = Math.min((p.dead / deadTarget)*100, 100);
+
     document.getElementById("modal").style.display="flex";
 
     document.getElementById("profileContent").innerHTML = `
-        <h2>${p.name}</h2>
-        <div class="box">🆔 ID: ${p.id}</div>
-        <div class="box">🏰 Alliance: ${p.alliance}</div>
-        <div class="box">🏆 Rank: #${rank}</div>
-        <div class="box">⚡ Power: ${Number(p.power).toLocaleString()}</div>
-        <div class="box">🔥 Kill: ${Number(p.kill).toLocaleString()}</div>
-        <div class="box">💀 Dead: ${Number(p.dead).toLocaleString()}</div>
+        <div style="text-align:center">
+            <img class="avatar" src="https://api.dicebear.com/7.x/adventurer/png?seed=${p.name}">
+            <h2>${p.name}</h2>
+        </div>
+
+        <div class="box">🆔 ${p.id}</div>
+        <div class="box">🏰 ${p.alliance}</div>
+        <div class="box">🏆 Rank #${rank}</div>
+        <div class="box">⚡ ${Number(p.power).toLocaleString()}</div>
+        <div class="box">🔥 ${Number(p.kill).toLocaleString()}</div>
+        <div class="box">💀 ${Number(p.dead).toLocaleString()}</div>
 
         <h3>🔥 KPI Kill</h3>
-        <div class="box">0 / 0 (0%)</div>
+        <div>${Number(p.kill).toLocaleString()} / ${killTarget.toLocaleString()} (${killPercent.toFixed(0)}%)</div>
+        <div class="bar"><div class="bar-fill" style="width:${killPercent}%"></div></div>
 
         <h3>💀 KPI Dead</h3>
-        <div class="box">0 / 0 (0%)</div>
+        <div>${Number(p.dead).toLocaleString()} / ${deadTarget.toLocaleString()} (${deadPercent.toFixed(0)}%)</div>
+        <div class="bar"><div class="bar-fill" style="width:${deadPercent}%"></div></div>
     `;
 }
 
@@ -246,7 +246,6 @@ render();
 </html>
 """
 
-# inject data (KHÔNG lỗi nữa)
 html = html.replace("DATA_PLACEHOLDER", data_json)
 
 components.html(html, height=1000)
