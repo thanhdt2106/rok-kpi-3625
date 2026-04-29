@@ -13,7 +13,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ===== 2. KPI RULES (Định nghĩa hàm trước để dùng trong xử lý dữ liệu) =====
+# ===== 2. KPI RULES =====
 def get_kpi_kill_value(p):
     if p >= 100_000_000: return 600_000_000
     elif p >= 80_000_000: return 450_000_000
@@ -48,16 +48,14 @@ def load_and_process_data():
     df["Kill"] = df["Tổng Tiêu Diệt"].apply(to_int)
     df["Dead"] = df["Điểm Chết"].apply(to_int)
     
-    # Tính KPI cá nhân cho từng dòng dựa trên Power
-    df['Individual_KPI_Dead'] = df['Power'].apply(get_kpi_dead_value)
-    df['Individual_KPI_Kill'] = df['Power'].apply(get_kpi_kill_value)
+    # Tính KPI DEAD cá nhân cho từng acc để chuẩn bị gộp
+    df['Indiv_KPI_Dead'] = df['Power'].apply(get_kpi_dead_value)
     
-    # Nhận diện Group (Tên đầu tiên)
+    # Nhận diện Group theo tên đầu tiên
     df['Group'] = df['Tên'].apply(lambda x: str(x).split()[0].upper() if pd.notnull(x) else "")
     
-    # Gộp KPI: Tính tổng KPI Dead/Kill của cả gia đình
-    group_kpi_dead = df.groupby('Group')['Individual_KPI_Dead'].transform('sum')
-    group_kpi_kill = df.groupby('Group')['Individual_KPI_Kill'].transform('sum')
+    # Gộp KPI DEAD: Tổng KPI Dead của cả gia đình
+    group_kpi_dead_sum = df.groupby('Group')['Indiv_KPI_Dead'].transform('sum')
     
     # Tìm Power lớn nhất để xác định Acc chính
     group_max_power = df.groupby('Group')['Power'].transform('max')
@@ -66,11 +64,10 @@ def load_and_process_data():
     for i, row in df.iterrows():
         is_main = (row['Power'] == group_max_power[i])
         
-        # LOGIC MỚI: 
-        # Nếu là acc chính: KPI hiển thị = Tổng KPI của cả nhóm farm cộng lại
-        # Điểm chết (Dead) thực tế: Vẫn giữ nguyên của từng acc (không cộng dồn điểm chết nữa)
-        display_kpi_dead = group_kpi_dead[i] if is_main else row['Individual_KPI_Dead']
-        display_kpi_kill = group_kpi_kill[i] if is_main else row['Individual_KPI_Kill']
+        # LOGIC THEO YÊU CẦU:
+        # Chỉ cộng dồn KPI DEAD cho acc chính. KPI KILL giữ nguyên cá nhân.
+        final_target_dead = group_kpi_dead_sum[i] if is_main else row['Indiv_KPI_Dead']
+        final_target_kill = get_kpi_kill_value(row['Power']) # Không cộng dồn Kill
         
         processed_list.append({
             "name": row["Tên"],
@@ -78,9 +75,9 @@ def load_and_process_data():
             "alliance": row["Liên Minh"],
             "pow": row["Power"],
             "kill": row["Kill"],
-            "dead": row["Dead"], # Giữ nguyên điểm thực tế
-            "final_kpi_dead": display_kpi_dead,
-            "final_kpi_kill": display_kpi_kill,
+            "dead": row["Dead"],
+            "final_kpi_dead": final_target_dead,
+            "final_kpi_kill": final_target_kill,
             "is_farm": not is_main
         })
     return processed_list
