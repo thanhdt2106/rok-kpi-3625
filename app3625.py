@@ -78,7 +78,8 @@ for _, row in df.iterrows():
 html = f"""
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
 <style>
 
 body {{
@@ -86,22 +87,8 @@ body {{
     color:white;
     font-family:Arial;
     margin:0;
-}}
-
-.block-container {{
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-}}
-
-.search {{
-    width:100%;
-    padding:12px;
-    font-size:16px;
-    border-radius:12px;
-    border:none;
-    margin-bottom:20px;
-    background:#111;
-    color:white;
+    font-size: clamp(14px, 2vw, 16px);
+    -webkit-tap-highlight-color: transparent;
 }}
 
 .grid {{
@@ -118,6 +105,7 @@ body {{
     cursor:pointer;
     transition:0.3s;
     border:1px solid #222;
+    touch-action: manipulation;
 }}
 
 .card:hover {{
@@ -132,13 +120,39 @@ body {{
     border-radius:50%;
     padding:3px;
     background:linear-gradient(45deg,gold,orange);
-    box-shadow:0 0 15px gold;
 }}
 
 .avatar-wrap img {{
     width:100%;
-    height:100%;
     border-radius:50%;
+}}
+
+.search {{
+    width:100%;
+    padding:12px;
+    border-radius:12px;
+    border:none;
+    margin-bottom:20px;
+    background:#111;
+    color:white;
+}}
+
+.filters {{
+    display:flex;
+    gap:10px;
+    margin-bottom:15px;
+}}
+
+.filter {{
+    padding:10px 15px;
+    background:#111;
+    border-radius:10px;
+    cursor:pointer;
+}}
+
+.filter.active {{
+    background:gold;
+    color:black;
 }}
 
 .modal {{
@@ -151,11 +165,12 @@ body {{
     display:none;
     justify-content:center;
     align-items:center;
+    backdrop-filter: blur(6px);
 }}
 
 .profile {{
     width:850px;
-    background:linear-gradient(145deg,#0f111a,#1b1f2e);
+    background:#111;
     border-radius:25px;
     padding:30px;
 }}
@@ -170,9 +185,6 @@ body {{
     width:90px;
     height:90px;
     border-radius:50%;
-    padding:4px;
-    background:linear-gradient(45deg,gold,orange);
-    box-shadow:0 0 20px gold;
 }}
 
 .avatar-big img {{
@@ -205,22 +217,14 @@ body {{
     background:linear-gradient(90deg,gold,orange);
 }}
 
-.filters {{
-    display:flex;
-    gap:10px;
-    margin-bottom:15px;
-}}
-
-.filter {{
-    padding:10px 15px;
-    background:#111;
+button {{
+    margin-top:20px;
+    padding:10px;
+    border:none;
     border-radius:10px;
-    cursor:pointer;
-}}
-
-.filter.active {{
     background:gold;
     color:black;
+    cursor:pointer;
 }}
 
 #langBtn {{
@@ -234,6 +238,25 @@ border-radius:8px;
 cursor:pointer;
 z-index:999;
 font-size:12px;
+}}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px){{
+
+    .grid{{ grid-template-columns:repeat(2,1fr); gap:15px; }}
+
+    .card{{ padding:12px; }}
+
+    .avatar-wrap{{ width:60px;height:60px; }}
+
+    .profile{{ width:100%; border-radius:20px 20px 0 0; padding:15px; }}
+
+    .modal{{ align-items:flex-end; }}
+
+    .profile-top{{ flex-direction:column; text-align:center; }}
+
+    .row{{ flex-direction:column; }}
+
 }}
 
 </style>
@@ -263,22 +286,8 @@ let mode = "power"
 let lang = "vn"
 
 const TEXT = {{
-    vn: {{
-        search: "🔍 Nhập tên...",
-        id: "🆔 ID",
-        alliance: "🏰 Alliance",
-        kpiKill: "🔥 KPI Kill",
-        kpiDead: "💀 KPI Dead",
-        exit: "❌ EXIT"
-    }},
-    en: {{
-        search: "🔍 Search...",
-        id: "🆔 ID",
-        alliance: "🏰 Alliance",
-        kpiKill: "🔥 KPI Kill",
-        kpiDead: "💀 KPI Dead",
-        exit: "❌ EXIT"
-    }}
+    vn: {{search:"🔍 Nhập tên...",id:"ID",alliance:"Alliance",exit:"EXIT"}},
+    en: {{search:"🔍 Search...",id:"ID",alliance:"Alliance",exit:"EXIT"}}
 }}
 
 document.getElementById("langBtn").onclick = function(){{
@@ -291,8 +300,8 @@ function setMode(m){{
     mode = m
     document.querySelectorAll(".filter").forEach(f=>f.classList.remove("active"))
     event.target.classList.add("active")
-let cards = Array.from(document.querySelectorAll(".card"))
 
+    let cards = Array.from(document.querySelectorAll(".card"))
     cards.sort((a,b)=> b.dataset[mode] - a.dataset[mode])
 
     let grid = document.getElementById("grid")
@@ -312,8 +321,6 @@ function search(val){{
 }}
 
 function openProfile(name,id,alliance,power,kill,dead,kpiK,kpiD,avatar){{
-    let t = TEXT[lang]
-
     document.getElementById("modal").style.display="flex"
 
     document.getElementById("profile").innerHTML = `
@@ -321,27 +328,18 @@ function openProfile(name,id,alliance,power,kill,dead,kpiK,kpiD,avatar){{
         <div class="avatar-big"><img src="${{avatar}}"></div>
         <div>
             <h2>${{name}}</h2>
-            <p>${{t.id}}: ${{id}}</p>
-            <p>${{t.alliance}}: ${{alliance}}</p>
+            <p>ID: ${{id}}</p>
+            <p>Alliance: ${{alliance}}</p>
         </div>
     </div>
 
     <div class="row">
-        <div class="box">⚡ Power<br>${{Number(power).toLocaleString()}}</div>
-        <div class="box">🔥 Kill<br>${{Number(kill).toLocaleString()}}</div>
-        <div class="box">💀 Dead<br>${{Number(dead).toLocaleString()}}</div>
+        <div class="box">⚡ ${{Number(power).toLocaleString()}}</div>
+        <div class="box">🔥 ${{Number(kill).toLocaleString()}}</div>
+        <div class="box">💀 ${{Number(dead).toLocaleString()}}</div>
     </div>
 
-    <h3>${{t.kpiKill}}</h3>
-    <div class="bar"><div class="fill" style="width:0%"></div></div>
-    <p>0 / ${{Number(kpiK).toLocaleString()}}</p>
-
-    <h3>${{t.kpiDead}}</h3>
-    <div class="bar"><div class="fill" style="width:0%"></div></div>
-    <p>0 / ${{Number(kpiD).toLocaleString()}}</p>
-
-    <br>
-    <button onclick="closeProfile()">${{t.exit}}</button>
+    <button onclick="closeProfile()">EXIT</button>
     `
 }}
 
