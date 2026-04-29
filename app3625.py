@@ -50,7 +50,7 @@ body{
 
 /* ===== HERO ===== */
 .hero{
-    height:240px;
+    height:300px;
     background:url('https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true');
     background-size:cover;
     background-position:center 70%;
