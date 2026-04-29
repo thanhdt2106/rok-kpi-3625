@@ -4,6 +4,14 @@ import streamlit.components.v1 as components
 
 st.set_page_config(layout="wide")
 
+# ❌ XÓA SIDEBAR
+st.markdown("""
+<style>
+[data-testid="stSidebar"] {display:none;}
+.block-container {padding:0;}
+</style>
+""", unsafe_allow_html=True)
+
 # ===== LOAD DATA =====
 @st.cache_data(ttl=60)
 def load_data():
@@ -16,7 +24,6 @@ def load_data():
 
 df = load_data()
 
-# ===== CLEAN =====
 def to_int(x):
     try:
         return int(str(x).replace(",", ""))
@@ -57,18 +64,20 @@ for _, row in df.iterrows():
     kpiK = kpi_kill(power)
     kpiD = kpi_dead(power)
 
-    kp = min(int(kill / kpiK * 100), 100)
-    dp = min(int(dead / kpiD * 100), 100)
-
     avatar = f"https://api.dicebear.com/7.x/adventurer/svg?seed={name}"
 
     cards_html += f"""
-    <div class="card" onclick="openProfile('{name}','{id_}','{alliance}','{power}','{kill}','{dead}','{kpiK}','{kpiD}','{kp}','{dp}','{avatar}')">
+    <div class="card"
+    data-power="{power}"
+    data-kill="{kill}"
+    data-dead="{dead}"
+    onclick="openProfile('{name}','{id_}','{alliance}','{power}','{kill}','{dead}','{kpiK}','{kpiD}','{avatar}')">
+
         <div class="avatar-wrap">
             <img src="{avatar}">
         </div>
         <h3>{name}</h3>
-        <p>{power:,}</p>
+        <p class="stat">{power}</p>
     </div>
     """
 
@@ -76,20 +85,41 @@ for _, row in df.iterrows():
 html = f"""
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
+
 body {{
     background: radial-gradient(circle at top, #111, #05070d);
     color:white;
     font-family:Arial;
+    margin:0;
+}}
+
+.top-box {{
+    display:flex;
+    gap:15px;
+    margin:20px;
+}}
+
+.mode {{
+    flex:1;
+    padding:15px;
+    text-align:center;
+    background:#111;
+    border-radius:12px;
+    cursor:pointer;
+    border:1px solid #333;
+}}
+
+.mode:hover {{
+    box-shadow:0 0 15px gold;
 }}
 
 .search {{
-    width:100%;
+    width:95%;
+    margin:20px;
     padding:15px;
-    font-size:18px;
     border-radius:12px;
-    border:none;
-    margin-bottom:25px;
     background:#111;
     color:white;
 }}
@@ -97,23 +127,22 @@ body {{
 .grid {{
     display:grid;
     grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
-    gap:25px;
+    gap:20px;
+    padding:20px;
 }}
 
 .card {{
-    background:linear-gradient(145deg,#0f111a,#1b1f2e);
+    background:#111;
     padding:20px;
     border-radius:20px;
     text-align:center;
     cursor:pointer;
     transition:0.3s;
-    border:1px solid #222;
-    position:relative;
 }}
 
 .card:hover {{
-    transform:translateY(-8px) scale(1.05);
-    box-shadow:0 0 25px gold;
+    transform:scale(1.05);
+    box-shadow:0 0 20px gold;
 }}
 
 .avatar-wrap {{
@@ -122,15 +151,12 @@ body {{
     margin:auto;
     border-radius:50%;
     padding:3px;
-    background:linear-gradient(45deg,gold,orange);
-    box-shadow:0 0 15px gold;
+    background:gold;
 }}
 
 .avatar-wrap img {{
     width:100%;
-    height:100%;
     border-radius:50%;
-    background:#111;
 }}
 
 .modal {{
@@ -139,65 +165,25 @@ body {{
     left:0;
     width:100%;
     height:100%;
-    background:rgba(0,0,0,0.9);
+    background:black;
     display:none;
     justify-content:center;
     align-items:center;
 }}
 
 .profile {{
-    width:850px;
-    background:linear-gradient(145deg,#0f111a,#1b1f2e);
-    border-radius:25px;
-    padding:30px;
-    box-shadow:0 0 40px rgba(255,215,0,0.3);
+    width:90%;
+    max-width:800px;
 }}
 
-.profile-top {{
-    display:flex;
-    align-items:center;
-    gap:20px;
-}}
-
-.avatar-big {{
-    width:90px;
-    height:90px;
-    border-radius:50%;
-    padding:4px;
-    background:linear-gradient(45deg,gold,orange);
-    box-shadow:0 0 20px gold;
-}}
-
-.avatar-big img {{
-    width:100%;
-    border-radius:50%;
-}}
-
-.row {{
-    display:flex;
-    gap:15px;
-    margin-top:20px;
-}}
-
-.box {{
-    flex:1;
-    background:rgba(255,255,255,0.05);
-    padding:15px;
-    border-radius:12px;
-    backdrop-filter: blur(10px);
-    border:1px solid rgba(255,255,255,0.1);
-}}
-
-.bar {{
-    height:10px;
-    background:#222;
+.close-btn {{
+    background:red;
+    color:white;
+    padding:10px 20px;
+    border:none;
     border-radius:10px;
-    overflow:hidden;
-}}
-
-.fill {{
-    height:100%;
-    background:linear-gradient(90deg,gold,orange);
+    cursor:pointer;
+    font-weight:bold;
 }}
 
 </style>
@@ -205,15 +191,40 @@ body {{
 
 <body>
 
+<div class="top-box">
+    <div class="mode" onclick="setMode('power')">⚡ POWER</div>
+    <div class="mode" onclick="setMode('kill')">🔥 KILL</div>
+    <div class="mode" onclick="setMode('dead')">💀 DEAD</div>
+</div>
+
 <input class="search" placeholder="🔍 Nhập tên..." onkeyup="search(this.value)">
 
-<div class="grid">{cards_html}</div>
+<div class="grid" id="grid">
+{cards_html}
+</div>
 
 <div class="modal" id="modal">
 <div class="profile" id="profile"></div>
 </div>
 
 <script>
+
+let mode = "power"
+
+function setMode(m){{
+    mode = m
+    let cards = Array.from(document.querySelectorAll(".card"))
+
+    cards.sort((a,b)=> b.dataset[mode] - a.dataset[mode])
+
+    let grid = document.getElementById("grid")
+    grid.innerHTML=""
+    cards.forEach((c,i)=>{{
+        c.querySelector(".stat").innerText = Number(c.dataset[mode]).toLocaleString()
+        grid.appendChild(c)
+    }})
+}}
+
 function search(val){{
     val = val.toLowerCase()
     document.querySelectorAll(".card").forEach(c=>{{
@@ -221,45 +232,37 @@ function search(val){{
     }})
 }}
 
-function openProfile(name,id,alliance,power,kill,dead,kpiK,kpiD,kp,dp,avatar){{
+function openProfile(name,id,alliance,power,kill,dead,kpiK,kpiD,avatar){{
     document.getElementById("modal").style.display="flex"
 
     document.getElementById("profile").innerHTML = `
-    <div class="profile-top">
-        <div class="avatar-big"><img src="${{avatar}}"></div>
-        <div>
-            <h2>${{name}}</h2>
-            <p>ID: ${{id}}</p>
-            <p>${{alliance}}</p>
-        </div>
-    </div>
+    <h2>${{name}}</h2>
+    <p>🆔 ID: ${{id}}</p>
+    <p>🏰 Alliance: ${{alliance}}</p>
 
-    <div class="row">
-        <div class="box">⚡ ${{Number(power).toLocaleString()}}</div>
-        <div class="box">🔥 ${{Number(kill).toLocaleString()}}</div>
-        <div class="box">💀 ${{Number(dead).toLocaleString()}}</div>
-    </div>
+    <p>⚡ Power: ${{Number(power).toLocaleString()}}</p>
+    <p>🔥 Kill: ${{Number(kill).toLocaleString()}}</p>
+    <p>💀 Dead: ${{Number(dead).toLocaleString()}}</p>
 
     <h3>🔥 KPI Kill</h3>
-    <div class="bar"><div class="fill" style="width:${{kp}}%"></div></div>
-    <p>${{kill}} / ${{kpiK}} (${{kp}}%)</p>
+    <p>0 / ${{Number(kpiK).toLocaleString()}}</p>
 
     <h3>💀 KPI Dead</h3>
-    <div class="bar"><div class="fill" style="width:${{dp}}%"></div></div>
-    <p>${{dead}} / ${{kpiD}} (${{dp}}%)</p>
+    <p>0 / ${{Number(kpiD).toLocaleString()}}</p>
 
     <br>
-    <button onclick="closeProfile()">Close</button>
+    <button class="close-btn" onclick="closeProfile()">❌ BYE BRO</button>
     `
 }}
 
 function closeProfile(){{
     document.getElementById("modal").style.display="none"
 }}
+
 </script>
 
 </body>
 </html>
 """
 
-components.html(html, height=900, scrolling=True)
+components.html(html, height=1000, scrolling=True)
