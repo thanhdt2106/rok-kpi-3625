@@ -41,23 +41,22 @@ body{
     width:420px;
     border-radius:30px;
     background:#081520;
-    box-shadow:0 30px 80px rgba(0,0,0,0.9);
-    border:1px solid rgba(255,215,0,0.1);
+    box-shadow:0 30px 90px rgba(0,0,0,0.9);
+    border:1px solid rgba(255,215,0,0.2);
     color:white;
-    overflow:visible; /* 🔥 QUAN TRỌNG */
+    overflow:visible;
     position:relative;
 }
 
 /* ===== HERO ===== */
 .hero{
-    height:270px;
+    height:230px;
     background:url('https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true');
     background-size:cover;
     background-position:center 70%;
     position:relative;
-    z-index:1;
-    border-top-left-radius:20px;
-    border-top-right-radius:20px;
+    border-top-left-radius:30px;
+    border-top-right-radius:30px;
 }
 
 /* overlay */
@@ -65,80 +64,73 @@ body{
     content:"";
     position:absolute;
     inset:0;
-    background:linear-gradient(
-        to bottom,
-        rgba(0,0,0,0.5),
-        rgba(0,0,0,0.2),
-        #081520
-    );
+    background:linear-gradient(to bottom, rgba(0,0,0,0.4), #081520);
 }
 
 /* ===== AVATAR ===== */
 .avatar-wrap{
     position:absolute;
-    bottom:-50px;
+    bottom:-70px;
     left:50%;
     transform:translateX(-50%);
-    z-index:5;
+    z-index:10;
 }
 
-/* glow */
+/* 🔥 FIRE AURA */
 .avatar-wrap::before{
     content:"";
     position:absolute;
     top:50%;
     left:50%;
-    width:150px;
-    height:150px;
+    width:200px;
+    height:200px;
     transform:translate(-50%,-50%);
     border-radius:50%;
-    background: radial-gradient(circle, rgba(255,215,0,0.9), transparent 70%);
-    filter:blur(15px);
-    animation:pulse 2s infinite;
-    z-index:-1;
+    background: radial-gradient(circle, rgba(255,180,0,1), rgba(255,80,0,0.4), transparent 70%);
+    filter:blur(25px);
+    animation:fire 1.5s infinite alternate;
 }
 
+/* RING */
 .avatar{
-    width:110px;
-    height:110px;
+    width:120px;
+    height:120px;
     border-radius:50%;
-    border:3px solid #FFD700;
+    border:4px solid #FFD700;
     position:relative;
     z-index:2;
 }
 
-/* ===== ANIMATION ===== */
-@keyframes pulse{
-    0%{opacity:0.6; transform:translate(-50%,-50%) scale(1);}
-    50%{opacity:1; transform:translate(-50%,-50%) scale(1.15);}
-    100%{opacity:0.6; transform:translate(-50%,-50%) scale(1);}
+/* ===== FIRE ANIMATION ===== */
+@keyframes fire{
+    0%{transform:translate(-50%,-50%) scale(1); opacity:0.7;}
+    100%{transform:translate(-50%,-50%) scale(1.2); opacity:1;}
 }
 
 /* ===== CONTENT ===== */
 .content{
-    padding-top:90px; /* 🔥 tạo chỗ cho avatar */
+    padding-top:100px;
     padding-bottom:25px;
     padding-left:25px;
     padding-right:25px;
-    position:relative;
-    z-index:2;
 }
 
 /* NAME */
 .name{
     text-align:center;
-    font-size:24px;
-    font-weight:700;
+    font-size:26px;
+    font-weight:800;
     color:#FFD700;
-    margin-bottom:20px;
+    text-shadow:0 0 15px rgba(255,200,0,0.8);
+    margin-bottom:25px;
 }
 
 /* ===== STATS ===== */
 .stats{
     border-radius:20px;
     padding:15px;
-    background:rgba(0,0,0,0.4);
-    border:1px solid rgba(255,215,0,0.1);
+    background:rgba(0,0,0,0.5);
+    border:1px solid rgba(255,215,0,0.15);
 }
 
 .row{
@@ -167,14 +159,35 @@ body{
     flex:1;
     padding:18px;
     border-radius:18px;
-    background:rgba(0,0,0,0.4);
-    border:1px solid rgba(255,215,0,0.15);
-    transition:0.3s;
+    background:rgba(0,0,0,0.5);
+    border:1px solid rgba(255,215,0,0.2);
+    text-align:center;
+    position:relative;
 }
 
-.box:hover{
-    transform:translateY(-6px);
-    box-shadow:0 0 25px rgba(255,215,0,0.4);
+/* 🔥 RANK #1 EFFECT */
+.box:first-child{
+    box-shadow:0 0 25px rgba(255,200,0,0.6);
+    border:2px solid #FFD700;
+}
+
+/* glow animation */
+.box:first-child::before{
+    content:"";
+    position:absolute;
+    inset:-2px;
+    border-radius:18px;
+    background:linear-gradient(45deg, gold, orange, gold);
+    z-index:-1;
+    filter:blur(10px);
+    opacity:0.7;
+    animation:glow 2s infinite linear;
+}
+
+@keyframes glow{
+    0%{filter:blur(5px);}
+    50%{filter:blur(15px);}
+    100%{filter:blur(5px);}
 }
 
 .dot{
