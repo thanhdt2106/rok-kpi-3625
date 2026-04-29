@@ -5,16 +5,13 @@ import streamlit.components.v1 as components
 st.set_page_config(initial_sidebar_state="collapsed")
 
 # ===== XOÁ SIDEBAR CHUẨN =====
-st.markdown(
-    """
-    <style>
-        div[data-testid="collapsedControl"] {
-            visibility: hidden;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown("""
+<style>
+[data-testid="stSidebar"] {display:none !important;}
+[data-testid="collapsedControl"] {display:none !important;}
+section[data-testid="stSidebar"] {display:none !important;}
+</style>
+""", unsafe_allow_html=True)
 
 # ===== LOAD DATA =====
 @st.cache_data(ttl=60)
