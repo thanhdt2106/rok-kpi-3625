@@ -56,31 +56,28 @@ if name:
         height:100vh;
     }}
 
-    .card {{
-        width:420px;
-        border-radius:24px;
-        overflow:hidden;
-        background:rgba(10,20,30,0.85);
-        backdrop-filter:blur(12px);
-        border:1px solid rgba(255,215,0,0.15);
-        box-shadow:0 20px 60px rgba(0,0,0,0.8);
-        color:#eaeaea;
-    }}
+  .card {{
+    width:420px;
+    border-radius:24px;
+    overflow:hidden;
 
-    .hero {{
-        height:280px;
-        background:url('https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true') center/cover;
-        position:relative;
-    }}
+    background:
+        linear-gradient(to bottom, rgba(5,10,15,0.6), rgba(5,10,15,0.95)),
+        url('https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true');
 
+    background-size:cover;
+    background-position:center;
+
+    backdrop-filter:blur(10px);
+    border:1px solid rgba(255,215,0,0.15);
+    box-shadow:0 20px 60px rgba(0,0,0,0.8);
+}}
 
 
     .avatar-wrap {{
-        position:absolute;
-        bottom:-45px;
-        left:50%;
-        transform:translateX(-50%);
-        z-index:10;
+         margin-top:30px;
+    display:flex;
+    justify-content:center;
     }}
 
     .avatar {{
@@ -92,7 +89,7 @@ if name:
     }}
 
     .content {{
-        padding:70px 24px 24px;
+        padding:20px 24px 24px;
     }}
 
     .name {{
