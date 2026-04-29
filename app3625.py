@@ -9,6 +9,27 @@ html = """
 <head>
 <style>
 
+/* ẨN SIDEBAR */
+section[data-testid="stSidebar"] {
+    display: none !important;
+}
+
+/* ẨN HEADER */
+header {
+    display: none !important;
+}
+
+/* ẨN FOOTER */
+footer {
+    display: none !important;
+}
+
+/* FULL WIDTH */
+.block-container {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
 /* ẨN HOÀN TOÀN UI STREAMLIT */
 [data-testid="stSidebar"] {display:none;}
 header {visibility:hidden;}
