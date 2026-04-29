@@ -68,7 +68,7 @@ if name:
     }}
 
     .hero {{
-        height:200px;
+        height:280px;
         background:url('https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true') center/cover;
         position:relative;
     }}
