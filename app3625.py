@@ -76,7 +76,7 @@ body{
 /* ===== AVATAR ===== */
 .avatar-wrap{
     position:absolute;
-    bottom:-60px;
+    bottom:-40px;
     left:50%;
     transform:translateX(-50%);
     z-index:5;
