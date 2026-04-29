@@ -4,7 +4,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(layout="wide")
 
-# ====== ẨN STREAMLIT ======
+# ===== HIDE STREAMLIT =====
 st.markdown("""
 <style>
 #MainMenu, header, footer {visibility:hidden;}
@@ -12,11 +12,11 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ====== CONFIG ======
+# ===== CONFIG =====
 SHEET_ID = "1CzGPseLzdRK1V-6qy7KD5T58sBRSGjQi"
 GID = "855089129"
 
-# ====== LOAD DATA ======
+# ===== LOAD DATA =====
 @st.cache_data(ttl=60)
 def load_data():
     url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&gid={GID}"
@@ -26,213 +26,197 @@ def load_data():
 
 df = load_data()
 
-# ====== SEARCH ======
+# ===== SEARCH =====
 search = st.text_input("🔍 Nhập tên người chơi")
 
 if search:
     df = df[df["Tên"].str.contains(search, case=False, na=False)]
 
-# ====== SORT TOP ======
-df = df.sort_values(by="Tổng Tiêu Diệt", ascending=False)
+# ===== SORT =====
+df = df.sort_values(by="Tổng Tiêu Diệt", ascending=False).reset_index(drop=True)
 
-# ====== BUILD CARD ======
-players_html = ""
+# ===== KPI FUNCTION =====
+def get_kpi_kill(pow):
+    if pow > 100_000_000: return 600_000_000
+    elif pow > 90_000_000: return 550_000_000
+    elif pow > 80_000_000: return 450_000_000
+    elif pow > 70_000_000: return 300_000_000
+    elif pow > 60_000_000: return 250_000_000
+    else: return 200_000_000
+
+def get_kpi_dead(pow):
+    if pow > 100_000_000: return 1_500_000
+    elif pow > 90_000_000: return 1_200_000
+    elif pow > 80_000_000: return 1_000_000
+    elif pow > 70_000_000: return 800_000
+    else: return 700_000
+
+# ===== FARM DEAD LOGIC =====
+def calculate_dead_with_farm(df):
+    result = {}
+
+    for name in df["Tên"].unique():
+        same = df[df["Tên"] == name]
+
+        main = same.loc[same["Tổng Tiêu Diệt"].idxmax()]
+        total_dead = main["Điểm chết"]
+
+        for _, r in same.iterrows():
+            pow = r["Tổng Tiêu Diệt"]
+
+            if pow > 40_000_000:
+                total_dead += 700_000
+            elif pow > 30_000_000:
+                total_dead += 500_000
+            elif pow > 20_000_000:
+                total_dead += 300_000
+
+        result[name] = total_dead
+
+    return result
+
+dead_map = calculate_dead_with_farm(df)
+
+# ===== BUILD HTML =====
+cards = ""
 
 for i, row in df.head(40).iterrows():
-    name = str(row.get("Tên", "Unknown"))
-    pid = str(row.get("ID", ""))
-    alliance = str(row.get("Liên Minh", ""))
-    power = int(row.get("Tổng Tiêu Diệt", 0))
-    dead = int(row.get("Điểm chết", 0))
+    name = str(row["Tên"])
+    pid = str(row["ID"])
+    alliance = str(row["Liên Minh"])
+    power = int(row["Tổng Tiêu Diệt"])
+    dead = int(dead_map.get(name, row["Điểm chết"]))
+
+    kill_kpi = get_kpi_kill(power)
+    dead_kpi = get_kpi_dead(power)
+
+    kill_percent = min(int(power / kill_kpi * 100), 100)
+    dead_percent = min(int(dead / dead_kpi * 100), 100)
 
     avatar = f"https://api.dicebear.com/7.x/adventurer/png?seed={name}"
 
-    glow = "gold" if i < 3 else "#00ffe0"
-
-    players_html += f"""
+    cards += f"""
     <div class="card"
-        onclick="openProfile('{name}','{pid}','{alliance}','{power}','{dead}','{avatar}')">
-
-        <div class="rank">#{i+1}</div>
-
+    onclick="openProfile('{name}','{pid}','{alliance}','{power}','{dead}','{i+1}','{kill_kpi}','{dead_kpi}','{avatar}')">
         <img src="{avatar}">
-
-        <div class="name">{name}</div>
-        <div class="power">{power:,}</div>
-
+        <div>{name}</div>
+        <small>#{i+1}</small>
     </div>
     """
 
-# ====== HTML ======
+# ===== HTML =====
 html = f"""
 <html>
 <head>
-<meta charset="UTF-8">
-
 <style>
 body {{
-    margin:0;
-    background:url('https://images.unsplash.com/photo-1605902711622-cfb43c44367f') center/cover no-repeat;
-    font-family:sans-serif;
-    color:white;
-}}
-
-.overlay-bg {{
-    position:fixed;
-    width:100%;
-    height:100%;
-    background:rgba(0,0,0,0.75);
-}}
-
-.title {{
-    text-align:center;
-    font-size:40px;
-    padding:20px;
-    font-weight:bold;
-    color:gold;
+background:#0b0f1a;
+color:white;
+font-family:sans-serif;
 }}
 
 .grid {{
-    display:grid;
-    grid-template-columns:repeat(auto-fill,180px);
-    gap:25px;
-    justify-content:center;
-    padding:20px;
+display:grid;
+grid-template-columns:repeat(auto-fill,160px);
+gap:20px;
+justify-content:center;
 }}
 
 .card {{
-    background:rgba(0,0,0,0.6);
-    border-radius:20px;
-    padding:15px;
-    text-align:center;
-    cursor:pointer;
-    transition:0.3s;
-    position:relative;
-}}
-
-.card:hover {{
-    transform:scale(1.1);
-    box-shadow:0 0 25px gold;
+background:#111;
+padding:15px;
+border-radius:20px;
+text-align:center;
+cursor:pointer;
 }}
 
 .card img {{
-    width:90px;
-    border-radius:50%;
-    border:3px solid gold;
-}}
-
-.rank {{
-    position:absolute;
-    top:10px;
-    left:10px;
-    font-size:14px;
-    color:gold;
-}}
-
-.name {{
-    margin-top:10px;
-    font-weight:bold;
-}}
-
-.power {{
-    font-size:13px;
-    color:#ccc;
+width:80px;
+border-radius:50%;
+border:2px solid gold;
 }}
 
 .popup {{
-    position:fixed;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    width:65%;
-    background:rgba(0,0,0,0.9);
-    border-radius:25px;
-    padding:30px;
-    display:none;
-    z-index:1000;
-    box-shadow:0 0 40px gold;
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+width:70%;
+background:#111;
+padding:30px;
+border-radius:20px;
+display:none;
 }}
 
-.overlay {{
-    position:fixed;
-    width:100%;
-    height:100%;
-    background:rgba(0,0,0,0.8);
-    display:none;
+.bar {{
+height:12px;
+background:#333;
+border-radius:10px;
+margin-top:5px;
 }}
 
-.profile-top {{
-    display:flex;
-    gap:20px;
-    align-items:center;
-}}
-
-.profile-top img {{
-    width:120px;
-    border-radius:50%;
-    border:4px solid gold;
-}}
-
-.stats {{
-    margin-top:20px;
-    display:flex;
-    gap:20px;
-}}
-
-.stat {{
-    flex:1;
-    background:rgba(255,255,255,0.1);
-    padding:20px;
-    border-radius:15px;
-    text-align:center;
+.fill {{
+height:100%;
+background:gold;
+border-radius:10px;
 }}
 </style>
 </head>
 
 <body>
 
-<div class="overlay-bg"></div>
-
-<div class="title">🔥 ROK PRO MAX DASHBOARD</div>
-
 <div class="grid">
-{players_html}
+{cards}
 </div>
-
-<div class="overlay" id="overlay" onclick="closeProfile()"></div>
 
 <div class="popup" id="popup">
 
-<div class="profile-top">
-<img id="p_avatar">
 <h2 id="p_name"></h2>
-</div>
 
-<div class="stats">
-<div class="stat">ID<br><b id="p_id"></b></div>
-<div class="stat">Alliance<br><b id="p_alliance"></b></div>
-<div class="stat">Power<br><b id="p_power"></b></div>
-<div class="stat">Dead<br><b id="p_dead"></b></div>
-</div>
+<p>🆔 ID: <span id="p_id"></span></p>
+<p>🏰 Alliance: <span id="p_alliance"></span></p>
+<p>⚔ Kill: <span id="p_power"></span></p>
+<p>💀 Dead: <span id="p_dead"></span></p>
+<p>🏆 Rank: <span id="p_rank"></span></p>
+
+<h3>🔥 KPI Kill</h3>
+<div id="kill_text"></div>
+<div class="bar"><div id="kill_bar" class="fill"></div></div>
+
+<h3>💀 KPI Dead</h3>
+<div id="dead_text"></div>
+<div class="bar"><div id="dead_bar" class="fill"></div></div>
+
+<button onclick="closeProfile()">Close</button>
 
 </div>
 
 <script>
-function openProfile(name,id,alliance,power,dead,avatar){{
-    document.getElementById("popup").style.display="block";
-    document.getElementById("overlay").style.display="block";
+function openProfile(name,id,alliance,power,dead,rank,killkpi,deadkpi,avatar){{
+document.getElementById("popup").style.display="block";
 
-    document.getElementById("p_name").innerText = name;
-    document.getElementById("p_id").innerText = id;
-    document.getElementById("p_alliance").innerText = alliance;
-    document.getElementById("p_power").innerText = Number(power).toLocaleString();
-    document.getElementById("p_dead").innerText = Number(dead).toLocaleString();
-    document.getElementById("p_avatar").src = avatar;
+document.getElementById("p_name").innerText=name;
+document.getElementById("p_id").innerText=id;
+document.getElementById("p_alliance").innerText=alliance;
+document.getElementById("p_power").innerText=Number(power).toLocaleString();
+document.getElementById("p_dead").innerText=Number(dead).toLocaleString();
+document.getElementById("p_rank").innerText=rank;
+
+let kpercent=Math.min(power/killkpi*100,100);
+let dpercent=Math.min(dead/deadkpi*100,100);
+
+document.getElementById("kill_text").innerText=
+Number(power).toLocaleString()+" / "+Number(killkpi).toLocaleString()+" ("+Math.round(kpercent)+"%)";
+
+document.getElementById("dead_text").innerText=
+Number(dead).toLocaleString()+" / "+Number(deadkpi).toLocaleString()+" ("+Math.round(dpercent)+"%)";
+
+document.getElementById("kill_bar").style.width=kpercent+"%";
+document.getElementById("dead_bar").style.width=dpercent+"%";
 }}
 
 function closeProfile(){{
-    document.getElementById("popup").style.display="none";
-    document.getElementById("overlay").style.display="none";
+document.getElementById("popup").style.display="none";
 }}
 </script>
 
@@ -240,4 +224,4 @@ function closeProfile(){{
 </html>
 """
 
-components.html(html, height=900, scrolling=True)
+components.html(html, height=900)
