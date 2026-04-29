@@ -1,59 +1,33 @@
 import streamlit as st
-import streamlit.components.v1 as components
 
+# ================= CONFIG =================
 st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-html = """
-<!DOCTYPE html>
-<html>
-<head>
+# ================= CSS =================
+st.markdown("""
 <style>
 
-
-/* ❌ Xoá sidebar hoàn toàn */
-section[data-testid="stSidebar"] {
-    display: none !important;
-}
-
-/* ❌ Xoá khoảng trống sidebar */
-.css-1d391kg {
-    display: none !important;
-}
-
-/* ❌ Expand main full width */
-.main .block-container {
-    max-width: 100% !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-}
-
-/* ❌ Xoá menu góc phải (3 chấm nếu muốn) */
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-header {visibility: hidden;}
-
-
-/* ẨN HOÀN TOÀN UI STREAMLIT */
-[data-testid="stSidebar"] {display:none;}
+/* ===== REMOVE STREAMLIT UI ===== */
+section[data-testid="stSidebar"] {display:none !important;}
 header {visibility:hidden;}
 footer {visibility:hidden;}
 #MainMenu {visibility:hidden;}
 
-.block-container{
+/* ===== FULL WIDTH ===== */
+.block-container {
     padding:0 !important;
+    max-width:100% !important;
 }
 
-/* BODY */
-body{
-    margin:0;
-    background:#0b0f1a;
-    font-family: 'Segoe UI', sans-serif;
+/* ===== BACKGROUND ===== */
+html, body, [class*="css"]  {
+    background: radial-gradient(circle at top, #0b1a2a, #050b12);
 }
 
-/* WRAPPER CENTER */
+/* ===== CENTER WRAPPER ===== */
 .wrapper{
     display:flex;
     justify-content:center;
@@ -61,52 +35,52 @@ body{
     height:100vh;
 }
 
-/* CARD */
+/* ===== CARD ===== */
 .card{
-    width:70vw;
+    width:65vw;
     height:65vh;
-    border-radius:30px;
+    border-radius:28px;
     overflow:hidden;
     position:relative;
-
-    background:url("https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true");
-    background-size:cover;
-    background-position:center;
-
-    box-shadow:0 0 80px rgba(0,0,0,0.8);
+    box-shadow:0 0 60px rgba(255,180,0,0.15);
 }
 
-/* LÀM CHỮ NỔI HƠN */
-.overlay{
+/* ===== BACKGROUND IMAGE INSIDE CARD ===== */
+.card::before{
+    content:"";
     position:absolute;
     inset:0;
-    background:linear-gradient(
-        to bottom,
-        rgba(0,0,0,0.2),
-        rgba(0,0,0,0.75)
-    );
+    background:url("https://i.imgur.com/your-image.jpg") center/cover no-repeat;
+    filter:brightness(0.85);
+    z-index:1;
 }
 
-/* CONTENT - FIX BỊ ĐẨY LÊN */
+/* ===== DARK OVERLAY ===== */
+.card::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.7));
+    z-index:2;
+}
+
+/* ===== CONTENT ===== */
 .content{
     position:relative;
-    z-index:2;
-
+    z-index:3;
+    padding:40px;
+    color:white;
+    height:100%;
     display:flex;
     flex-direction:column;
-    justify-content:center;   /* 👈 QUAN TRỌNG */
-    height:100%;
-
-    padding:50px;
-    color:white;
+    justify-content:space-between;
 }
 
-/* HEADER */
-.header{
+/* ===== TOP ===== */
+.top{
     display:flex;
     align-items:center;
     gap:20px;
-    margin-bottom:25px;
 }
 
 /* AVATAR */
@@ -114,147 +88,165 @@ body{
     width:90px;
     height:90px;
     border-radius:50%;
-    border:3px solid gold;
-    box-shadow:0 0 25px gold;
+    border:3px solid #ffd700;
+    box-shadow:0 0 20px #ffd700;
 }
 
 /* NAME */
 .name{
     font-size:28px;
     color:#ffd700;
+    letter-spacing:1px;
 }
 
-/* INFO */
+/* ===== INFO ROW ===== */
 .info{
     display:grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap:20px;
-    margin-bottom:35px;
+    grid-template-columns:repeat(4,1fr);
+    gap:15px;
+    margin-top:20px;
 }
 
-.item{
-    background:rgba(0,0,0,0.45);
-    backdrop-filter: blur(6px);
-    padding:12px 16px;
+.info-box{
+    background:rgba(0,0,0,0.35);
+    padding:12px 15px;
     border-radius:12px;
+    backdrop-filter:blur(6px);
 }
 
 .label{
     font-size:12px;
-    opacity:0.7;
+    opacity:0.6;
 }
 
 .value{
     font-size:16px;
+    margin-top:4px;
 }
 
-/* KPI */
-.kpi{
-    display:grid;
-    grid-template-columns: repeat(3,1fr);
+/* ===== STATS ===== */
+.stats{
+    display:flex;
     gap:20px;
 }
 
-/* BOX */
-.box{
-    padding:20px;
+.stat{
+    flex:1;
+    background:rgba(0,0,0,0.4);
     border-radius:18px;
+    padding:25px;
     text-align:center;
-    backdrop-filter: blur(10px);
-    background:rgba(0,0,0,0.5);
-    border:1px solid rgba(255,255,255,0.1);
+    backdrop-filter:blur(10px);
     transition:0.3s;
 }
 
-/* HIGHLIGHT */
-.box.active{
-    border:2px solid gold;
-    box-shadow:0 0 25px rgba(255,215,0,0.8);
+.stat:hover{
+    transform:translateY(-5px);
+    box-shadow:0 0 25px rgba(255,200,0,0.3);
 }
 
+/* ICON */
 .icon{
     font-size:22px;
-    margin-bottom:8px;
+    margin-bottom:10px;
 }
 
-.big{
-    font-size:18px;
+/* VALUE */
+.stat-value{
+    font-size:20px;
+    margin-bottom:5px;
 }
 
+/* SUB */
 .sub{
-    font-size:12px;
-    opacity:0.7;
+    font-size:13px;
+    opacity:0.6;
+}
+
+/* RANK HIGHLIGHT */
+.rank{
+    border:2px solid #ffd700;
+    box-shadow:0 0 25px rgba(255,215,0,0.6);
 }
 
 </style>
-</head>
+""", unsafe_allow_html=True)
 
-<body>
+# ================= DATA DEMO =================
+name = "L Gạo Nút"
+avatar = "https://i.pravatar.cc/150"
+id_player = "16925269"
+alliance = "[FT-D]FIGHT TO DEAD"
+kill = "5,826,515,379"
+dead = "3,418,388,660"
 
+rank = "#12"
+kill_kpi = "5.8B"
+kill_percent = "38%"
+dead_kpi = "3.4B"
+dead_percent = "28%"
+
+# ================= UI =================
+st.markdown(f"""
 <div class="wrapper">
 
     <div class="card">
-
-        <div class="overlay"></div>
-
         <div class="content">
 
-            <div class="header">
-                <img class="avatar" src="https://i.pravatar.cc/150">
-                <div class="name">L Gạo Nút 亗</div>
+            <!-- TOP -->
+            <div class="top">
+                <img src="{avatar}" class="avatar"/>
+                <div class="name">{name}</div>
             </div>
 
+            <!-- INFO -->
             <div class="info">
-                <div class="item">
+                <div class="info-box">
                     <div class="label">ID</div>
-                    <div class="value">16925269</div>
+                    <div class="value">{id_player}</div>
                 </div>
 
-                <div class="item">
+                <div class="info-box">
                     <div class="label">Alliance</div>
-                    <div class="value">[FT-D]FIGHT TO DEAD</div>
+                    <div class="value">{alliance}</div>
                 </div>
 
-                <div class="item">
+                <div class="info-box">
                     <div class="label">Kill</div>
-                    <div class="value">5,826,515,379</div>
+                    <div class="value">{kill}</div>
                 </div>
 
-                <div class="item">
+                <div class="info-box">
                     <div class="label">Dead</div>
-                    <div class="value">3,418,388,660</div>
+                    <div class="value">{dead}</div>
                 </div>
             </div>
 
-            <div class="kpi">
+            <!-- STATS -->
+            <div class="stats">
 
-                <div class="box active">
+                <div class="stat rank">
                     <div class="icon">🏆</div>
-                    <div class="big">#12</div>
+                    <div class="stat-value">{rank}</div>
+                    <div class="sub">Rank</div>
                 </div>
 
-                <div class="box">
+                <div class="stat">
                     <div class="icon">🔥</div>
-                    <div class="big">5.8B</div>
-                    <div class="sub">38%</div>
+                    <div class="stat-value">{kill_kpi}</div>
+                    <div class="sub">{kill_percent}</div>
                 </div>
 
-                <div class="box">
+                <div class="stat">
                     <div class="icon">💀</div>
-                    <div class="big">3.4B</div>
-                    <div class="sub">28%</div>
+                    <div class="stat-value">{dead_kpi}</div>
+                    <div class="sub">{dead_percent}</div>
                 </div>
 
             </div>
 
         </div>
-
     </div>
 
 </div>
-
-</body>
-</html>
-"""
-
-components.html(html, height=900)
+""", unsafe_allow_html=True)
