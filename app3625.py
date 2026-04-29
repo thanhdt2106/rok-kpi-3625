@@ -1,170 +1,131 @@
 import streamlit as st
 import pandas as pd
-import time
 
-st.set_page_config(page_title="ROK Dashboard", layout="wide")
+st.set_page_config(layout="wide")
 
-# ================== LOAD DATA ==================
+# ================= LOAD DATA =================
 @st.cache_data(ttl=30)
 def load_data():
     sheet_id = "1CzGPseLzdRK1V-6qy7KD5T58sBRSGjQi"
     gid = "855089129"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
+    
     df = pd.read_csv(url)
+
+    # Chuẩn hoá cột
+    df.columns = df.columns.str.strip().str.lower()
+
     return df
 
 df = load_data()
 
-# ================== STYLE ==================
-st.markdown("""
-<style>
-html, body, [class*="css"] {
-    font-family: 'Segoe UI', sans-serif;
-    background: #0b1220;
+# ================= MAP COLUMN =================
+col_map = {
+    "name": "tên",
+    "id": "id",
+    "alliance": "liên minh",
+    "kill": "tổng tiêu diệt",
+    "power": "sức mạnh",
+    "dead": "điểm chết"
 }
 
-/* CARD PLAYER */
-.card {
-    width: 100%;
-    border-radius: 20px;
-    padding: 25px;
-    margin-bottom: 15px;
-    background: linear-gradient(145deg, #111827, #0b1220);
-    border: 1px solid rgba(255,255,255,0.05);
-    transition: 0.3s;
-}
-
-.card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 0 25px rgba(255, 200, 0, 0.3);
-}
-
-/* PROFILE CARD */
-.profile {
-    width: 70%;
-    margin: auto;
-    padding: 40px;
-    border-radius: 25px;
-    background-size: cover;
-    background-position: center;
-    color: white;
-    position: relative;
-}
-
-.overlay {
-    position:absolute;
-    inset:0;
-    background:rgba(0,0,0,0.6);
-    border-radius:25px;
-}
-
-.content {
-    position:relative;
-    z-index:2;
-}
-
-/* AVATAR */
-.avatar {
-    width:90px;
-    height:90px;
-    border-radius:50%;
-    border:3px solid gold;
-    margin-right:15px;
-}
-
-/* STATS BOX */
-.stat-box {
-    flex:1;
-    padding:20px;
-    border-radius:15px;
-    text-align:center;
-    background:rgba(0,0,0,0.5);
-    backdrop-filter: blur(10px);
-}
-
-/* SEARCH */
-input {
-    border-radius:10px !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# ================== SEARCH ==================
+# ================= SEARCH =================
 st.title("🔥 ROK MEMBER DASHBOARD")
 
 search = st.text_input("🔍 Nhập tên người chơi")
 
-# ================== FILTER ==================
 if search:
-    df_filtered = df[df["Name"].str.contains(search, case=False, na=False)]
+    df_filtered = df[df[col_map["name"]].astype(str).str.contains(search, case=False, na=False)]
 else:
     df_filtered = df
 
-# ================== VIEW MODE ==================
-if "view_profile" not in st.session_state:
-    st.session_state.view_profile = None
+# ================= VIEW STATE =================
+if "profile" not in st.session_state:
+    st.session_state.profile = None
 
-# ================== LIST MEMBER ==================
-if st.session_state.view_profile is None:
-
-    st.subheader("👥 Danh sách thành viên")
+# ================= LIST =================
+if st.session_state.profile is None:
 
     for i, row in df_filtered.iterrows():
-        col1, col2 = st.columns([1, 6])
+
+        col1, col2, col3 = st.columns([1,6,2])
 
         with col1:
-            st.image(f"https://api.dicebear.com/7.x/adventurer/png?seed={row['Name']}", width=60)
+            st.image(f"https://api.dicebear.com/7.x/adventurer/png?seed={row[col_map['name']]}", width=60)
 
         with col2:
             st.markdown(f"""
-            <div class="card">
-                <b>{row['Name']}</b><br>
-                Power: {row.get('Power','N/A')}<br>
-                Kill: {row.get('Kill','N/A')}
+            <div style="
+                padding:15px;
+                border-radius:15px;
+                background:#111;
+                border:1px solid rgba(255,255,255,0.05);
+            ">
+                <b style="color:gold">{row[col_map['name']]}</b><br>
+                Power: {row[col_map['power']]:,}<br>
+                Kill: {row[col_map['kill']]:,}
             </div>
             """, unsafe_allow_html=True)
 
-        if st.button(f"Xem profile {row['Name']}", key=i):
-            st.session_state.view_profile = row.to_dict()
-            st.rerun()
+        with col3:
+            if st.button("Xem", key=i):
+                st.session_state.profile = row.to_dict()
+                st.rerun()
 
-# ================== PROFILE ==================
+# ================= PROFILE =================
 else:
-    p = st.session_state.view_profile
-
-    bg = "https://i.imgur.com/6Iej2c3.jpg"
+    p = st.session_state.profile
 
     st.markdown(f"""
-    <div class="profile" style="background-image:url('{bg}')">
-        <div class="overlay"></div>
+    <div style="
+        width:70%;
+        margin:auto;
+        padding:40px;
+        border-radius:25px;
+        background:url('https://i.imgur.com/6Iej2c3.jpg');
+        background-size:cover;
+        color:white;
+        position:relative;
+    ">
 
-        <div class="content">
+        <div style="
+            position:absolute;
+            inset:0;
+            background:rgba(0,0,0,0.7);
+            border-radius:25px;
+        "></div>
+
+        <div style="position:relative;z-index:2">
 
             <div style="display:flex;align-items:center;margin-bottom:20px;">
-                <img class="avatar" src="https://api.dicebear.com/7.x/adventurer/png?seed={p['Name']}"/>
-                <h2 style="color:gold;">{p['Name']}</h2>
+                <img src="https://api.dicebear.com/7.x/adventurer/png?seed={p[col_map['name']]}" 
+                style="width:90px;height:90px;border-radius:50%;border:3px solid gold;margin-right:15px;"/>
+                
+                <h2 style="color:gold;">{p[col_map['name']]}</h2>
             </div>
 
-            <div style="display:flex;gap:20px;margin-top:20px;">
-                <div class="stat-box">
-                    <small>ID</small><br>
-                    {p.get('ID','N/A')}
+            <div style="display:flex;gap:20px;flex-wrap:wrap;">
+
+                <div style="flex:1;background:#111;padding:20px;border-radius:15px;">
+                    <small>ID</small><br>{p[col_map['id']]}
                 </div>
 
-                <div class="stat-box">
-                    <small>Alliance</small><br>
-                    {p.get('Alliance','N/A')}
+                <div style="flex:1;background:#111;padding:20px;border-radius:15px;">
+                    <small>Alliance</small><br>{p[col_map['alliance']]}
                 </div>
 
-                <div class="stat-box">
-                    <small>Kill</small><br>
-                    {p.get('Kill','N/A')}
+                <div style="flex:1;background:#111;padding:20px;border-radius:15px;">
+                    <small>Power</small><br>{p[col_map['power']]:,}
                 </div>
 
-                <div class="stat-box">
-                    <small>Dead</small><br>
-                    {p.get('Dead','N/A')}
+                <div style="flex:1;background:#111;padding:20px;border-radius:15px;">
+                    <small>Kill</small><br>{p[col_map['kill']]:,}
                 </div>
+
+                <div style="flex:1;background:#111;padding:20px;border-radius:15px;">
+                    <small>Dead</small><br>{p[col_map['dead']]:,}
+                </div>
+
             </div>
 
         </div>
@@ -172,5 +133,5 @@ else:
     """, unsafe_allow_html=True)
 
     if st.button("⬅ Quay lại"):
-        st.session_state.view_profile = None
+        st.session_state.profile = None
         st.rerun()
