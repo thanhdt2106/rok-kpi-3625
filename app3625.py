@@ -9,26 +9,29 @@ html = """
 <head>
 <style>
 
-/* ẨN SIDEBAR */
+
+/* ❌ Xoá sidebar hoàn toàn */
 section[data-testid="stSidebar"] {
     display: none !important;
 }
 
-/* ẨN HEADER */
-header {
+/* ❌ Xoá khoảng trống sidebar */
+.css-1d391kg {
     display: none !important;
 }
 
-/* ẨN FOOTER */
-footer {
-    display: none !important;
+/* ❌ Expand main full width */
+.main .block-container {
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
 }
 
-/* FULL WIDTH */
-.block-container {
-    padding: 0 !important;
-    margin: 0 !important;
-}
+/* ❌ Xoá menu góc phải (3 chấm nếu muốn) */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+
 
 /* ẨN HOÀN TOÀN UI STREAMLIT */
 [data-testid="stSidebar"] {display:none;}
