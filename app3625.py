@@ -11,7 +11,7 @@ st.markdown("""
             display: none;
         }
     </style>
-    """,
+    """
     unsafe_allow_html=True,
 
 # ===== LOAD DATA =====
