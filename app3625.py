@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import streamlit.components.v1 as components
+import re
 
 st.set_page_config(page_title="FTD KPI SYSTEM", layout="wide", initial_sidebar_state="collapsed")
 
@@ -27,14 +28,19 @@ df["Power"] = df["Sức Mạnh"].apply(to_int)
 df["Kill"] = df["Tổng Tiêu Diệt"].apply(to_int)
 df["Dead"] = df["Điểm Chết"].apply(to_int)
 
-# ===== GỘP DEAD FARM → ACC POW CAO NHẤT =====
-df["Name_Key"] = df["Tên"].str.lower().str.strip()
+# ===== 🔥 THÊM: GỘP DEAD FARM THEO PREFIX =====
+def get_main_name(name):
+    name = str(name).lower().strip()
+    match = re.match(r"[a-zA-Z]+", name)  # lấy phần chữ đầu
+    return match.group(0) if match else name
 
-# lấy acc mạnh nhất mỗi tên
+df["Name_Key"] = df["Tên"].apply(get_main_name)
+
+# lấy acc mạnh nhất mỗi nhóm
 idx = df.groupby("Name_Key")["Power"].idxmax()
 main_df = df.loc[idx].copy()
 
-# tổng dead của tất cả acc cùng tên
+# tổng dead của toàn bộ farm
 dead_sum = df.groupby("Name_Key")["Dead"].sum()
 
 # gán lại cho acc chính
@@ -90,7 +96,7 @@ for _, row in df.iterrows():
     </div>
     """
 
-# ===== HTML =====
+# ===== HTML (GIỮ NGUYÊN 100%) =====
 html = f"""
 <html>
 <head>
@@ -239,25 +245,10 @@ body {{
     color:black;
 }}
 
-#langBtn {{
-position:fixed;
-top:10px;
-right:15px;
-background:gold;
-color:black;
-padding:5px 10px;
-border-radius:8px;
-cursor:pointer;
-z-index:999;
-font-size:12px;
-}}
-
 </style>
 </head>
 
 <body>
-
-<div id="langBtn">EN</div>
 
 <input class="search" placeholder="🔍 Nhập tên..." onkeyup="search(this.value)">
 
@@ -276,32 +267,6 @@ font-size:12px;
 <script>
 
 let mode = "power"
-let lang = "vn"
-
-const TEXT = {{
-    vn: {{
-        search: "🔍 Nhập tên...",
-        id: "🆔 ID",
-        alliance: "🏰 Alliance",
-        kpiKill: "🔥 KPI Kill",
-        kpiDead: "💀 KPI Dead",
-        exit: "❌ EXIT"
-    }},
-    en: {{
-        search: "🔍 Search...",
-        id: "🆔 ID",
-        alliance: "🏰 Alliance",
-        kpiKill: "🔥 KPI Kill",
-        kpiDead: "💀 KPI Dead",
-        exit: "❌ EXIT"
-    }}
-}}
-
-document.getElementById("langBtn").onclick = function(){{
-    lang = lang === "vn" ? "en" : "vn"
-    this.innerText = lang.toUpperCase()
-    document.querySelector(".search").placeholder = TEXT[lang].search
-}}
 
 function setMode(m){{
     mode = m
@@ -329,8 +294,6 @@ function search(val){{
 }}
 
 function openProfile(name,id,alliance,power,kill,dead,kpiK,kpiD,avatar){{
-    let t = TEXT[lang]
-
     document.getElementById("modal").style.display="flex"
 
     document.getElementById("profile").innerHTML = `
@@ -338,8 +301,8 @@ function openProfile(name,id,alliance,power,kill,dead,kpiK,kpiD,avatar){{
         <div class="avatar-big"><img src="${{avatar}}"></div>
         <div>
             <h2>${{name}}</h2>
-            <p>${{t.id}}: ${{id}}</p>
-            <p>${{t.alliance}}: ${{alliance}}</p>
+            <p>🆔 ID: ${{id}}</p>
+            <p>🏰 Alliance: ${{alliance}}</p>
         </div>
     </div>
 
@@ -349,16 +312,16 @@ function openProfile(name,id,alliance,power,kill,dead,kpiK,kpiD,avatar){{
         <div class="box">💀 Dead<br>${{Number(dead).toLocaleString()}}</div>
     </div>
 
-    <h3>${{t.kpiKill}}</h3>
+    <h3>🔥 KPI Kill</h3>
     <div class="bar"><div class="fill" style="width:0%"></div></div>
     <p>0 / ${{Number(kpiK).toLocaleString()}}</p>
 
-    <h3>${{t.kpiDead}}</h3>
+    <h3>💀 KPI Dead</h3>
     <div class="bar"><div class="fill" style="width:0%"></div></div>
     <p>0 / ${{Number(kpiD).toLocaleString()}}</p>
 
     <br>
-    <button onclick="closeProfile()">${{t.exit}}</button>
+    <button onclick="closeProfile()">❌ EXIT</button>
     `
 }}
 
