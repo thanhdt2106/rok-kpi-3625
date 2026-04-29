@@ -25,7 +25,7 @@ def to_int(x):
 
 df["Power"] = df["Sức Mạnh"].apply(to_int)
 df["Kill"] = df["Tổng Tiêu Diệt"].apply(to_int)
-df["Dead"] = df["Điểm hết"].apply(to_int)
+df["Dead"] = df["Điểm Chết"].apply(to_int)
 
 # ===== KPI =====
 def kpi_kill(pow):
