@@ -41,30 +41,47 @@ body{
     width:420px;
     border-radius:30px;
     overflow:hidden;
-    background:rgba(10,20,30,0.9);
-    box-shadow:0 25px 70px rgba(0,0,0,0.8);
-    border:1px solid rgba(255,255,255,0.08);
+    background:rgba(10,20,30,0.85);
+    backdrop-filter:blur(12px);
+    box-shadow:0 30px 80px rgba(0,0,0,0.9);
+    border:1px solid rgba(255,215,0,0.15);
     color:white;
+    position:relative;
 }
 
-/* ===== HERO (ẢNH CHỈ Ở ĐÂY) ===== */
+/* ===== HERO (ẢNH) ===== */
 .hero{
-    height:220px;
+    height:230px;
     background:url('https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true');
     background-size:cover;
     background-position:center 70%;
     position:relative;
+    overflow:hidden;
 }
 
-/* overlay làm tối */
+/* ===== GOD LIGHT ===== */
+.hero::before{
+    content:"";
+    position:absolute;
+    top:-50%;
+    left:50%;
+    transform:translateX(-50%);
+    width:300px;
+    height:400px;
+    background:radial-gradient(circle, rgba(255,215,0,0.35), transparent 70%);
+    filter:blur(40px);
+    animation:lightMove 4s ease-in-out infinite;
+}
+
+/* overlay */
 .hero::after{
     content:"";
     position:absolute;
     inset:0;
     background:linear-gradient(
         to bottom,
-        rgba(0,0,0,0.6),
-        rgba(0,0,0,0.3),
+        rgba(0,0,0,0.5),
+        rgba(0,0,0,0.2),
         rgba(10,20,30,1)
     );
 }
@@ -78,22 +95,21 @@ body{
     z-index:2;
 }
 
-/* glow vàng */
+/* GLOW MẠNH */
 .avatar-wrap::before{
     content:"";
     position:absolute;
     top:50%;
     left:50%;
-    width:140px;
-    height:140px;
+    width:160px;
+    height:160px;
     transform:translate(-50%,-50%);
     border-radius:50%;
-    background: radial-gradient(circle, rgba(255,215,0,0.8), transparent 70%);
-    filter:blur(10px);
+    background: radial-gradient(circle, rgba(255,215,0,1), transparent 70%);
+    filter:blur(20px);
     animation:pulse 2s infinite;
 }
 
-/* ring */
 .avatar{
     width:110px;
     height:110px;
@@ -103,73 +119,82 @@ body{
     z-index:2;
 }
 
+/* ===== ANIMATION ===== */
 @keyframes pulse{
     0%{opacity:0.6; transform:translate(-50%,-50%) scale(1);}
-    50%{opacity:1; transform:translate(-50%,-50%) scale(1.1);}
+    50%{opacity:1; transform:translate(-50%,-50%) scale(1.2);}
     100%{opacity:0.6; transform:translate(-50%,-50%) scale(1);}
+}
+
+@keyframes lightMove{
+    0%{opacity:0.4; transform:translateX(-50%) translateY(0);}
+    50%{opacity:0.8; transform:translateX(-50%) translateY(20px);}
+    100%{opacity:0.4; transform:translateX(-50%) translateY(0);}
 }
 
 /* ===== CONTENT ===== */
 .content{
-    padding-top:70px;
-    padding-bottom:25px;
-    padding-left:25px;
-    padding-right:25px;
+    padding:75px 25px 25px;
 }
 
 /* NAME */
 .name{
     text-align:center;
-    font-size:24px;
+    font-size:26px;
     font-weight:700;
-    color:#FFD700;
+    background:linear-gradient(#FFD700,#ffae00);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
     margin-bottom:25px;
 }
 
 /* ===== STATS ===== */
 .stats{
-    border-top:1px solid rgba(255,255,255,0.05);
+    border-radius:20px;
+    padding:15px;
+    background:rgba(0,0,0,0.4);
+    border:1px solid rgba(255,215,0,0.1);
 }
 
 .row{
     display:flex;
     justify-content:space-between;
-    padding:14px 0;
-    border-bottom:1px solid rgba(255,255,255,0.05);
+    padding:12px 5px;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.row:last-child{
+    border-bottom:none;
 }
 
 .row span{
-    color:#9aa4ad;
-}
-
-.row b{
-    font-weight:600;
+    color:#aaa;
 }
 
 /* ===== FOOTER ===== */
 .footer{
     display:flex;
     gap:12px;
-    margin-top:25px;
+    margin-top:20px;
 }
 
 .box{
     flex:1;
     padding:18px;
-    border-radius:16px;
-    background: rgba(255,255,255,0.03);
-    text-align:center;
+    border-radius:18px;
+    background:rgba(0,0,0,0.4);
+    border:1px solid rgba(255,215,0,0.15);
     transition:0.3s;
 }
 
 .box:hover{
-    transform:translateY(-5px);
-    box-shadow:0 0 15px rgba(255,215,0,0.3);
+    transform:translateY(-6px);
+    box-shadow:0 0 25px rgba(255,215,0,0.4);
 }
 
 .dot{
-    width:30px;
-    height:30px;
+    width:35px;
+    height:35px;
     background:#FFD700;
     border-radius:50%;
     margin:auto;
@@ -215,4 +240,4 @@ body{
 </html>
 """
 
-components.html(html, height=900)
+components.html(html, height=700)
