@@ -4,6 +4,15 @@ import streamlit.components.v1 as components
 
 st.set_page_config(layout="wide")
 
+# ===== XOÁ SIDEBAR CHUẨN =====
+st.markdown("""
+<style>
+[data-testid="stSidebar"] {display:none !important;}
+[data-testid="collapsedControl"] {display:none !important;}
+section[data-testid="stSidebar"] {display:none !important;}
+</style>
+""", unsafe_allow_html=True)
+
 # ===== LOAD DATA =====
 @st.cache_data(ttl=60)
 def load_data():
@@ -43,7 +52,7 @@ def kpi_dead(pow):
     elif pow >= 70_000_000: return 800_000
     else: return 700_000
 
-# ===== BUILD CARD =====
+# ===== BUILD CARD (GIỮ NGUYÊN UI, CHỈ THÊM DATA) =====
 cards_html = ""
 
 for _, row in df.iterrows():
@@ -63,12 +72,17 @@ for _, row in df.iterrows():
     avatar = f"https://api.dicebear.com/7.x/adventurer/svg?seed={name}"
 
     cards_html += f"""
-    <div class="card" onclick="openProfile('{name}','{id_}','{alliance}','{power}','{kill}','{dead}','{kpiK}','{kpiD}','{kp}','{dp}','{avatar}')">
+    <div class="card"
+        data-power="{power}"
+        data-kill="{kill}"
+        data-dead="{dead}"
+        onclick="openProfile('{name}','{id_}','{alliance}','{power}','{kill}','{dead}','{kpiK}','{kpiD}','{kp}','{dp}','{avatar}')">
+
         <div class="avatar-wrap">
             <img src="{avatar}">
         </div>
         <h3>{name}</h3>
-        <p>{power:,}</p>
+        <p class="value">{power:,}</p>
     </div>
     """
 
@@ -76,11 +90,15 @@ for _, row in df.iterrows():
 html = f"""
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
+
+/* ===== GIỮ NGUYÊN STYLE GỐC ===== */
 body {{
     background: radial-gradient(circle at top, #111, #05070d);
     color:white;
     font-family:Arial;
+    margin:0;
 }}
 
 .search {{
@@ -108,7 +126,6 @@ body {{
     cursor:pointer;
     transition:0.3s;
     border:1px solid #222;
-    position:relative;
 }}
 
 .card:hover {{
@@ -130,7 +147,6 @@ body {{
     width:100%;
     height:100%;
     border-radius:50%;
-    background:#111;
 }}
 
 .modal {{
@@ -150,7 +166,6 @@ body {{
     background:linear-gradient(145deg,#0f111a,#1b1f2e);
     border-radius:25px;
     padding:30px;
-    box-shadow:0 0 40px rgba(255,215,0,0.3);
 }}
 
 .profile-top {{
@@ -184,8 +199,6 @@ body {{
     background:rgba(255,255,255,0.05);
     padding:15px;
     border-radius:12px;
-    backdrop-filter: blur(10px);
-    border:1px solid rgba(255,255,255,0.1);
 }}
 
 .bar {{
@@ -200,6 +213,25 @@ body {{
     background:linear-gradient(90deg,gold,orange);
 }}
 
+/* ===== THÊM FILTER (KHÔNG PHÁ UI) ===== */
+.filters {{
+    display:flex;
+    gap:10px;
+    margin-bottom:15px;
+}}
+
+.filter {{
+    padding:10px 15px;
+    background:#111;
+    border-radius:10px;
+    cursor:pointer;
+}}
+
+.filter.active {{
+    background:gold;
+    color:black;
+}}
+
 </style>
 </head>
 
@@ -207,13 +239,40 @@ body {{
 
 <input class="search" placeholder="🔍 Nhập tên..." onkeyup="search(this.value)">
 
-<div class="grid">{cards_html}</div>
+<div class="filters">
+    <div class="filter active" onclick="setMode('power')">⚡ POWER</div>
+    <div class="filter" onclick="setMode('kill')">🔥 KILL</div>
+    <div class="filter" onclick="setMode('dead')">💀 DEAD</div>
+</div>
+
+<div class="grid" id="grid">{cards_html}</div>
 
 <div class="modal" id="modal">
 <div class="profile" id="profile"></div>
 </div>
 
 <script>
+
+let mode = "power"
+
+function setMode(m){{
+    mode = m
+    document.querySelectorAll(".filter").forEach(f=>f.classList.remove("active"))
+    event.target.classList.add("active")
+
+    let cards = Array.from(document.querySelectorAll(".card"))
+
+    cards.sort((a,b)=> b.dataset[mode] - a.dataset[mode])
+
+    let grid = document.getElementById("grid")
+    grid.innerHTML=""
+
+    cards.forEach(c=>{{
+        c.querySelector(".value").innerText = Number(c.dataset[mode]).toLocaleString()
+        grid.appendChild(c)
+    }})
+}}
+
 function search(val){{
     val = val.toLowerCase()
     document.querySelectorAll(".card").forEach(c=>{{
@@ -229,37 +288,38 @@ function openProfile(name,id,alliance,power,kill,dead,kpiK,kpiD,kp,dp,avatar){{
         <div class="avatar-big"><img src="${{avatar}}"></div>
         <div>
             <h2>${{name}}</h2>
-            <p>ID: ${{id}}</p>
-            <p>${{alliance}}</p>
+            <p>🆔 ID: ${{id}}</p>
+            <p>🏰 Alliance: ${{alliance}}</p>
         </div>
     </div>
 
     <div class="row">
-        <div class="box">⚡ ${{Number(power).toLocaleString()}}</div>
-        <div class="box">🔥 ${{Number(kill).toLocaleString()}}</div>
-        <div class="box">💀 ${{Number(dead).toLocaleString()}}</div>
+        <div class="box">⚡ Power<br>${{Number(power).toLocaleString()}}</div>
+        <div class="box">🔥 Kill<br>${{Number(kill).toLocaleString()}}</div>
+        <div class="box">💀 Dead<br>${{Number(dead).toLocaleString()}}</div>
     </div>
 
     <h3>🔥 KPI Kill</h3>
-    <div class="bar"><div class="fill" style="width:${{kp}}%"></div></div>
-    <p>${{kill}} / ${{kpiK}} (${{kp}}%)</p>
+    <div class="bar"><div class="fill" style="width:0%"></div></div>
+    <p>0 / ${{kpiK.toLocaleString()}}</p>
 
     <h3>💀 KPI Dead</h3>
-    <div class="bar"><div class="fill" style="width:${{dp}}%"></div></div>
-    <p>${{dead}} / ${{kpiD}} (${{dp}}%)</p>
+    <div class="bar"><div class="fill" style="width:0%"></div></div>
+    <p>0 / ${{kpiD.toLocaleString()}}</p>
 
     <br>
-    <button onclick="closeProfile()">Close</button>
+    <button onclick="closeProfile()">❌ EXIT</button>
     `
 }}
 
 function closeProfile(){{
     document.getElementById("modal").style.display="none"
 }}
+
 </script>
 
 </body>
 </html>
 """
 
-components.html(html, height=900, scrolling=True)
+components.html(html, height=1000, scrolling=True)
