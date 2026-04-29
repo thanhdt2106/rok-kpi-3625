@@ -18,7 +18,7 @@ def load_data():
         "Tên": "Name",
         "Liên Minh": "Alliance",
         "Tổng Tiêu Diệt": "Kill",
-        "Điểm chết": "Dead",
+        "Điểm Chết": "Dead",
         "Sức Mạnh": "Power",
         "ID": "ID"
     }
