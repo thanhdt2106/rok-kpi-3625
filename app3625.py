@@ -7,9 +7,13 @@ st.set_page_config(initial_sidebar_state="collapsed")
 # ===== XOÁ SIDEBAR CHUẨN =====
 st.markdown("""
 <style>
-  [data-testid="stSidebar"] {
+<style>
+        [data-testid="stSidebar"] {
             display: none;
         }
+    </style>
+    """,
+    unsafe_allow_html=True,
 </style>
 """, unsafe_allow_html=True)
 
