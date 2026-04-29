@@ -2,8 +2,7 @@ import streamlit as st
 import pandas as pd
 import streamlit.components.v1 as components
 
-st.set_page_config(layout="wide")
-
+st.set_page_config(page_title="FTD KPI SYSTEM", layout="wide", initial_sidebar_state="collapsed")
 # ===== XOÁ SIDEBAR CHUẨN =====
 st.markdown("""
 <style>
