@@ -103,7 +103,7 @@ body {{
 
 .search {{
     width:100%;
-    padding:15px;
+    padding:20px;
     font-size:18px;
     border-radius:12px;
     border:none;
