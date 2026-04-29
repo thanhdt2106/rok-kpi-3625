@@ -3,36 +3,16 @@ import streamlit.components.v1 as components
 
 st.set_page_config(layout="wide")
 
-# 🔥 ẨN TOÀN BỘ UI STREAMLIT (sidebar + header + menu)
+# ẨN UI STREAMLIT
 st.markdown("""
 <style>
-
-/* ẨN SIDEBAR */
-[data-testid="stSidebar"] {
-    display: none;
-}
-
-/* ẨN HEADER (nút share, menu, ...) */
-header {
-    visibility: hidden;
-}
-
-/* ẨN FOOTER */
-footer {
-    visibility: hidden;
-}
-
-/* FULL WIDTH */
-.block-container {
-    padding: 0 !important;
-    max-width: 100% !important;
-}
-
+[data-testid="stSidebar"] {display:none;}
+header {visibility:hidden;}
+footer {visibility:hidden;}
+.block-container {padding:0 !important; max-width:100% !important;}
 </style>
 """, unsafe_allow_html=True)
 
-
-# 🔥 HTML UI
 html = """
 <!DOCTYPE html>
 <html>
@@ -47,123 +27,159 @@ html = """
     font-family:system-ui;
 }
 
-/* ===== BACKGROUND ===== */
+/* ===== BACKGROUND FULL ===== */
 body{
     height:100vh;
     display:flex;
     justify-content:center;
     align-items:center;
-    background:#05080c;
+    background:url('https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true') center/cover no-repeat;
+    overflow:hidden;
+}
+
+/* ===== FIRE PARTICLES ===== */
+body::before{
+    content:"";
+    position:absolute;
+    width:100%;
+    height:100%;
+    background: radial-gradient(circle, rgba(255,140,0,0.15) 1px, transparent 1px);
+    background-size:3px 3px;
+    animation:move 20s linear infinite;
+}
+
+@keyframes move{
+    from{transform:translateY(0);}
+    to{transform:translateY(-200px);}
 }
 
 /* ===== CARD ===== */
 .card{
     width:420px;
-    border-radius:28px;
-    overflow:hidden;
-    box-shadow:0 25px 70px rgba(0,0,0,0.9);
-    border:1px solid rgba(255,255,255,0.08);
+    border-radius:30px;
+    padding:25px;
+    background:rgba(10,20,30,0.6);
+    backdrop-filter:blur(15px);
+    border:1px solid rgba(255,215,0,0.2);
+    box-shadow:0 0 40px rgba(255,180,0,0.2);
     color:white;
+    text-align:center;
 }
 
-/* ===== HERO ===== */
-.hero{
-    height:260px;
-    background:url('https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true');
-    background-size:cover;
-    background-position:center 75%;
-    background-repeat:no-repeat;
-    position:relative;
-}
-
-/* overlay */
-.hero::after{
-    content:"";
-    position:absolute;
-    inset:0;
-    background:linear-gradient(
-        to bottom,
-        rgba(0,0,0,0.6),
-        rgba(0,0,0,0.3),
-        #0b1a22 95%
-    );
-}
-
-/* ===== AVATAR ===== */
+/* ===== AVATAR GLOW ===== */
 .avatar-wrap{
-    position:absolute;
-    bottom:-50px;
-    left:50%;
-    transform:translateX(-50%);
-    z-index:2;
+    position:relative;
+    margin-bottom:15px;
 }
 
 .avatar{
-    width:100px;
-    height:100px;
+    width:110px;
+    height:110px;
+    border-radius:50%;
+    position:relative;
+    z-index:2;
+}
+
+/* glow vòng ngoài */
+.avatar-wrap::before{
+    content:"";
+    position:absolute;
+    top:50%;
+    left:50%;
+    width:140px;
+    height:140px;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    background: radial-gradient(circle, rgba(255,215,0,0.8), transparent 70%);
+    filter:blur(10px);
+    animation:pulse 2s infinite;
+}
+
+/* ring vàng */
+.avatar-wrap::after{
+    content:"";
+    position:absolute;
+    top:50%;
+    left:50%;
+    width:125px;
+    height:125px;
+    transform:translate(-50%,-50%);
     border-radius:50%;
     border:3px solid #FFD700;
 }
 
-/* ===== CONTENT ===== */
-.content{
-    background:#0b1a22;
-    padding-top:70px;
-    padding-bottom:25px;
-    padding-left:25px;
-    padding-right:25px;
+@keyframes pulse{
+    0%{opacity:0.6; transform:translate(-50%,-50%) scale(1);}
+    50%{opacity:1; transform:translate(-50%,-50%) scale(1.1);}
+    100%{opacity:0.6; transform:translate(-50%,-50%) scale(1);}
 }
 
-/* NAME */
+/* ===== NAME ===== */
 .name{
-    text-align:center;
-    font-size:22px;
-    font-weight:600;
-    margin-bottom:25px;
+    font-size:26px;
+    font-weight:700;
+    margin-bottom:20px;
+    background:linear-gradient(#FFD700,#ffae00);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
 }
 
 /* ===== STATS ===== */
 .stats{
-    border-top:1px solid rgba(255,255,255,0.05);
+    margin-top:10px;
+    border-radius:20px;
+    padding:15px;
+    background:rgba(0,0,0,0.4);
+    border:1px solid rgba(255,215,0,0.1);
 }
 
 .row{
     display:flex;
     justify-content:space-between;
-    padding:14px 0;
-    border-bottom:1px solid rgba(255,255,255,0.05);
+    padding:12px 5px;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.row:last-child{
+    border-bottom:none;
 }
 
 .row span{
-    color:#9aa4ad;
+    color:#ccc;
 }
 
 .row b{
-    font-weight:600;
+    color:#fff;
 }
 
 /* ===== FOOTER ===== */
 .footer{
     display:flex;
     gap:12px;
-    margin-top:25px;
+    margin-top:20px;
 }
 
 .box{
     flex:1;
     padding:18px;
-    border-radius:16px;
-    background: rgba(255,255,255,0.03);
-    text-align:center;
+    border-radius:18px;
+    background:rgba(0,0,0,0.4);
+    border:1px solid rgba(255,215,0,0.15);
+    transition:0.3s;
 }
 
-.dot{
-    width:30px;
-    height:30px;
-    background:#FFD700;
-    border-radius:50%;
+.box:hover{
+    transform:translateY(-5px);
+    box-shadow:0 0 20px rgba(255,215,0,0.3);
+}
+
+.icon{
+    width:40px;
+    height:40px;
     margin:auto;
     margin-bottom:10px;
+    border-radius:50%;
+    background:#FFD700;
 }
 
 </style>
@@ -173,30 +189,24 @@ body{
 
 <div class="card">
 
-    <div class="hero">
-        <div class="avatar-wrap">
-            <img src="https://i.pravatar.cc/150?img=12" class="avatar">
-        </div>
+    <div class="avatar-wrap">
+        <img src="https://i.pravatar.cc/150?img=12" class="avatar">
     </div>
 
-    <div class="content">
+    <div class="name">Louis Noob</div>
 
-        <div class="name">Louis Noob</div>
+    <div class="stats">
+        <div class="row"><span>ID</span><b>71428274</b></div>
+        <div class="row"><span>Alliance</span><b>[FT-D]</b></div>
+        <div class="row"><span>Power</span><b>87M</b></div>
+        <div class="row"><span>Kill</span><b>6.1B</b></div>
+        <div class="row"><span>Dead</span><b>1.2B</b></div>
+    </div>
 
-        <div class="stats">
-            <div class="row"><span>ID</span><b>71428274</b></div>
-            <div class="row"><span>Alliance</span><b>[FT-D]</b></div>
-            <div class="row"><span>Power</span><b>87M</b></div>
-            <div class="row"><span>Kill</span><b>6.1B</b></div>
-            <div class="row"><span>Dead</span><b>1.2B</b></div>
-        </div>
-
-        <div class="footer">
-            <div class="box"><div class="dot"></div>#1</div>
-            <div class="box"><div class="dot"></div>85%</div>
-            <div class="box"><div class="dot"></div>92%</div>
-        </div>
-
+    <div class="footer">
+        <div class="box"><div class="icon"></div>#1</div>
+        <div class="box"><div class="icon"></div>85%</div>
+        <div class="box"><div class="icon"></div>92%</div>
     </div>
 
 </div>
@@ -205,4 +215,4 @@ body{
 </html>
 """
 
-components.html(html, height=650)
+components.html(html, height=700)
