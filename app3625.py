@@ -61,8 +61,9 @@ if name:
     .card {{
        width:95%;
 max-width:1400px;
-
-    min-height:500px; /* thêm dòng này */
+min-height:500px; /* thêm dòng này */
+display:flex;
+    justify-content:center;
 
         /* 👉 ẢNH NẰM TRONG CARD */
         background:
