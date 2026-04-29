@@ -1,8 +1,30 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(layout="wide")
+# ================= CONFIG =================
+st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
 
+# ================= XOÁ SIDEBAR THẬT =================
+st.markdown("""
+<style>
+section[data-testid="stSidebar"] {display:none !important;}
+[data-testid="stSidebarNav"] {display:none !important;}
+header {display:none !important;}
+footer {display:none !important;}
+#MainMenu {visibility:hidden;}
+
+.block-container {
+    padding:0 !important;
+    max-width:100% !important;
+}
+
+[data-testid="stAppViewContainer"] {
+    margin-left:0 !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ================= HTML UI =================
 html = """
 <!DOCTYPE html>
 <html>
@@ -10,7 +32,6 @@ html = """
 <meta charset="UTF-8">
 <style>
 
-/* ===== RESET ===== */
 *{
     margin:0;
     padding:0;
@@ -18,16 +39,15 @@ html = """
     font-family: 'Segoe UI', sans-serif;
 }
 
-/* ===== FULL BACKGROUND ===== */
 body{
     height:100vh;
     display:flex;
     justify-content:center;
     align-items:center;
-    background: radial-gradient(circle at top, #0b1a2a, #050b12);
+    background: radial-gradient(circle at top,#0b1a2a,#050b12);
 }
 
-/* ===== CARD ===== */
+/* CARD */
 .card{
     width:65vw;
     height:65vh;
@@ -37,16 +57,16 @@ body{
     box-shadow:0 0 60px rgba(255,180,0,0.2);
 }
 
-/* ===== BACKGROUND IMAGE ===== */
+/* BACKGROUND */
 .card::before{
     content:"";
     position:absolute;
     inset:0;
-    background:url("https://i.imgur.com/3ZQ3Z6E.jpg") center/cover no-repeat;
-    filter:brightness(0.85);
+    background:url("https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true") center/cover;
+    filter:brightness(0.9);
 }
 
-/* ===== OVERLAY ===== */
+/* OVERLAY */
 .card::after{
     content:"";
     position:absolute;
@@ -54,7 +74,7 @@ body{
     background:linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.75));
 }
 
-/* ===== CONTENT ===== */
+/* CONTENT */
 .content{
     position:relative;
     z-index:2;
@@ -66,7 +86,7 @@ body{
     justify-content:space-between;
 }
 
-/* ===== TOP ===== */
+/* TOP */
 .top{
     display:flex;
     align-items:center;
@@ -77,8 +97,8 @@ body{
     width:90px;
     height:90px;
     border-radius:50%;
-    border:3px solid #ffd700;
-    box-shadow:0 0 20px #ffd700;
+    border:3px solid gold;
+    box-shadow:0 0 25px gold;
 }
 
 .name{
@@ -86,7 +106,7 @@ body{
     color:#ffd700;
 }
 
-/* ===== INFO ===== */
+/* INFO */
 .info{
     display:grid;
     grid-template-columns:repeat(4,1fr);
@@ -100,17 +120,10 @@ body{
     backdrop-filter:blur(6px);
 }
 
-.label{
-    font-size:12px;
-    opacity:0.6;
-}
+.label{font-size:12px;opacity:.6;}
+.value{font-size:16px;margin-top:5px;}
 
-.value{
-    font-size:16px;
-    margin-top:5px;
-}
-
-/* ===== STATS ===== */
+/* STATS */
 .stats{
     display:flex;
     gap:20px;
@@ -123,12 +136,6 @@ body{
     border-radius:18px;
     text-align:center;
     backdrop-filter:blur(10px);
-    transition:0.3s;
-}
-
-.stat:hover{
-    transform:translateY(-5px);
-    box-shadow:0 0 25px rgba(255,200,0,0.4);
 }
 
 .rank{
@@ -136,19 +143,9 @@ body{
     box-shadow:0 0 25px gold;
 }
 
-.icon{
-    font-size:22px;
-    margin-bottom:10px;
-}
-
-.stat-value{
-    font-size:20px;
-}
-
-.sub{
-    font-size:13px;
-    opacity:0.6;
-}
+.icon{font-size:22px;margin-bottom:10px;}
+.stat-value{font-size:20px;}
+.sub{font-size:13px;opacity:.6;}
 
 </style>
 </head>
@@ -171,7 +168,7 @@ body{
 
             <div class="box">
                 <div class="label">Alliance</div>
-                <div class="value">[FT-D]FIGHT TO DEAD</div>
+                <div class="value">[FT-D]</div>
             </div>
 
             <div class="box">
@@ -214,4 +211,5 @@ body{
 </html>
 """
 
+# ================= RENDER =================
 components.html(html, height=900, scrolling=False)
