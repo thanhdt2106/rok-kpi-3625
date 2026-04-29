@@ -27,6 +27,22 @@ df["Power"] = df["Sức Mạnh"].apply(to_int)
 df["Kill"] = df["Tổng Tiêu Diệt"].apply(to_int)
 df["Dead"] = df["Điểm Chết"].apply(to_int)
 
+# ===== GỘP DEAD FARM → ACC POW CAO NHẤT =====
+df["Name_Key"] = df["Tên"].str.lower().str.strip()
+
+# lấy acc mạnh nhất mỗi tên
+idx = df.groupby("Name_Key")["Power"].idxmax()
+main_df = df.loc[idx].copy()
+
+# tổng dead của tất cả acc cùng tên
+dead_sum = df.groupby("Name_Key")["Dead"].sum()
+
+# gán lại cho acc chính
+main_df["Dead"] = main_df["Name_Key"].map(dead_sum)
+
+# dùng lại df
+df = main_df.reset_index(drop=True)
+
 # ===== KPI =====
 def kpi_kill(pow):
     if pow >= 100_000_000: return 600_000_000
