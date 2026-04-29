@@ -295,13 +295,13 @@ function openProfile(name,id,alliance,power,kill,dead,kpiK,kpiD,kp,dp,avatar){{
         <div class="box">💀 Dead<br>${{Number(dead).toLocaleString()}}</div>
     </div>
 
-    <h3>🔥 KPI Kill</h3>
-    <div class="bar"><div class="fill" style="width:0%"></div></div>
-    <p>0 / ${{kpiK.toLocaleString()}}</p>
+   <h3>🔥 KPI Kill</h3>
+<div class="bar"><div class="fill" style="width:0%"></div></div>
+<p>0 / ${Number(kpiK).toLocaleString()}</p>
 
-    <h3>💀 KPI Dead</h3>
-    <div class="bar"><div class="fill" style="width:0%"></div></div>
-    <p>0 / ${{kpiD.toLocaleString()}}</p>
+<h3>💀 KPI Dead</h3>
+<div class="bar"><div class="fill" style="width:0%"></div></div>
+<p>0 / ${Number(kpiD).toLocaleString()}</p>
 
     <br>
     <button onclick="closeProfile()">❌ EXIT</button>
