@@ -27,60 +27,58 @@ html = """
     font-family:system-ui;
 }
 
-/* ===== BACKGROUND FULL ===== */
+/* ===== BACKGROUND NGOÀI ===== */
 body{
     height:100vh;
     display:flex;
     justify-content:center;
     align-items:center;
-    background:url('https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true') center/cover no-repeat;
-    overflow:hidden;
-}
-
-/* ===== FIRE PARTICLES ===== */
-body::before{
-    content:"";
-    position:absolute;
-    width:100%;
-    height:100%;
-    background: radial-gradient(circle, rgba(255,140,0,0.15) 1px, transparent 1px);
-    background-size:3px 3px;
-    animation:move 20s linear infinite;
-}
-
-@keyframes move{
-    from{transform:translateY(0);}
-    to{transform:translateY(-200px);}
+    background:#05080c;
 }
 
 /* ===== CARD ===== */
 .card{
     width:420px;
     border-radius:30px;
-    padding:25px;
-    background:rgba(10,20,30,0.6);
-    backdrop-filter:blur(15px);
-    border:1px solid rgba(255,215,0,0.2);
-    box-shadow:0 0 40px rgba(255,180,0,0.2);
+    overflow:hidden;
+    background:rgba(10,20,30,0.9);
+    box-shadow:0 25px 70px rgba(0,0,0,0.8);
+    border:1px solid rgba(255,255,255,0.08);
     color:white;
-    text-align:center;
 }
 
-/* ===== AVATAR GLOW ===== */
+/* ===== HERO (ẢNH CHỈ Ở ĐÂY) ===== */
+.hero{
+    height:220px;
+    background:url('https://github.com/thanhdt2106/rok-kpi-3625/blob/main/anhnen.png?raw=true');
+    background-size:cover;
+    background-position:center 70%;
+    position:relative;
+}
+
+/* overlay làm tối */
+.hero::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(
+        to bottom,
+        rgba(0,0,0,0.6),
+        rgba(0,0,0,0.3),
+        rgba(10,20,30,1)
+    );
+}
+
+/* ===== AVATAR ===== */
 .avatar-wrap{
-    position:relative;
-    margin-bottom:15px;
-}
-
-.avatar{
-    width:110px;
-    height:110px;
-    border-radius:50%;
-    position:relative;
+    position:absolute;
+    bottom:-55px;
+    left:50%;
+    transform:translateX(-50%);
     z-index:2;
 }
 
-/* glow vòng ngoài */
+/* glow vàng */
 .avatar-wrap::before{
     content:"";
     position:absolute;
@@ -95,17 +93,14 @@ body::before{
     animation:pulse 2s infinite;
 }
 
-/* ring vàng */
-.avatar-wrap::after{
-    content:"";
-    position:absolute;
-    top:50%;
-    left:50%;
-    width:125px;
-    height:125px;
-    transform:translate(-50%,-50%);
+/* ring */
+.avatar{
+    width:110px;
+    height:110px;
     border-radius:50%;
     border:3px solid #FFD700;
+    position:relative;
+    z-index:2;
 }
 
 @keyframes pulse{
@@ -114,72 +109,71 @@ body::before{
     100%{opacity:0.6; transform:translate(-50%,-50%) scale(1);}
 }
 
-/* ===== NAME ===== */
+/* ===== CONTENT ===== */
+.content{
+    padding-top:70px;
+    padding-bottom:25px;
+    padding-left:25px;
+    padding-right:25px;
+}
+
+/* NAME */
 .name{
-    font-size:26px;
+    text-align:center;
+    font-size:24px;
     font-weight:700;
-    margin-bottom:20px;
-    background:linear-gradient(#FFD700,#ffae00);
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
+    color:#FFD700;
+    margin-bottom:25px;
 }
 
 /* ===== STATS ===== */
 .stats{
-    margin-top:10px;
-    border-radius:20px;
-    padding:15px;
-    background:rgba(0,0,0,0.4);
-    border:1px solid rgba(255,215,0,0.1);
+    border-top:1px solid rgba(255,255,255,0.05);
 }
 
 .row{
     display:flex;
     justify-content:space-between;
-    padding:12px 5px;
-    border-bottom:1px solid rgba(255,255,255,0.08);
-}
-
-.row:last-child{
-    border-bottom:none;
+    padding:14px 0;
+    border-bottom:1px solid rgba(255,255,255,0.05);
 }
 
 .row span{
-    color:#ccc;
+    color:#9aa4ad;
 }
 
 .row b{
-    color:#fff;
+    font-weight:600;
 }
 
 /* ===== FOOTER ===== */
 .footer{
     display:flex;
     gap:12px;
-    margin-top:20px;
+    margin-top:25px;
 }
 
 .box{
     flex:1;
     padding:18px;
-    border-radius:18px;
-    background:rgba(0,0,0,0.4);
-    border:1px solid rgba(255,215,0,0.15);
+    border-radius:16px;
+    background: rgba(255,255,255,0.03);
+    text-align:center;
     transition:0.3s;
 }
 
 .box:hover{
     transform:translateY(-5px);
-    box-shadow:0 0 20px rgba(255,215,0,0.3);
+    box-shadow:0 0 15px rgba(255,215,0,0.3);
 }
 
-.icon{
-    width:40px;
-    height:40px;
+.dot{
+    width:30px;
+    height:30px;
+    background:#FFD700;
+    border-radius:50%;
     margin:auto;
     margin-bottom:10px;
-    border-radius:50%;
-    background:#FFD700;
 }
 
 </style>
@@ -189,24 +183,30 @@ body::before{
 
 <div class="card">
 
-    <div class="avatar-wrap">
-        <img src="https://i.pravatar.cc/150?img=12" class="avatar">
+    <div class="hero">
+        <div class="avatar-wrap">
+            <img src="https://i.pravatar.cc/150?img=12" class="avatar">
+        </div>
     </div>
 
-    <div class="name">Louis Noob</div>
+    <div class="content">
 
-    <div class="stats">
-        <div class="row"><span>ID</span><b>71428274</b></div>
-        <div class="row"><span>Alliance</span><b>[FT-D]</b></div>
-        <div class="row"><span>Power</span><b>87M</b></div>
-        <div class="row"><span>Kill</span><b>6.1B</b></div>
-        <div class="row"><span>Dead</span><b>1.2B</b></div>
-    </div>
+        <div class="name">Louis Noob</div>
 
-    <div class="footer">
-        <div class="box"><div class="icon"></div>#1</div>
-        <div class="box"><div class="icon"></div>85%</div>
-        <div class="box"><div class="icon"></div>92%</div>
+        <div class="stats">
+            <div class="row"><span>ID</span><b>71428274</b></div>
+            <div class="row"><span>Alliance</span><b>[FT-D]</b></div>
+            <div class="row"><span>Power</span><b>87M</b></div>
+            <div class="row"><span>Kill</span><b>6.1B</b></div>
+            <div class="row"><span>Dead</span><b>1.2B</b></div>
+        </div>
+
+        <div class="footer">
+            <div class="box"><div class="dot"></div>#1</div>
+            <div class="box"><div class="dot"></div>85%</div>
+            <div class="box"><div class="dot"></div>92%</div>
+        </div>
+
     </div>
 
 </div>
@@ -215,4 +215,4 @@ body::before{
 </html>
 """
 
-components.html(html, height=900)
+components.html(html, height=650)
