@@ -4,13 +4,12 @@ import streamlit.components.v1 as components
 
 st.set_page_config(layout="wide")
 
-# ===== XOÁ SIDEBAR + FULL SCREEN =====
+# ===== XOÁ SIDEBAR =====
 st.markdown("""
 <style>
 [data-testid="stSidebar"] {display:none !important;}
 [data-testid="collapsedControl"] {display:none !important;}
 section[data-testid="stSidebar"] {display:none !important;}
-.block-container {padding:0 !important;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -93,81 +92,43 @@ html = f"""
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 
-body {{
-    background: radial-gradient(circle at top, #111, #05070d);
-    color:white;
-    font-family:Arial;
-    margin:0;
+/* ===== SEARCH XỊN ===== */
+.search-box {{
+    position:relative;
+    width:100%;
+    margin-bottom:25px;
 }}
 
 .search {{
-    width:80%;
-    margin:20px auto;
-    display:block;
-    padding:12px;
-    font-size:16px;
+    width:100%;
+    padding:15px 50px 15px 15px;
+    font-size:18px;
     border-radius:12px;
     border:none;
     background:#111;
     color:white;
 }}
 
+.search-icon {{
+    position:absolute;
+    right:15px;
+    top:50%;
+    transform:translateY(-50%);
+    font-size:20px;
+    opacity:0.7;
+}}
+
+/* ===== LANG SWITCH ===== */
 .lang {{
     position:absolute;
-    top:15px;
+    top:10px;
     right:20px;
+    cursor:pointer;
+    padding:8px 15px;
     background:gold;
-    color:black;
-    padding:8px 12px;
     border-radius:10px;
-    cursor:pointer;
+    color:black;
     font-weight:bold;
-}}
-
-.grid {{
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
-    gap:25px;
-    padding:20px;
-}}
-
-.card {{
-    background:linear-gradient(145deg,#0f111a,#1b1f2e);
-    padding:20px;
-    border-radius:20px;
-    text-align:center;
-    cursor:pointer;
-}}
-
-.avatar-wrap {{
-    width:80px;
-    height:80px;
-    margin:auto;
-    border-radius:50%;
-    padding:3px;
-    background:linear-gradient(45deg,gold,orange);
-}}
-
-.avatar-wrap img {{
-    width:100%;
-    border-radius:50%;
-}}
-
-.modal {{
-    position:fixed;
-    width:100%;
-    height:100%;
-    background:rgba(0,0,0,0.9);
-    display:none;
-    justify-content:center;
-    align-items:center;
-}}
-
-.profile {{
-    width:850px;
-    background:#111;
-    padding:30px;
-    border-radius:20px;
 }}
 
 </style>
@@ -177,9 +138,18 @@ body {{
 
 <div class="lang" onclick="toggleLang()">EN</div>
 
-<input class="search" id="searchInput" placeholder="🔍 Nhập tên..." onkeyup="search(this.value)">
+<div class="search-box">
+    <input class="search" id="searchInput" placeholder="🔍 Nhập tên..." onkeyup="search(this.value)">
+    <div class="search-icon">🔍</div>
+</div>
 
-<div class="grid">{cards_html}</div>
+<div class="filters">
+    <div class="filter active" onclick="setMode('power')">⚡ POWER</div>
+    <div class="filter" onclick="setMode('kill')">🔥 KILL</div>
+    <div class="filter" onclick="setMode('dead')">💀 DEAD</div>
+</div>
+
+<div class="grid" id="grid">{cards_html}</div>
 
 <div class="modal" id="modal">
 <div class="profile" id="profile"></div>
@@ -187,6 +157,7 @@ body {{
 
 <script>
 
+let mode = "power"
 let lang = "vn"
 
 function toggleLang(){{
@@ -194,7 +165,21 @@ function toggleLang(){{
     document.querySelector(".lang").innerText = lang.toUpperCase()
 
     document.getElementById("searchInput").placeholder =
-        lang==="vn" ? "🔍 Nhập tên..." : "🔍 Search..."
+        lang==="vn" ? "🔍 Nhập tên..." : "🔍 Search player..."
+}}
+
+function setMode(m){{
+    mode = m
+    let cards = Array.from(document.querySelectorAll(".card"))
+    cards.sort((a,b)=> b.dataset[mode] - a.dataset[mode])
+
+    let grid = document.getElementById("grid")
+    grid.innerHTML=""
+
+    cards.forEach(c=>{{
+        c.querySelector(".value").innerText = Number(c.dataset[mode]).toLocaleString()
+        grid.appendChild(c)
+    }})
 }}
 
 function search(val){{
@@ -207,27 +192,57 @@ function search(val){{
 function openProfile(name,id,alliance,power,kill,dead,kpiK,kpiD,kp,dp,avatar){{
     document.getElementById("modal").style.display="flex"
 
-    let t = {{
-        vn: ["ID","Liên Minh","Sức Mạnh","Tiêu Diệt","Tử Trận","KPI Tiêu Diệt","KPI Tử Trận","ĐÓNG"],
-        en: ["ID","Alliance","Power","Kill","Dead","KPI Kill","KPI Dead","CLOSE"]
-    }}[lang]
+    let text = {{
+        vn: {{
+            id:"ID",
+            alliance:"Liên Minh",
+            power:"Sức Mạnh",
+            kill:"Tiêu Diệt",
+            dead:"Tử Trận",
+            kpiK:"KPI Tiêu Diệt",
+            kpiD:"KPI Tử Trận",
+            close:"❌ ĐÓNG"
+        }},
+        en: {{
+            id:"ID",
+            alliance:"Alliance",
+            power:"Power",
+            kill:"Kill",
+            dead:"Dead",
+            kpiK:"KPI Kill",
+            kpiD:"KPI Dead",
+            close:"❌ CLOSE"
+        }}
+    }}
+
+    let t = text[lang]
 
     document.getElementById("profile").innerHTML = `
-    <h2>${{name}}</h2>
-    <p>${{t[0]}}: ${{id}}</p>
-    <p>${{t[1]}}: ${{alliance}}</p>
+    <div class="profile-top">
+        <div class="avatar-big"><img src="${{avatar}}"></div>
+        <div>
+            <h2>${{name}}</h2>
+            <p>${{t.id}}: ${{id}}</p>
+            <p>${{t.alliance}}: ${{alliance}}</p>
+        </div>
+    </div>
 
-    <p>⚡ ${{t[2]}}: ${{power}}</p>
-    <p>🔥 ${{t[3]}}: ${{kill}}</p>
-    <p>💀 ${{t[4]}}: ${{dead}}</p>
+    <div class="row">
+        <div class="box">⚡ ${{t.power}}<br>${{Number(power).toLocaleString()}}</div>
+        <div class="box">🔥 ${{t.kill}}<br>${{Number(kill).toLocaleString()}}</div>
+        <div class="box">💀 ${{t.dead}}<br>${{Number(dead).toLocaleString()}}</div>
+    </div>
 
-    <h3>${{t[5]}}</h3>
-    <p>0 / ${{kpiK}}</p>
+    <h3>🔥 ${{t.kpiK}}</h3>
+    <div class="bar"><div class="fill" style="width:0%"></div></div>
+    <p>0 / ${{kpiK.toLocaleString()}}</p>
 
-    <h3>${{t[6]}}</h3>
-    <p>0 / ${{kpiD}}</p>
+    <h3>💀 ${{t.kpiD}}</h3>
+    <div class="bar"><div class="fill" style="width:0%"></div></div>
+    <p>0 / ${{kpiD.toLocaleString()}}</p>
 
-    <button onclick="closeProfile()">❌ ${{t[7]}}</button>
+    <br>
+    <button onclick="closeProfile()">${{t.close}}</button>
     `
 }}
 
