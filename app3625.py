@@ -215,4 +215,4 @@ body{
 </html>
 """
 
-components.html(html, height=650)
+components.html(html, height=1000)
