@@ -216,4 +216,115 @@ html_content = f"""
     </style>
 </head>
 <body>
-    <div id="
+    <div id="langBtn">EN</div>
+    <input class="search" id="searchInput" placeholder="🔍 Nhập tên hoặc ID..." onkeyup="search(this.value)">
+    <div class="filters">
+        <div class="filter active" id="fPow" onclick="setMode('power', this)">⚡ SỨC MẠNH BIẾN ĐỘNG</div>
+        <div class="filter" id="fKill" onclick="setMode('kill', this)">🔥 TIÊU DIỆT BIẾN ĐỘNG</div>
+        <div class="filter" id="fDead" onclick="setMode('dead', this)">💀 ĐIỂM CHẾT BIẾN ĐỘNG</div>
+    </div>
+    <div class="grid" id="grid">{cards_html}</div>
+    <div class="modal" id="modal"><div class="profile-box" id="profileContent"></div></div>
+
+<script>
+    let lang = "vn";
+    const TEXT = {{
+        vn: {{ search: "🔍 Nhập tên hoặc ID...", pow: "⚡ SỨC MẠNH BIẾN ĐỘNG", kill: "🔥 TIÊU DIỆT BIẾN ĐỘNG", dead: "💀 ĐIỂM CHẾT BIẾN ĐỘNG", kK_label: "🔥 KPI Tiêu diệt (T4+T5)", kD_label: "💀 KPI Điểm chết", exit: "QUAY LẠI" }},
+        en: {{ search: "🔍 Search name or ID...", pow: "⚡ POWER CHANGE", kill: "🔥 KILLS CHANGE", dead: "💀 DEAD CHANGE", kK_label: "🔥 Kills KPI (T4+T5)", kD_label: "💀 Dead KPI", exit: "CLOSE" }}
+    }};
+
+    document.getElementById("langBtn").onclick = function() {{
+        lang = lang === "vn" ? "en" : "vn";
+        this.innerText = lang.toUpperCase();
+        document.getElementById("searchInput").placeholder = TEXT[lang].search;
+        document.getElementById("fPow").innerText = TEXT[lang].pow;
+        document.getElementById("fKill").innerText = TEXT[lang].kill;
+        document.getElementById("fDead").innerText = TEXT[lang].dead;
+    }};
+
+    fn_search = function(v) {{
+        v = v.toLowerCase();
+        document.querySelectorAll('.card').forEach(c => {{
+            const name = c.querySelector('.card-name').innerText.toLowerCase();
+            const id = c.getAttribute('data-id').toLowerCase();
+            if (name.includes(v) || id.includes(v)) {{
+                c.style.display = 'block';
+            }} else {{
+                c.style.display = 'none';
+            }}
+        }});
+    }}
+    document.getElementById("searchInput").onkeyup = function() {{ fn_search(this.value); }};
+
+    function setMode(m, el) {{
+        document.querySelectorAll('.filter').forEach(f => f.classList.remove('active'));
+        el.classList.add('active');
+        let grid = document.getElementById('grid');
+        let cards = Array.from(grid.getElementsByClassName('card'));
+        cards.sort((a,b) => Number(b.dataset[m]) - Number(a.dataset[m]));
+        grid.innerHTML = "";
+        cards.forEach(c => {{
+            let prefix = m === 'power' ? '⚡ ' : (m === 'kill' ? '🔥 ' : '💀 ');
+            c.querySelector('.value').innerText = prefix + Number(c.dataset[m]).toLocaleString();
+            grid.appendChild(c);
+        }});
+    }}
+
+    // Hàm chuyển đổi ẩn/hiển thị bảng thông tin phân rã T4/T5
+    function toggleTDetail() {{
+        let box = document.getElementById('tDetailBox');
+        if(box.style.display === 'none' || box.style.display === '') {{
+            box.style.display = 'block';
+        }} else {{
+            box.style.display = 'none';
+        }}
+    }}
+
+    function openProfile(name, id, all, tPow, tKill, tDead, dKill, dDead, kK, kD, realPctK, realPctD, barK, barD, t4, t5, avatar) {{
+        let t = TEXT[lang];
+        document.getElementById('modal').style.display = 'flex';
+        document.getElementById('profileContent').innerHTML = `
+            <center>
+                <div class="avatar-wrap" style="width:70px; height:70px;"><img src="${{avatar}}"></div>
+                <h3 style="margin:10px 0 5px 0;">${{name}}</h3>
+                <small style="color:#888;">ID: ${{id}} | ${{all}}</small>
+            </center>
+            
+            <div class="stat-row">
+                <div class="stat-card">⚡ SỨC MẠNH<br><b>${{Number(tPow).toLocaleString()}}</b></div>
+                
+                <div class="stat-card">
+                    🔥 TIÊU DIỆT <button class="info-trigger" onclick="toggleTDetail()">!</button>
+                    <br><b>${{Number(tKill).toLocaleString()}}</b>
+                </div>
+                
+                <div class="stat-card">💀 ĐIỂM CHẾT<br><b>${{Number(tDead).toLocaleString()}}</b></div>
+            </div>
+            
+            <div class="t-detail-box" id="tDetailBox">
+                <div>• Chỉ số T4 Diệt: <span>${{Number(t4).toLocaleString()}}</span></div>
+                <div>• Chỉ số T5 Diệt: <span>${{Number(t5).toLocaleString()}}</span></div>
+            </div>
+
+            <div class="kpi-section">
+                <div class="kpi-label">
+                    <span>${{t.kK_label}} <span class="pct-tag">${{realPctK}}%</span></span>
+                    <span>${{Number(dKill).toLocaleString()}} / ${{Number(kK).toLocaleString()}}</span>
+                </div>
+                <div class="bar"><div class="fill" style="width: ${{barK}}%;"></div></div>
+                
+                <div class="kpi-label">
+                    <span>${{t.kD_label}} <span class="pct-tag">${{realPctD}}%</span></span>
+                    <span>${{Number(dDead).toLocaleString()}} / ${{Number(kD).toLocaleString()}}</span>
+                </div>
+                <div class="bar"><div class="fill" style="width: ${{barD}}%;"></div></div>
+            </div>
+            <button class="close-btn" onclick="document.getElementById('modal').style.display='none'">${{t.exit}}</button>
+        `;
+    }}
+</script>
+</body>
+</html>
+"""
+
+components.html(html_content, height=1000, scrolling=True)
