@@ -56,9 +56,12 @@ def load_and_process_data():
     # Tạo các từ điển ánh xạ từ Sheet 2 (Dữ liệu mới nhất)
     name_sheet2 = df2.set_index("ID_str")["Tên"].to_dict()
     pow_sheet2 = df2.set_index("ID_str")["Sức Mạnh"].to_dict()
+    kill_sheet2 = df2.set_index("ID_str")["Tổng Tiêu Diệt"].to_dict()
     dead_sheet2 = df2.set_index("ID_str")["Điểm Chết"].to_dict()
     
-    # Lấy thông tin T4, T5 mới nhất từ Sheet 2 để phục vụ xem chi tiết
+    # Lấy thông tin T4, T5 độc lập từ Sheet 1 và Sheet 2
+    t4_sheet1 = df1.set_index("ID_str")["T4 Diệt"].to_dict() if "T4 Diệt" in df1.columns else {}
+    t5_sheet1 = df1.set_index("ID_str")["T5 Diệt"].to_dict() if "T5 Diệt" in df1.columns else {}
     t4_sheet2 = df2.set_index("ID_str")["T4 Diệt"].to_dict() if "T4 Diệt" in df2.columns else {}
     t5_sheet2 = df2.set_index("ID_str")["T5 Diệt"].to_dict() if "T5 Diệt" in df2.columns else {}
 
@@ -78,31 +81,34 @@ def load_and_process_data():
         
         current_name = name_sheet2.get(p_id, row["Tên"])
         
-        # --- XỬ LÝ CHỈ SỐ TIÊU DIỆT (CHỈ TÍNH T4 VÀ T5, BỎ T1-T2-T3) ---
-        # Lấy giá trị T4, T5 ban đầu ở Sheet 1 (nếu không có cột riêng thì mặc định xử lý từ Tổng)
-        t4_s1 = to_int(row.get("T4 Diệt", 0))
-        t5_s1 = to_int(row.get("T5 Diệt", 0))
-        kill_s1_pure = t4_s1 + t5_s1 # Tổng gốc chỉ tính T4 + T5
-        
-        # Lấy giá trị T4, T5 mới nhất ở Sheet 2
-        t4_s2 = to_int(t4_sheet2.get(p_id, t4_s1))
-        t5_s2 = to_int(t5_sheet2.get(p_id, t5_s1))
-        kill_s2_pure = t4_s2 + t5_s2 # Tổng mới chỉ tính T4 + T5
-        
-        # --- CÁC CHỈ SỐ KHÁC ---
+        # --- ĐỌC GIÁ TRỊ BAN ĐẦU VÀ CẬP NHẬT ---
         pow_s1 = to_int(row["Sức Mạnh"])
+        kill_s1 = to_int(row["Tổng Tiêu Diệt"])
         dead_s1 = to_int(row["Điểm Chết"])
         
+        t4_s1 = to_int(t4_sheet1.get(p_id, row.get("T4 Diệt", 0)))
+        t5_s1 = to_int(t5_sheet1.get(p_id, row.get("T5 Diệt", 0)))
+        
         pow_s2 = to_int(pow_sheet2.get(p_id, pow_s1))
+        kill_s2 = to_int(kill_sheet2.get(p_id, kill_s1)) # Tổng điểm diệt thực tế từ game
         dead_s2 = to_int(dead_sheet2.get(p_id, dead_s1))
         
-        # Tính toán hiệu số biến động thực tế (Chấp nhận cả tăng và giảm)
+        t4_s2 = to_int(t4_sheet2.get(p_id, t4_s1))
+        t5_s2 = to_int(t5_sheet2.get(p_id, t5_s1))
+        
+        # --- TÍNH BIẾN ĐỘNG TƠN SỐ T4 VÀ T5 ĐỂ TRUYỀN VÀO NÚT (!) ---
+        diff_t4_count = t4_s2 - t4_s1
+        diff_t5_count = t5_s2 - t5_s1
+        
+        # --- QUY ĐỔI ĐIỂM KPI TIÊU DIỆT BIẾN ĐỘNG: T4 = 10 ĐIỂM, T5 = 20 ĐIỂM ---
+        diff_kill_score = (diff_t4_count * 10) + (diff_t5_count * 20)
+        
+        # --- CÁC BIẾN ĐỘNG CÒN LẠI ---
         diff_pow = pow_s2 - pow_s1
-        diff_kill = kill_s2_pure - kill_s1_pure  # Biến động chỉ dựa trên T4+T5
         diff_dead = dead_s2 - dead_s1
         
-        # Tính toán % KPI dựa trên chỉ số T4+T5 mới
-        real_pct_kill = round((diff_kill / final_target_kill) * 100, 1) if final_target_kill > 0 else 0.0
+        # --- TÍNH % KPI THEO SỐ ĐIỂM QUY ĐỔI T4+T5 MỚI ---
+        real_pct_kill = round((diff_kill_score / final_target_kill) * 100, 1) if final_target_kill > 0 else 0.0
         real_pct_dead = round((diff_dead / final_target_dead) * 100, 1) if final_target_dead > 0 else 0.0
         
         bar_fill_kill = min(100, max(0, int(real_pct_kill)))
@@ -113,17 +119,19 @@ def load_and_process_data():
             "id": str(row["ID"]),
             "alliance": row["Liên Minh"],
             
+            # Sử dụng số điểm quy đổi T4+T5 cho trang chủ và bộ lọc sắp xếp
             "diff_pow": diff_pow,
-            "diff_kill": diff_kill,
+            "diff_kill": diff_kill_score, 
             "diff_dead": diff_dead,
             
+            # Stats tổng thể hiển thị trong Profile (Kill lấy tổng gốc của Sheet 2)
             "total_pow": pow_s2,
-            "total_kill": kill_s2_pure, # Tổng điểm diệt (chỉ gồm T4+T5)
+            "total_kill": kill_s2, 
             "total_dead": dead_s2,
             
-            # Gửi kèm dữ liệu T4, T5 tách biệt để hiển thị khi nhấn nút (!)
-            "t4_val": t4_s2,
-            "t5_val": t5_s2,
+            # Số lượng lính T4, T5 biến động tăng/giảm để hiển thị ở ô (!)
+            "diff_t4": diff_t4_count,
+            "diff_t5": diff_t5_count,
             
             "real_pct_kill": real_pct_kill,
             "real_pct_dead": real_pct_dead,
@@ -153,7 +161,7 @@ for item in final_data:
                              '{item['final_kpi_kill']}','{item['final_kpi_dead']}',
                              '{item['real_pct_kill']}','{item['real_pct_dead']}',
                              '{item['bar_fill_kill']}','{item['bar_fill_dead']}',
-                             '{item['t4_val']}','{item['t5_val']}','{avatar}')">
+                             '{item['diff_t4']}','{item['diff_t5']}','{avatar}')">
         <div class="avatar-wrap"><img src="{avatar}"></div>
         <div class="card-name">{item['name']}</div>
         <div class="value">⚡ {item['diff_pow']:,}</div>
@@ -198,14 +206,14 @@ html_content = f"""
         .stat-card {{ flex: 1; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; text-align: center; font-size: 10px; position: relative; }}
         .stat-card b {{ font-size: 11px; color: gold; display: block; margin-top: 5px; }}
         
-        /* Nút Khảo sát chi tiết T4/T5 (!) */
-        .info-trigger {{ background: #ffd700; color: #000; border: none; border-radius: 50%; width: 14px; height: 14px; font-size: 9px; font-weight: bold; cursor: pointer; display: inline-block; margin-left: 3px; line-height: 14px; text-align: center; vertical-align: middle; }}
+        /* Nút Khảo sát chi tiết biến động T4/T5 (!) */
+        .info-trigger {{ background: #ffd700; color: #000; border: none; border-radius: 50%; width: 16px; height: 16px; font-size: 10px; font-weight: bold; cursor: pointer; display: inline-block; margin-left: 4px; line-height: 16px; text-align: center; vertical-align: middle; }}
         .info-trigger:hover {{ background: #fff; }}
         
-        /* Menu thả xuống chứa dữ liệu T4 - T5 */
-        .t-detail-box {{ display: none; background: #0f111a; border: 1px dashed #ffd700; padding: 8px; margin-top: 8px; border-radius: 8px; font-size: 11px; text-align: left; }}
-        .t-detail-box div {{ display: flex; justify-content: space-between; margin: 3px 0; color: #ccc; }}
-        .t-detail-box span {{ color: #00ffcc; font-family: monospace; }}
+        /* Bảng hiển thị thông tin biến động T4 - T5 đã tăng */
+        .t-detail-box {{ display: none; background: #0f111a; border: 1px dashed #ffd700; padding: 10px; margin-top: 8px; border-radius: 8px; font-size: 11px; text-align: left; }}
+        .t-detail-box div {{ display: flex; justify-content: space-between; margin: 4px 0; color: #ccc; }}
+        .t-detail-box span {{ color: #00ffcc; font-family: monospace; font-weight: bold; }}
 
         .kpi-section {{ font-size: 12px; margin-top: 15px; }}
         .kpi-label {{ display: flex; justify-content: space-between; margin-bottom: 5px; font-weight: bold; }}
@@ -229,8 +237,8 @@ html_content = f"""
 <script>
     let lang = "vn";
     const TEXT = {{
-        vn: {{ search: "🔍 Nhập tên hoặc ID...", pow: "⚡ SỨC MẠNH BIẾN ĐỘNG", kill: "🔥 TIÊU DIỆT BIẾN ĐỘNG", dead: "💀 ĐIỂM CHẾT BIẾN ĐỘNG", kK_label: "🔥 KPI Tiêu diệt (T4+T5)", kD_label: "💀 KPI Điểm chết", exit: "QUAY LẠI" }},
-        en: {{ search: "🔍 Search name or ID...", pow: "⚡ POWER CHANGE", kill: "🔥 KILLS CHANGE", dead: "💀 DEAD CHANGE", kK_label: "🔥 Kills KPI (T4+T5)", kD_label: "💀 Dead KPI", exit: "CLOSE" }}
+        vn: {{ search: "🔍 Nhập tên hoặc ID...", pow: "⚡ SỨC MẠNH BIẾN ĐỘNG", kill: "🔥 TIÊU DIỆT BIẾN ĐỘNG (T4+T5)", dead: "💀 ĐIỂM CHẾT BIẾN ĐỘNG", kK_label: "🔥 KPI Điểm Diệt (T4+T5)", kD_label: "💀 KPI Điểm chết", exit: "QUAY LẠI" }},
+        en: {{ search: "🔍 Search name or ID...", pow: "⚡ POWER CHANGE", kill: "🔥 KILLS CHANGE (T4+T5)", dead: "💀 DEAD CHANGE", kK_label: "🔥 Kills KPI (T4+T5)", kD_label: "💀 Dead KPI", exit: "CLOSE" }}
     }};
 
     document.getElementById("langBtn").onclick = function() {{
@@ -270,7 +278,6 @@ html_content = f"""
         }});
     }}
 
-    // Hàm chuyển đổi ẩn/hiển thị bảng thông tin phân rã T4/T5
     function toggleTDetail() {{
         let box = document.getElementById('tDetailBox');
         if(box.style.display === 'none' || box.style.display === '') {{
@@ -280,7 +287,7 @@ html_content = f"""
         }}
     }}
 
-    function openProfile(name, id, all, tPow, tKill, tDead, dKill, dDead, kK, kD, realPctK, realPctD, barK, barD, t4, t5, avatar) {{
+    function openProfile(name, id, all, tPow, tKill, tDead, dKill, dDead, kK, kD, realPctK, realPctD, barK, barD, dt4, dt5, avatar) {{
         let t = TEXT[lang];
         document.getElementById('modal').style.display = 'flex';
         document.getElementById('profileContent').innerHTML = `
@@ -302,8 +309,10 @@ html_content = f"""
             </div>
             
             <div class="t-detail-box" id="tDetailBox">
-                <div>• Chỉ số T4 Diệt: <span>${{Number(t4).toLocaleString()}}</span></div>
-                <div>• Chỉ số T5 Diệt: <span>${{Number(t5).toLocaleString()}}</span></div>
+                <div style="color: gold; font-weight: bold; margin-bottom: 5px; text-align: center;">BIẾN ĐỘNG QUÂN TIÊU DIỆT</div>
+                <div>• Số T4 đã tăng: <span>${{Number(dt4) > 0 ? '+' : ''}}${{Number(dt4).toLocaleString()}}</span></div>
+                <div>• Số T5 đã tăng: <span>${{Number(dt5) > 0 ? '+' : ''}}${{Number(dt5).toLocaleString()}}</span></div>
+                <div style="border-top: 1px dashed #333; margin-top: 5px; padding-top: 5px;">• Quy đổi điểm (T4x10 + T5x20): <span style="color: gold;">${{Number(dKill).toLocaleString()}}</span></div>
             </div>
 
             <div class="kpi-section">
