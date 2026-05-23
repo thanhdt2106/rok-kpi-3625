@@ -43,6 +43,7 @@ def load_and_process_data():
     df1 = pd.read_csv(url1)
     df2 = pd.read_csv(url2)
     
+    # Làm sạch khoảng trắng ở tên cột
     df1.columns = df1.columns.str.strip()
     df2.columns = df2.columns.str.strip()
 
@@ -50,23 +51,39 @@ def load_and_process_data():
         try: return int(str(x).replace(",", ""))
         except: return 0
 
+    # Hàm dò các cột chữ chính để tránh lỗi chữ hoa/thường hoặc dấu
+    def find_col(df, keywords):
+        for col in df.columns:
+            if all(k.lower() in col.lower() for k in keywords):
+                return col
+        return None
+
+    # Tự động dò các cột Sức Mạnh, Tổng Tiêu Diệt, Điểm Chết
+    col_pow = find_col(df2, ["sức", "mạnh"]) or "Sức Mạnh"
+    col_kill = find_col(df2, ["tổng", "tiêu", "diệt"]) or find_col(df2, ["kill"]) or "Tổng Tiêu Diệt"
+    col_dead = find_col(df2, ["chết"]) or "Điểm Chết"
+    
+    # Gán cứng tên cột T4 và T5 theo đúng cấu trúc thực tế của bạn
+    col_t4 = "T4"
+    col_t5 = "T5"
+
+    # Đồng bộ ID dạng chuỗi text sạch để so khớp chính xác
     df1["ID_str"] = df1["ID"].astype(str).str.strip()
     df2["ID_str"] = df2["ID"].astype(str).str.strip()
 
-    # Tạo các từ điển ánh xạ từ Sheet 2 (Dữ liệu mới nhất)
+    # Tạo các mapping dữ liệu từ Sheet 2 (Mới nhất)
     name_sheet2 = df2.set_index("ID_str")["Tên"].to_dict()
-    pow_sheet2 = df2.set_index("ID_str")["Sức Mạnh"].to_dict()
-    kill_sheet2 = df2.set_index("ID_str")["Tổng Tiêu Diệt"].to_dict()
-    dead_sheet2 = df2.set_index("ID_str")["Điểm Chết"].to_dict()
+    pow_sheet2 = df2.set_index("ID_str")[col_pow].to_dict()
+    kill_sheet2 = df2.set_index("ID_str")[col_kill].to_dict()
+    dead_sheet2 = df2.set_index("ID_str")[col_dead].to_dict()
     
-    # Lấy thông tin T4, T5 độc lập từ Sheet 1 và Sheet 2
-    t4_sheet1 = df1.set_index("ID_str")["T4 Diệt"].to_dict() if "T4 Diệt" in df1.columns else {}
-    t5_sheet1 = df1.set_index("ID_str")["T5 Diệt"].to_dict() if "T5 Diệt" in df1.columns else {}
-    t4_sheet2 = df2.set_index("ID_str")["T4 Diệt"].to_dict() if "T4 Diệt" in df2.columns else {}
-    t5_sheet2 = df2.set_index("ID_str")["T5 Diệt"].to_dict() if "T5 Diệt" in df2.columns else {}
+    t4_sheet1 = df1.set_index("ID_str")[col_t4].to_dict() if col_t4 in df1.columns else {}
+    t5_sheet1 = df1.set_index("ID_str")[col_t5].to_dict() if col_t5 in df1.columns else {}
+    t4_sheet2 = df2.set_index("ID_str")[col_t4].to_dict() if col_t4 in df2.columns else {}
+    t5_sheet2 = df2.set_index("ID_str")[col_t5].to_dict() if col_t5 in df2.columns else {}
 
     # Tính toán mốc KPI dựa trên dữ liệu nền gốc (Sheet 1)
-    df1["Power_Goc"] = df1["Sức Mạnh"].apply(to_int)
+    df1["Power_Goc"] = df1[find_col(df1, ["sức", "mạnh"]) or "Sức Mạnh"].apply(to_int)
     df1['Indiv_KPI_Dead'] = df1['Power_Goc'].apply(get_kpi_dead_value)
     df1['Group'] = df1['Tên'].apply(lambda x: str(x).split()[0].upper() if pd.notnull(x) else "")
     group_kpi_dead_sum = df1.groupby('Group')['Indiv_KPI_Dead'].transform('sum')
@@ -81,33 +98,30 @@ def load_and_process_data():
         
         current_name = name_sheet2.get(p_id, row["Tên"])
         
-        # --- ĐỌC GIÁ TRỊ BAN ĐẦU VÀ CẬP NHẬT ---
-        pow_s1 = to_int(row["Sức Mạnh"])
-        kill_s1 = to_int(row["Tổng Tiêu Diệt"])
-        dead_s1 = to_int(row["Điểm Chết"])
+        # Số liệu mốc gốc ban đầu (Sheet 1)
+        pow_s1 = to_int(row[find_col(df1, ["sức", "mạnh"]) or "Sức Mạnh"])
+        dead_s1 = to_int(row[find_col(df1, ["chết"]) or "Điểm Chết"])
+        t4_s1 = to_int(t4_sheet1.get(p_id, 0))
+        t5_s1 = to_int(t5_sheet1.get(p_id, 0))
         
-        t4_s1 = to_int(t4_sheet1.get(p_id, row.get("T4 Diệt", 0)))
-        t5_s1 = to_int(t5_sheet1.get(p_id, row.get("T5 Diệt", 0)))
-        
+        # Số liệu tổng thể hiện tại mới nhất (Sheet 2)
         pow_s2 = to_int(pow_sheet2.get(p_id, pow_s1))
-        kill_s2 = to_int(kill_sheet2.get(p_id, kill_s1)) # Tổng điểm diệt thực tế từ game
+        kill_s2 = to_int(kill_sheet2.get(p_id, 0)) # Tổng điểm diệt thực tế từ game (Sheet 2)
         dead_s2 = to_int(dead_sheet2.get(p_id, dead_s1))
+        t4_s2 = to_int(t4_sheet2.get(p_id, 0))
+        t5_s2 = to_int(t5_sheet2.get(p_id, 0))
         
-        t4_s2 = to_int(t4_sheet2.get(p_id, t4_s1))
-        t5_s2 = to_int(t5_sheet2.get(p_id, t5_s1))
+        # --- LOGIC TÍNH TOÁN BIẾN ĐỘNG QUÂN SỐ T4 VÀ T5 ---
+        diff_t4 = t4_s2 - t4_s1
+        diff_t5 = t5_s2 - t5_s1
         
-        # --- TÍNH BIẾN ĐỘNG TƠN SỐ T4 VÀ T5 ĐỂ TRUYỀN VÀO NÚT (!) ---
-        diff_t4_count = t4_s2 - t4_s1
-        diff_t5_count = t5_s2 - t5_s1
+        # Quy đổi điểm hệ thống: 1 T4 = 10 Điểm, 1 T5 = 20 Điểm
+        diff_kill_score = (diff_t4 * 10) + (diff_t5 * 20)
         
-        # --- QUY ĐỔI ĐIỂM KPI TIÊU DIỆT BIẾN ĐỘNG: T4 = 10 ĐIỂM, T5 = 20 ĐIỂM ---
-        diff_kill_score = (diff_t4_count * 10) + (diff_t5_count * 20)
-        
-        # --- CÁC BIẾN ĐỘNG CÒN LẠI ---
         diff_pow = pow_s2 - pow_s1
         diff_dead = dead_s2 - dead_s1
         
-        # --- TÍNH % KPI THEO SỐ ĐIỂM QUY ĐỔI T4+T5 MỚI ---
+        # Tính % KPI lũy tiến vô hạn
         real_pct_kill = round((diff_kill_score / final_target_kill) * 100, 1) if final_target_kill > 0 else 0.0
         real_pct_dead = round((diff_dead / final_target_dead) * 100, 1) if final_target_dead > 0 else 0.0
         
@@ -117,21 +131,21 @@ def load_and_process_data():
         processed_list.append({
             "name": current_name,
             "id": str(row["ID"]),
-            "alliance": row["Liên Minh"],
+            "alliance": row.get("Liên Minh", "FTD"),
             
-            # Sử dụng số điểm quy đổi T4+T5 cho trang chủ và bộ lọc sắp xếp
+            # Biến động ngoài trang chủ (Tiêu diệt chỉ lấy điểm quy đổi T4+T5)
             "diff_pow": diff_pow,
             "diff_kill": diff_kill_score, 
             "diff_dead": diff_dead,
             
-            # Stats tổng thể hiển thị trong Profile (Kill lấy tổng gốc của Sheet 2)
+            # Số liệu TỔNG THỂ trong Profile (Tiêu diệt lấy tổng gốc Sheet 2)
             "total_pow": pow_s2,
             "total_kill": kill_s2, 
             "total_dead": dead_s2,
             
-            # Số lượng lính T4, T5 biến động tăng/giảm để hiển thị ở ô (!)
-            "diff_t4": diff_t4_count,
-            "diff_t5": diff_t5_count,
+            # Số quân T4, T5 biến động phục vụ ô hiển thị (!)
+            "diff_t4": diff_t4,
+            "diff_t5": diff_t5,
             
             "real_pct_kill": real_pct_kill,
             "real_pct_dead": real_pct_dead,
@@ -146,7 +160,7 @@ def load_and_process_data():
 try:
     final_data = load_and_process_data()
 except Exception as e:
-    st.error(f"Lỗi đồng bộ dữ liệu: {e}")
+    st.error(f"Lỗi đồng bộ cấu trúc dữ liệu bảng tính: {e}")
     st.stop()
 
 # ===== 4. BUILD HTML CARDS =====
@@ -206,11 +220,11 @@ html_content = f"""
         .stat-card {{ flex: 1; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; text-align: center; font-size: 10px; position: relative; }}
         .stat-card b {{ font-size: 11px; color: gold; display: block; margin-top: 5px; }}
         
-        /* Nút Khảo sát chi tiết biến động T4/T5 (!) */
+        /* Kiểu dáng nút tròn (!) */
         .info-trigger {{ background: #ffd700; color: #000; border: none; border-radius: 50%; width: 16px; height: 16px; font-size: 10px; font-weight: bold; cursor: pointer; display: inline-block; margin-left: 4px; line-height: 16px; text-align: center; vertical-align: middle; }}
         .info-trigger:hover {{ background: #fff; }}
         
-        /* Bảng hiển thị thông tin biến động T4 - T5 đã tăng */
+        /* Bảng thả xuống chứa biến động T4 - T5 */
         .t-detail-box {{ display: none; background: #0f111a; border: 1px dashed #ffd700; padding: 10px; margin-top: 8px; border-radius: 8px; font-size: 11px; text-align: left; }}
         .t-detail-box div {{ display: flex; justify-content: space-between; margin: 4px 0; color: #ccc; }}
         .t-detail-box span {{ color: #00ffcc; font-family: monospace; font-weight: bold; }}
@@ -250,7 +264,7 @@ html_content = f"""
         document.getElementById("fDead").innerText = TEXT[lang].dead;
     }};
 
-    fn_search = function(v) {{
+    function search(v) {{
         v = v.toLowerCase();
         document.querySelectorAll('.card').forEach(c => {{
             const name = c.querySelector('.card-name').innerText.toLowerCase();
@@ -262,7 +276,6 @@ html_content = f"""
             }}
         }});
     }}
-    document.getElementById("searchInput").onkeyup = function() {{ fn_search(this.value); }};
 
     function setMode(m, el) {{
         document.querySelectorAll('.filter').forEach(f => f.classList.remove('active'));
