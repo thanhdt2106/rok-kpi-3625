@@ -30,43 +30,71 @@ def get_kpi_dead_value(p):
     elif p >= 30_000_000: return 400_000
     else: return 300_000
 
-# ===== 3. LOAD VÀ XỬ LÝ DỮ LIỆU =====
+# ===== 3. LOAD VÀ XỬ LÝ DỮ LIỆU LIÊN KẾT 2 SHEET =====
 @st.cache_data(ttl=60)
 def load_and_process_data():
     sheet_id = "1CzGPseLzdRK1V-6qy7KD5T58sBRSGjQi"
-    gid = "855089129"
-    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
+    gid1 = "855089129"
+    gid2 = "316243863"
     
-    df = pd.read_csv(url)
-    df.columns = df.columns.str.strip()
+    url1 = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid1}"
+    url2 = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid2}"
+    
+    # Đọc dữ liệu gốc (Sheet 1) và Dữ liệu so sánh/thực tế (Sheet 2)
+    df1 = pd.read_csv(url1)
+    df2 = pd.read_csv(url2)
+    
+    # Làm sạch tên cột
+    df1.columns = df1.columns.str.strip()
+    df2.columns = df2.columns.str.strip()
 
     def to_int(x):
-        try: return int(str(x).replace(",", ""))
+        try: return int(str(x).replace(",", "").split('.')[0].strip())
         except: return 0
 
-    df["Power"] = df["Sức Mạnh"].apply(to_int)
-    df["Kill"] = df["Tổng Tiêu Diệt"].apply(to_int)
-    df["Dead"] = df["Điểm Chết"].apply(to_int)
-    df['Indiv_KPI_Dead'] = df['Power'].apply(get_kpi_dead_value)
-    df['Group'] = df['Tên'].apply(lambda x: str(x).split()[0].upper() if pd.notnull(x) else "")
-    group_kpi_dead_sum = df.groupby('Group')['Indiv_KPI_Dead'].transform('sum')
-    group_max_power = df.groupby('Group')['Power'].transform('max')
+    # Chuyển ID sang chuỗi text sạch để thực hiện map chính xác
+    df1["ID_str"] = df1["ID"].astype(str).str.strip()
+    df2["ID_str"] = df2["ID"].astype(str).str.strip()
+
+    # Tính toán các chỉ số cơ bản trên Sheet 1
+    df1["Power"] = df1["Sức Mạnh"].apply(to_int)
+    df1['Indiv_KPI_Dead'] = df1['Power'].apply(get_kpi_dead_value)
+    df1['Group'] = df1['Tên'].apply(lambda x: str(x).split()[0].upper() if pd.notnull(x) else "")
+    
+    group_kpi_dead_sum = df1.groupby('Group')['Indiv_KPI_Dead'].transform('sum')
+    group_max_power = df1.groupby('Group')['Power'].transform('max')
+
+    # Trích xuất dữ liệu thực tế từ Sheet 2 để so sánh (Map qua ID)
+    kill_map = df2.set_index("ID_str")["Tổng Tiêu Diệt"].to_dict()
+    dead_map = df2.set_index("ID_str")["Điểm Chết"].to_dict()
 
     processed_list = []
-    for i, row in df.iterrows():
+    for i, row in df1.iterrows():
+        p_id = row['ID_str']
         is_main = (row['Power'] == group_max_power[i])
+        
         final_target_dead = group_kpi_dead_sum[i] if is_main else row['Indiv_KPI_Dead']
         final_target_kill = get_kpi_kill_value(row['Power'])
         
+        # Lấy dữ liệu thực tế từ Sheet 2, nếu không tìm thấy ID thì mặc định bằng 0
+        actual_kill = to_int(kill_map.get(p_id, 0))
+        actual_dead = to_int(dead_map.get(p_id, 0))
+        
+        # Tính toán phần trăm tiến độ đạt KPI
+        pct_kill = min(100, int((actual_kill / final_target_kill) * 100)) if final_target_kill > 0 else 0
+        pct_dead = min(100, int((actual_dead / final_target_dead) * 100)) if final_target_dead > 0 else 0
+        
         processed_list.append({
             "name": row["Tên"],
-            "id": str(row["ID"]), # Chuyển ID sang string để search dễ hơn
+            "id": p_id,
             "alliance": row["Liên Minh"],
             "pow": row["Power"],
-            "kill": row["Kill"],
-            "dead": row["Dead"],
+            "kill": actual_kill,         # Dữ liệu thực tế mới từ Sheet 2
+            "dead": actual_dead,         # Dữ liệu thực tế mới từ Sheet 2
             "final_kpi_dead": final_target_dead,
             "final_kpi_kill": final_target_kill,
+            "pct_kill": pct_kill,
+            "pct_dead": pct_dead,
             "is_farm": not is_main
         })
     return processed_list
@@ -74,17 +102,16 @@ def load_and_process_data():
 try:
     final_data = load_and_process_data()
 except Exception as e:
-    st.error(f"Lỗi: {e}")
+    st.error(f"Lỗi đồng bộ hoặc xử lý dữ liệu giữa 2 GID: {e}")
     st.stop()
 
 # ===== 4. BUILD HTML CARDS =====
 cards_html = ""
 for item in final_data:
     avatar = f"https://api.dicebear.com/7.x/adventurer/svg?seed={item['name']}"
-    # THÊM data-id VÀO ĐÂY
     cards_html += f"""
     <div class="card" data-id="{item['id']}" data-power="{item['pow']}" data-kill="{item['kill']}" data-dead="{item['dead']}"
-        onclick="openProfile('{item['name']}','{item['id']}','{item['alliance']}','{item['pow']}','{item['kill']}','{item['dead']}','{item['final_kpi_kill']}','{item['final_kpi_dead']}','{avatar}')">
+        onclick="openProfile('{item['name']}','{item['id']}','{item['alliance']}','{item['pow']}','{item['kill']}','{item['dead']}','{item['final_kpi_kill']}','{item['final_kpi_dead']}','{item['pct_kill']}','{item['pct_dead']}','{avatar}')">
         <div class="avatar-wrap"><img src="{avatar}"></div>
         <div class="card-name">{item['name']}</div>
         <div class="value">⚡ {item['pow']:,}</div>
@@ -129,8 +156,8 @@ html_content = f"""
         .kpi-section {{ font-size: 12px; margin-top: 15px; }}
         .kpi-label {{ display: flex; justify-content: space-between; margin-bottom: 5px; }}
         .bar {{ height: 10px; background: #333; border-radius: 5px; margin-bottom: 12px; overflow: hidden; }}
-        .fill {{ height: 100%; background: linear-gradient(90deg, gold, orange); width: 0%; }}
-        .close-btn {{ width: 100%; padding: 12px; background: #ff4b4b; color: white; border: none; border-radius: 10px; cursor: pointer; margin-top: 15px; font-weight: bold; }}
+        .fill {{ height: 100%; background: linear-gradient(90deg, #ffd700, #ff8c00); width: 0%; transition: width 0.5s ease-in-out; }}
+    body .close-btn {{ width: 100%; padding: 12px; background: #ff4b4b; color: white; border: none; border-radius: 10px; cursor: pointer; margin-top: 15px; font-weight: bold; }}
     </style>
 </head>
 <body>
@@ -160,13 +187,11 @@ html_content = f"""
         document.getElementById("fDead").innerText = TEXT[lang].dead;
     }};
 
-    // CẬP NHẬT HÀM SEARCH TÌM THEO CẢ TÊN VÀ ID
     function search(v) {{
         v = v.toLowerCase();
         document.querySelectorAll('.card').forEach(c => {{
             const name = c.querySelector('.card-name').innerText.toLowerCase();
             const id = c.getAttribute('data-id').toLowerCase();
-            
             if (name.includes(v) || id.includes(v)) {{
                 c.style.display = 'block';
             }} else {{
@@ -189,7 +214,7 @@ html_content = f"""
         }});
     }}
 
-    function openProfile(name, id, all, pow, kill, dead, kK, kD, avatar) {{
+    function openProfile(name, id, all, pow, kill, dead, kK, kD, pctK, pctD, avatar) {{
         let t = TEXT[lang];
         document.getElementById('modal').style.display = 'flex';
         document.getElementById('profileContent').innerHTML = `
@@ -204,10 +229,11 @@ html_content = f"""
                 <div class="stat-card">💀 DEAD<br><b>${{Number(dead).toLocaleString()}}</b></div>
             </div>
             <div class="kpi-section">
-                <div class="kpi-label"><span>${{t.kK_label}}</span><span>0 / ${{Number(kK).toLocaleString()}}</span></div>
-                <div class="bar"><div class="fill"></div></div>
-                <div class="kpi-label"><span>${{t.kD_label}}</span><span>0 / ${{Number(kD).toLocaleString()}}</span></div>
-                <div class="bar"><div class="fill"></div></div>
+                <div class="kpi-label"><span>${{t.kK_label}} (${{pctK}}%)</span><span>${{Number(kill).toLocaleString()}} / ${{Number(kK).toLocaleString()}}</span></div>
+                <div class="bar"><div class="fill" style="width: ${{pctK}}%;"></div></div>
+                
+                <div class="kpi-label"><span>${{t.kD_label}} (${{pctD}}%)</span><span>${{Number(dead).toLocaleString()}} / ${{Number(kD).toLocaleString()}}</span></div>
+                <div class="bar"><div class="fill" style="width: ${{pctD}}%;"></div></div>
             </div>
             <button class="close-btn" onclick="document.getElementById('modal').style.display='none'">${{t.exit}}</button>
         `;
