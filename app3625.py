@@ -59,7 +59,7 @@ def load_and_process_data():
     dead_sheet2 = df2.set_index("ID_str")["Điểm Chết"].to_dict()
 
     # Tính toán các logic nhóm dựa trên dữ liệu gốc ban đầu (Sheet 1)
-    df1["Power"] = df1["Sức Mạch"].apply(to_int)
+    df1["Power"] = df1["Sức Mạnh"].apply(to_int)
     df1['Indiv_KPI_Dead'] = df1['Power'].apply(get_kpi_dead_value)
     df1['Group'] = df1['Tên'].apply(lambda x: str(x).split()[0].upper() if pd.notnull(x) else "")
     group_kpi_dead_sum = df1.groupby('Group')['Indiv_KPI_Dead'].transform('sum')
