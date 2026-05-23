@@ -54,13 +54,13 @@ def load_and_process_data():
     df1["ID_str"] = df1["ID"].astype(str).str.strip()
     df2["ID_str"] = df2["ID"].astype(str).str.strip()
 
-    # Tạo các danh mục map từ Sheet 2 theo ID để so sánh đối chiếu
+    # Tạo các danh mục định danh map từ Sheet 2 theo ID để đối chiếu dữ liệu mới
     name_sheet2 = df2.set_index("ID_str")["Tên"].to_dict()
     pow_sheet2 = df2.set_index("ID_str")["Sức Mạnh"].to_dict()
     kill_sheet2 = df2.set_index("ID_str")["Tổng Tiêu Diệt"].to_dict()
     dead_sheet2 = df2.set_index("ID_str")["Điểm Chết"].to_dict()
 
-    # Tính toán các mốc KPI dựa trên dữ liệu nền gốc (Sheet 1)
+    # Tính toán các mốc KPI dựa trên dữ liệu nền gốc (Sức mạnh nền ở Sheet 1)
     df1["Power_Goc"] = df1["Sức Mạnh"].apply(to_int)
     df1['Indiv_KPI_Dead'] = df1['Power_Goc'].apply(get_kpi_dead_value)
     df1['Group'] = df1['Tên'].apply(lambda x: str(x).split()[0].upper() if pd.notnull(x) else "")
@@ -74,43 +74,37 @@ def load_and_process_data():
         final_target_dead = group_kpi_dead_sum[i] if is_main else row['Indiv_KPI_Dead']
         final_target_kill = get_kpi_kill_value(row['Power_Goc'])
         
-        # Lấy TÊN MỚI NHẤT trong game từ Sheet 2
+        # SỬ DỤNG TÊN MỚI NHẤT TỪ SHEET 2 (Fix lỗi đổi tên)
         current_name = name_sheet2.get(p_id, row["Tên"])
         
-        # --- LẤY SỐ LIỆU MỐC BAN ĐẦU (Sheet 1) ---
+        # Số liệu gốc ban đầu (Sheet 1)
         pow_s1 = to_int(row["Sức Mạnh"])
         kill_s1 = to_int(row["Tổng Tiêu Diệt"])
         dead_s1 = to_int(row["Điểm Chết"])
         
-        # --- LẤY SỐ LIỆU SAU KHI THAY ĐỔI (Sheet 2) ---
+        # Số liệu mới sau cập nhật (Sheet 2)
         pow_s2 = to_int(pow_sheet2.get(p_id, pow_s1))
         kill_s2 = to_int(kill_sheet2.get(p_id, kill_s1))
         dead_s2 = to_int(dead_sheet2.get(p_id, dead_s1))
         
-        # --- TÍNH TOÁN SỐ LIỆU THAY ĐỔI (CHÊNH LỆCH TĂNG THÊM) ---
-        # Sử dụng max(0, ...) để tránh số âm nếu có sai sót nhập liệu dữ liệu giảm
-        diff_pow = max(0, pow_s2 - pow_s1)
-        diff_kill = max(0, kill_s2 - kill_s1)
-        diff_dead = max(0, dead_s2 - dead_s1)
+        # HIỆU SỐ BIẾN ĐỘNG THỰC TẾ (Nhận cả kết quả ÂM và DƯƠNG)
+        diff_pow = pow_s2 - pow_s1
+        diff_kill = kill_s2 - kill_s1
+        diff_dead = dead_s2 - dead_s1
         
-        # Tính toán % chiều dài thanh fill KPI dựa trên số liệu thay đổi này
-        pct_fill_kill = min(100, int((diff_kill / final_target_kill) * 100)) if final_target_kill > 0 else 0
-        pct_fill_dead = min(100, int((diff_dead / final_target_dead) * 100)) if final_target_dead > 0 else 0
+        # Tính % thanh tiến độ kpi (nếu biến động bị âm, thanh tiến độ giữ mức tối thiểu là 0%)
+        pct_fill_kill = min(100, max(0, int((diff_kill / final_target_kill) * 100))) if final_target_kill > 0 else 0
+        pct_fill_dead = min(100, max(0, int((diff_dead / final_target_dead) * 100))) if final_target_dead > 0 else 0
         
         processed_list.append({
             "name": current_name,
             "id": str(row["ID"]),
             "alliance": row["Liên Minh"],
-            
-            # Gán hoàn toàn số liệu thay đổi (tăng thêm) vào biến chính để hiển thị ra trang chủ và bộ lọc
-            "pow": diff_pow,
-            "kill": diff_kill,
-            "dead": diff_dead,
-            
-            # Biến phục vụ thanh progress KPI
+            "pow": diff_pow,   # Đưa số liệu biến động lên giao diện
+            "kill": diff_kill, # Đưa số liệu biến động lên giao diện
+            "dead": diff_dead, # Đưa số liệu biến động lên giao diện
             "pct_kill": pct_fill_kill,
             "pct_dead": pct_fill_dead,
-            
             "final_kpi_dead": final_target_dead,
             "final_kpi_kill": final_target_kill,
             "is_farm": not is_main
@@ -120,14 +114,13 @@ def load_and_process_data():
 try:
     final_data = load_and_process_data()
 except Exception as e:
-    st.error(f"Lỗi đồng bộ dữ liệu thay đổi: {e}")
+    st.error(f"Lỗi đồng bộ dữ liệu: {e}")
     st.stop()
 
 # ===== 4. BUILD HTML CARDS =====
 cards_html = ""
 for item in final_data:
     avatar = f"https://api.dicebear.com/7.x/adventurer/svg?seed={item['name']}"
-    # Card hiển thị giá trị mặc định lúc đầu là Sức mạnh tăng thêm (Item['pow'])
     cards_html += f"""
     <div class="card" data-id="{item['id']}" data-power="{item['pow']}" data-kill="{item['kill']}" data-dead="{item['dead']}"
         onclick="openProfile('{item['name']}','{item['id']}','{item['alliance']}','{item['pow']}','{item['kill']}','{item['dead']}','{item['final_kpi_kill']}','{item['final_kpi_dead']}','{item['pct_kill']}','{item['pct_dead']}','{avatar}')">
@@ -183,9 +176,9 @@ html_content = f"""
     <div id="langBtn">EN</div>
     <input class="search" id="searchInput" placeholder="🔍 Nhập tên hoặc ID..." onkeyup="search(this.value)">
     <div class="filters">
-        <div class="filter active" id="fPow" onclick="setMode('power', this)">⚡ SỨC MẠNH TĂNG</div>
-        <div class="filter" id="fKill" onclick="setMode('kill', this)">🔥 TIÊU DIỆT TĂNG</div>
-        <div class="filter" id="fDead" onclick="setMode('dead', this)">💀 ĐIỂM CHẾT TĂNG</div>
+        <div class="filter active" id="fPow" onclick="setMode('power', this)">⚡ SỨC MẠNH BIẾN ĐỘNG</div>
+        <div class="filter" id="fKill" onclick="setMode('kill', this)">🔥 TIÊU DIỆT BIẾN ĐỘNG</div>
+        <div class="filter" id="fDead" onclick="setMode('dead', this)">💀 ĐIỂM CHẾT BIẾN ĐỘNG</div>
     </div>
     <div class="grid" id="grid">{cards_html}</div>
     <div class="modal" id="modal"><div class="profile-box" id="profileContent"></div></div>
@@ -193,8 +186,8 @@ html_content = f"""
 <script>
     let lang = "vn";
     const TEXT = {{
-        vn: {{ search: "🔍 Nhập tên hoặc ID...", pow: "⚡ SỨC MẠNH TĂNG", kill: "🔥 TIÊU DIỆT TĂNG", dead: "💀 ĐIỂM CHẾT TĂNG", kK_label: "🔥 KPI Tiêu diệt", kD_label: "💀 KPI Điểm chết", exit: "QUAY LẠI" }},
-        en: {{ search: "🔍 Search name or ID...", pow: "⚡ POWER INCREASED", kill: "🔥 KILLS INCREASED", dead: "💀 DEAD INCREASED", kK_label: "🔥 Kills KPI", kD_label: "💀 Dead KPI", exit: "CLOSE" }}
+        vn: {{ search: "🔍 Nhập tên hoặc ID...", pow: "⚡ SỨC MẠNH BIẾN ĐỘNG", kill: "🔥 TIÊU DIỆT BIẾN ĐỘNG", dead: "💀 ĐIỂM CHẾT BIẾN ĐỘNG", kK_label: "🔥 KPI Tiêu diệt", kD_label: "💀 KPI Điểm chết", exit: "QUAY LẠI" }},
+        en: {{ search: "🔍 Search name or ID...", pow: "⚡ POWER CHANGE", kill: "🔥 KILLS CHANGE", dead: "💀 DEAD CHANGE", kK_label: "🔥 Kills KPI", kD_label: "💀 Dead KPI", exit: "CLOSE" }}
     }};
 
     document.getElementById("langBtn").onclick = function() {{
@@ -233,7 +226,6 @@ html_content = f"""
         }});
     }}
 
-    // Hàm nhận dữ liệu hiển thị (Đều đã là số liệu chênh lệch tăng thêm)
     function openProfile(name, id, all, pow, kill, dead, kK, kD, pctK, pctD, avatar) {{
         let t = TEXT[lang];
         document.getElementById('modal').style.display = 'flex';
@@ -244,9 +236,9 @@ html_content = f"""
                 <small style="color:#888;">ID: ${{id}} | ${{all}}</small>
             </center>
             <div class="stat-row">
-                <div class="stat-card">⚡ SỨC MẠNH TĂNG<br><b>${{Number(pow).toLocaleString()}}</b></div>
-                <div class="stat-card">🔥 TIÊU DIỆT TĂNG<br><b>${{Number(kill).toLocaleString()}}</b></div>
-                <div class="stat-card">💀 ĐIỂM CHẾT TĂNG<br><b>${{Number(dead).toLocaleString()}}</b></div>
+                <div class="stat-card">⚡ SỨC MẠNH<br><b>${{Number(pow).toLocaleString()}}</b></div>
+                <div class="stat-card">🔥 TIÊU DIỆT<br><b>${{Number(kill).toLocaleString()}}</b></div>
+                <div class="stat-card">💀 ĐIỂM CHẾT<br><b>${{Number(dead).toLocaleString()}}</b></div>
             </div>
             <div class="kpi-section">
                 <div class="kpi-label"><span>${{t.kK_label}}</span><span>${{Number(kill).toLocaleString()}} / ${{Number(kK).toLocaleString()}}</span></div>
