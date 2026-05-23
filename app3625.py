@@ -82,12 +82,12 @@ def load_and_process_data():
         kill_s1 = to_int(row["Tổng Tiêu Diệt"])
         dead_s1 = to_int(row["Điểm Chết"])
         
-        # Số liệu mới sau cập nhật (Sheet 2)
+        # Số liệu tổng thể hiện tại mới nhất (Sheet 2)
         pow_s2 = to_int(pow_sheet2.get(p_id, pow_s1))
         kill_s2 = to_int(kill_sheet2.get(p_id, kill_s1))
         dead_s2 = to_int(dead_sheet2.get(p_id, dead_s1))
         
-        # HIỆU SỐ BIẾN ĐỘNG THỰC TẾ (Nhận cả kết quả ÂM và DƯƠNG)
+        # HIỆU SỐ BIẾN ĐỘNG THỰC TẾ (Nhận cả kết quả ÂM và DƯƠNG dành cho trang chủ và KPI)
         diff_pow = pow_s2 - pow_s1
         diff_kill = kill_s2 - kill_s1
         diff_dead = dead_s2 - dead_s1
@@ -100,33 +100,48 @@ def load_and_process_data():
             "name": current_name,
             "id": str(row["ID"]),
             "alliance": row["Liên Minh"],
-            "pow": diff_pow,   # Đưa số liệu biến động lên giao diện
-            "kill": diff_kill, # Đưa số liệu biến động lên giao diện
-            "dead": diff_dead, # Đưa số liệu biến động lên giao diện
+            
+            # Số liệu biến động dành cho trang chủ và bộ lọc sắp xếp công việc
+            "diff_pow": diff_pow,
+            "diff_kill": diff_kill,
+            "diff_dead": diff_dead,
+            
+            # Số liệu TỔNG THỂ hiện tại dành cho 3 ô Stats lớn trong Profile
+            "total_pow": pow_s2,
+            "total_kill": kill_s2,
+            "total_dead": dead_s2,
+            
+            # Biến nạp độ dài thanh tiến độ KPI
             "pct_kill": pct_fill_kill,
             "pct_dead": pct_fill_dead,
+            
             "final_kpi_dead": final_target_dead,
-            "final_kpi_kill": final_target_kill,
-            "is_farm": not is_main
+            "final_kpi_kill": final_target_kill
         })
     return processed_list
 
 try:
     final_data = load_and_process_data()
 except Exception as e:
-    st.error(f"Lỗi đồng bộ dữ liệu: {e}")
+    st.error(f"Lỗi đồng bộ dữ liệu hệ thống: {e}")
     st.stop()
 
 # ===== 4. BUILD HTML CARDS =====
 cards_html = ""
 for item in final_data:
     avatar = f"https://api.dicebear.com/7.x/adventurer/svg?seed={item['name']}"
+    # Card trang chủ nhận data-attributes là dữ liệu BIẾN ĐỘNG (diff) để lọc sắp xếp, 
+    # nhưng truyền vào hàm openProfile cả thông số TỔNG THỂ (total) và BIẾN ĐỘNG (diff) độc lập.
     cards_html += f"""
-    <div class="card" data-id="{item['id']}" data-power="{item['pow']}" data-kill="{item['kill']}" data-dead="{item['dead']}"
-        onclick="openProfile('{item['name']}','{item['id']}','{item['alliance']}','{item['pow']}','{item['kill']}','{item['dead']}','{item['final_kpi_kill']}','{item['final_kpi_dead']}','{item['pct_kill']}','{item['pct_dead']}','{avatar}')">
+    <div class="card" data-id="{item['id']}" data-power="{item['diff_pow']}" data-kill="{item['diff_kill']}" data-dead="{item['diff_dead']}"
+        onclick="openProfile('{item['name']}','{item['id']}','{item['alliance']}',
+                             '{item['total_pow']}','{item['total_kill']}','{item['total_dead']}',
+                             '{item['diff_kill']}','{item['diff_dead']}',
+                             '{item['final_kpi_kill']}','{item['final_kpi_dead']}',
+                             '{item['pct_kill']}','{item['pct_dead']}','{avatar}')">
         <div class="avatar-wrap"><img src="{avatar}"></div>
         <div class="card-name">{item['name']}</div>
-        <div class="value">⚡ {item['pow']:,}</div>
+        <div class="value">⚡ {item['diff_pow']:,}</div>
     </div>
     """
 
@@ -226,7 +241,8 @@ html_content = f"""
         }});
     }}
 
-    function openProfile(name, id, all, pow, kill, dead, kK, kD, pctK, pctD, avatar) {{
+    // Hàm nhận tách biệt thông số Tổng thể (tPow, tKill, tDead) và thông số Biến động thực tế (dKill, dDead)
+    function openProfile(name, id, all, tPow, tKill, tDead, dKill, dDead, kK, kD, pctK, pctD, avatar) {{
         let t = TEXT[lang];
         document.getElementById('modal').style.display = 'flex';
         document.getElementById('profileContent').innerHTML = `
@@ -236,15 +252,15 @@ html_content = f"""
                 <small style="color:#888;">ID: ${{id}} | ${{all}}</small>
             </center>
             <div class="stat-row">
-                <div class="stat-card">⚡ SỨC MẠNH<br><b>${{Number(pow).toLocaleString()}}</b></div>
-                <div class="stat-card">🔥 TIÊU DIỆT<br><b>${{Number(kill).toLocaleString()}}</b></div>
-                <div class="stat-card">💀 ĐIỂM CHẾT<br><b>${{Number(dead).toLocaleString()}}</b></div>
+                <div class="stat-card">⚡ SỨC MẠNH<br><b>${{Number(tPow).toLocaleString()}}</b></div>
+                <div class="stat-card">🔥 TIÊU DIỆT<br><b>${{Number(tKill).toLocaleString()}}</b></div>
+                <div class="stat-card">💀 ĐIỂM CHẾT<br><b>${{Number(tDead).toLocaleString()}}</b></div>
             </div>
             <div class="kpi-section">
-                <div class="kpi-label"><span>${{t.kK_label}}</span><span>${{Number(kill).toLocaleString()}} / ${{Number(kK).toLocaleString()}}</span></div>
+                <div class="kpi-label"><span>${{t.kK_label}}</span><span>${{Number(dKill).toLocaleString()}} / ${{Number(kK).toLocaleString()}}</span></div>
                 <div class="bar"><div class="fill" style="width: ${{pctK}}%;"></div></div>
                 
-                <div class="kpi-label"><span>${{t.kD_label}}</span><span>${{Number(dead).toLocaleString()}} / ${{Number(kD).toLocaleString()}}</span></div>
+                <div class="kpi-label"><span>${{t.kD_label}}</span><span>${{Number(dDead).toLocaleString()}} / ${{Number(kD).toLocaleString()}}</span></div>
                 <div class="bar"><div class="fill" style="width: ${{pctD}}%;"></div></div>
             </div>
             <button class="close-btn" onclick="document.getElementById('modal').style.display='none'">${{t.exit}}</button>
