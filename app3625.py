@@ -50,11 +50,12 @@ def load_and_process_data():
         try: return int(str(x).replace(",", ""))
         except: return 0
 
-    # Đồng bộ ID dạng chuỗi text sạch để so khớp
+    # Đồng bộ ID dạng chuỗi text sạch để so khớp chính xác
     df1["ID_str"] = df1["ID"].astype(str).str.strip()
     df2["ID_str"] = df2["ID"].astype(str).str.strip()
 
-    # Tạo danh mục lưu dữ liệu từ Sheet 2 phục vụ tính toán phần tăng thêm
+    # Tạo các danh mục map từ Sheet 2 theo ID (Bao gồm cả TÊN MỚI)
+    name_sheet2 = df2.set_index("ID_str")["Tên"].to_dict()
     kill_sheet2 = df2.set_index("ID_str")["Tổng Tiêu Diệt"].to_dict()
     dead_sheet2 = df2.set_index("ID_str")["Điểm Chết"].to_dict()
 
@@ -72,6 +73,9 @@ def load_and_process_data():
         final_target_dead = group_kpi_dead_sum[i] if is_main else row['Indiv_KPI_Dead']
         final_target_kill = get_kpi_kill_value(row['Power'])
         
+        # Lấy TÊN MỚI NHẤT từ Sheet 2 (Nếu không tìm thấy ID thì giữ tên cũ Sheet 1)
+        current_name = name_sheet2.get(p_id, row["Tên"])
+        
         # 1. Dữ liệu mốc ban đầu (Sheet 1)
         kill_s1 = to_int(row["Tổng Tiêu Diệt"])
         dead_s1 = to_int(row["Điểm Chết"])
@@ -80,7 +84,7 @@ def load_and_process_data():
         kill_s2 = to_int(kill_sheet2.get(p_id, kill_s1))
         dead_s2 = to_int(dead_sheet2.get(p_id, dead_s1))
         
-        # 3. Tính toán CHÊNH LỆCH ĐÃ TĂNG (Dành riêng cho thanh KPI)
+        # 3. Tính toán CHÊNH LỆCH ĐÃ TĂNG (Dành riêng cho hiển thị thanh KPI)
         diff_kill = max(0, kill_s2 - kill_s1)
         diff_dead = max(0, dead_s2 - dead_s1)
         
@@ -89,21 +93,16 @@ def load_and_process_data():
         pct_fill_dead = min(100, int((diff_dead / final_target_dead) * 100)) if final_target_dead > 0 else 0
         
         processed_list.append({
-            "name": row["Tên"],
+            "name": current_name, # Đã cập nhật tên mới nhất trong game từ Sheet 2
             "id": str(row["ID"]),
             "alliance": row["Liên Minh"],
             "pow": row["Power"],
-            
-            # Giữ nguyên hiển thị tổng số lớn ở trang chủ (Lấy từ Sheet 2 mới nhất)
             "kill": kill_s2, 
             "dead": dead_s2, 
-            
-            # Gửi thêm dữ liệu chênh lệch tăng trưởng vào cấu trúc để nạp vào thanh KPI
             "diff_kill": diff_kill,
             "diff_dead": diff_dead,
             "pct_kill": pct_fill_kill,
             "pct_dead": pct_fill_dead,
-            
             "final_kpi_dead": final_target_dead,
             "final_kpi_kill": final_target_kill,
             "is_farm": not is_main
@@ -113,14 +112,14 @@ def load_and_process_data():
 try:
     final_data = load_and_process_data()
 except Exception as e:
-    st.error(f"Lỗi đồng bộ dữ liệu KPI: {e}")
+    st.error(f"Lỗi đồng bộ tên và dữ liệu: {e}")
     st.stop()
 
 # ===== 4. BUILD HTML CARDS =====
 cards_html = ""
 for item in final_data:
     avatar = f"https://api.dicebear.com/7.x/adventurer/svg?seed={item['name']}"
-    # Đưa thêm các tham số diff_kill, diff_dead, pct_kill, pct_dead vào hàm onClick openProfile
+    # item['name'] bây giờ đã là tên mới từ Sheet 2 nên Card và Avatar sẽ tự động đổi theo tên mới
     cards_html += f"""
     <div class="card" data-id="{item['id']}" data-power="{item['pow']}" data-kill="{item['kill']}" data-dead="{item['dead']}"
         onclick="openProfile('{item['name']}','{item['id']}','{item['alliance']}','{item['pow']}','{item['kill']}','{item['dead']}','{item['final_kpi_kill']}','{item['final_kpi_dead']}','{item['diff_kill']}','{item['diff_dead']}','{item['pct_kill']}','{item['pct_dead']}','{avatar}')">
@@ -130,7 +129,7 @@ for item in final_data:
     </div>
     """
 
-# ===== 5. GIAO DIỆN HTML/CSS/JS =====
+# ===== 5. GIAO DIỆN HTML/CSS/JS (GIỮ NGUYÊN HOÀN TOÀN) =====
 html_content = f"""
 <!DOCTYPE html>
 <html>
@@ -226,7 +225,6 @@ html_content = f"""
         }});
     }}
 
-    // Hàm nhận thêm biến diffK, diffD (số tăng thêm) và pctK, pctD (phần trăm của thanh bar)
     function openProfile(name, id, all, pow, kill, dead, kK, kD, diffK, diffD, pctK, pctD, avatar) {{
         let t = TEXT[lang];
         document.getElementById('modal').style.display = 'flex';
