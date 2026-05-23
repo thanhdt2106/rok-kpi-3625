@@ -50,17 +50,19 @@ def load_and_process_data():
         try: return int(str(x).replace(",", ""))
         except: return 0
 
-    # Đồng bộ ID dạng chuỗi text để so khớp chính xác
     df1["ID_str"] = df1["ID"].astype(str).str.strip()
     df2["ID_str"] = df2["ID"].astype(str).str.strip()
 
-    # Tạo các danh mục map dữ liệu mới nhất từ Sheet 2 theo ID
+    # Tạo các từ điển ánh xạ từ Sheet 2 (Dữ liệu mới nhất)
     name_sheet2 = df2.set_index("ID_str")["Tên"].to_dict()
     pow_sheet2 = df2.set_index("ID_str")["Sức Mạnh"].to_dict()
-    kill_sheet2 = df2.set_index("ID_str")["Tổng Tiêu Diệt"].to_dict()
     dead_sheet2 = df2.set_index("ID_str")["Điểm Chết"].to_dict()
+    
+    # Lấy thông tin T4, T5 mới nhất từ Sheet 2 để phục vụ xem chi tiết
+    t4_sheet2 = df2.set_index("ID_str")["T4 Diệt"].to_dict() if "T4 Diệt" in df2.columns else {}
+    t5_sheet2 = df2.set_index("ID_str")["T5 Diệt"].to_dict() if "T5 Diệt" in df2.columns else {}
 
-    # Tính toán các mốc KPI dựa trên dữ liệu nền gốc (Sheet 1)
+    # Tính toán mốc KPI dựa trên dữ liệu nền gốc (Sheet 1)
     df1["Power_Goc"] = df1["Sức Mạnh"].apply(to_int)
     df1['Indiv_KPI_Dead'] = df1['Power_Goc'].apply(get_kpi_dead_value)
     df1['Group'] = df1['Tên'].apply(lambda x: str(x).split()[0].upper() if pd.notnull(x) else "")
@@ -74,29 +76,35 @@ def load_and_process_data():
         final_target_dead = group_kpi_dead_sum[i] if is_main else row['Indiv_KPI_Dead']
         final_target_kill = get_kpi_kill_value(row['Power_Goc'])
         
-        # Cập nhật tên mới nhất từ Sheet 2
         current_name = name_sheet2.get(p_id, row["Tên"])
         
-        # Số liệu mốc ban đầu (Sheet 1)
+        # --- XỬ LÝ CHỈ SỐ TIÊU DIỆT (CHỈ TÍNH T4 VÀ T5, BỎ T1-T2-T3) ---
+        # Lấy giá trị T4, T5 ban đầu ở Sheet 1 (nếu không có cột riêng thì mặc định xử lý từ Tổng)
+        t4_s1 = to_int(row.get("T4 Diệt", 0))
+        t5_s1 = to_int(row.get("T5 Diệt", 0))
+        kill_s1_pure = t4_s1 + t5_s1 # Tổng gốc chỉ tính T4 + T5
+        
+        # Lấy giá trị T4, T5 mới nhất ở Sheet 2
+        t4_s2 = to_int(t4_sheet2.get(p_id, t4_s1))
+        t5_s2 = to_int(t5_sheet2.get(p_id, t5_s1))
+        kill_s2_pure = t4_s2 + t5_s2 # Tổng mới chỉ tính T4 + T5
+        
+        # --- CÁC CHỈ SỐ KHÁC ---
         pow_s1 = to_int(row["Sức Mạnh"])
-        kill_s1 = to_int(row["Tổng Tiêu Diệt"])
         dead_s1 = to_int(row["Điểm Chết"])
         
-        # Số liệu tổng thể hiện tại mới nhất (Sheet 2)
         pow_s2 = to_int(pow_sheet2.get(p_id, pow_s1))
-        kill_s2 = to_int(kill_sheet2.get(p_id, kill_s1))
         dead_s2 = to_int(dead_sheet2.get(p_id, dead_s1))
         
-        # Hiệu số biến động thực tế (Nhận cả âm và dương)
+        # Tính toán hiệu số biến động thực tế (Chấp nhận cả tăng và giảm)
         diff_pow = pow_s2 - pow_s1
-        diff_kill = kill_s2 - kill_s1
+        diff_kill = kill_s2_pure - kill_s1_pure  # Biến động chỉ dựa trên T4+T5
         diff_dead = dead_s2 - dead_s1
         
-        # Tính toán % KPI tăng dần không giới hạn
+        # Tính toán % KPI dựa trên chỉ số T4+T5 mới
         real_pct_kill = round((diff_kill / final_target_kill) * 100, 1) if final_target_kill > 0 else 0.0
         real_pct_dead = round((diff_dead / final_target_dead) * 100, 1) if final_target_dead > 0 else 0.0
         
-        # Chiều rộng hiển thị thanh bar (Tối đa 100% để tránh lỗi vỡ khung CSS)
         bar_fill_kill = min(100, max(0, int(real_pct_kill)))
         bar_fill_dead = min(100, max(0, int(real_pct_dead)))
         
@@ -105,17 +113,18 @@ def load_and_process_data():
             "id": str(row["ID"]),
             "alliance": row["Liên Minh"],
             
-            # Biến động hiển thị ở trang chủ và lọc sắp xếp
             "diff_pow": diff_pow,
             "diff_kill": diff_kill,
             "diff_dead": diff_dead,
             
-            # Dữ liệu tổng thể cho Profile
             "total_pow": pow_s2,
-            "total_kill": kill_s2,
+            "total_kill": kill_s2_pure, # Tổng điểm diệt (chỉ gồm T4+T5)
             "total_dead": dead_s2,
             
-            # Dữ liệu % thực tế và độ rộng thanh Bar
+            # Gửi kèm dữ liệu T4, T5 tách biệt để hiển thị khi nhấn nút (!)
+            "t4_val": t4_s2,
+            "t5_val": t5_s2,
+            
             "real_pct_kill": real_pct_kill,
             "real_pct_dead": real_pct_dead,
             "bar_fill_kill": bar_fill_kill,
@@ -136,7 +145,6 @@ except Exception as e:
 cards_html = ""
 for item in final_data:
     avatar = f"https://api.dicebear.com/7.x/adventurer/svg?seed={item['name']}"
-    # Đã sửa lỗi viết lặp dấu nháy đơn ở tham số real_pct_dead giúp kích hoạt onclick bình thường
     cards_html += f"""
     <div class="card" data-id="{item['id']}" data-power="{item['diff_pow']}" data-kill="{item['diff_kill']}" data-dead="{item['diff_dead']}"
         onclick="openProfile('{item['name']}','{item['id']}','{item['alliance']}',
@@ -144,7 +152,8 @@ for item in final_data:
                              '{item['diff_kill']}','{item['diff_dead']}',
                              '{item['final_kpi_kill']}','{item['final_kpi_dead']}',
                              '{item['real_pct_kill']}','{item['real_pct_dead']}',
-                             '{item['bar_fill_kill']}','{item['bar_fill_dead']}','{avatar}')">
+                             '{item['bar_fill_kill']}','{item['bar_fill_dead']}',
+                             '{item['t4_val']}','{item['t5_val']}','{avatar}')">
         <div class="avatar-wrap"><img src="{avatar}"></div>
         <div class="card-name">{item['name']}</div>
         <div class="value">⚡ {item['diff_pow']:,}</div>
@@ -181,11 +190,23 @@ html_content = f"""
         .card:hover {{ border-color: gold; transform: translateY(-5px); }}
         .card-name {{ font-weight: bold; font-size: 14px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
         .value {{ color: gold; font-family: monospace; font-size: 12px; }}
+        
+        /* Giao diện Modal Profile */
         .modal {{ position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 3000; }}
-        .profile-box {{ width: 88%; max-width: 360px; background: #1b1f2e; padding: 25px; border-radius: 25px; border: 1px solid gold; }}
+        .profile-box {{ width: 88%; max-width: 360px; background: #1b1f2e; padding: 25px; border-radius: 25px; border: 1px solid gold; position: relative; }}
         .stat-row {{ display: flex; gap: 8px; margin: 20px 0; }}
-        .stat-card {{ flex: 1; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; text-align: center; font-size: 10px; }}
-        .stat-card b {{ font-size: 12px; color: gold; display: block; margin-top: 5px; }}
+        .stat-card {{ flex: 1; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; text-align: center; font-size: 10px; position: relative; }}
+        .stat-card b {{ font-size: 11px; color: gold; display: block; margin-top: 5px; }}
+        
+        /* Nút Khảo sát chi tiết T4/T5 (!) */
+        .info-trigger {{ background: #ffd700; color: #000; border: none; border-radius: 50%; width: 14px; height: 14px; font-size: 9px; font-weight: bold; cursor: pointer; display: inline-block; margin-left: 3px; line-height: 14px; text-align: center; vertical-align: middle; }}
+        .info-trigger:hover {{ background: #fff; }}
+        
+        /* Menu thả xuống chứa dữ liệu T4 - T5 */
+        .t-detail-box {{ display: none; background: #0f111a; border: 1px dashed #ffd700; padding: 8px; margin-top: 8px; border-radius: 8px; font-size: 11px; text-align: left; }}
+        .t-detail-box div {{ display: flex; justify-content: space-between; margin: 3px 0; color: #ccc; }}
+        .t-detail-box span {{ color: #00ffcc; font-family: monospace; }}
+
         .kpi-section {{ font-size: 12px; margin-top: 15px; }}
         .kpi-label {{ display: flex; justify-content: space-between; margin-bottom: 5px; font-weight: bold; }}
         .pct-tag {{ color: #00ffcc; font-family: monospace; background: rgba(0,255,204,0.1); padding: 1px 6px; border-radius: 4px; margin-left: 5px; }}
@@ -195,93 +216,4 @@ html_content = f"""
     </style>
 </head>
 <body>
-    <div id="langBtn">EN</div>
-    <input class="search" id="searchInput" placeholder="🔍 Nhập tên hoặc ID..." onkeyup="search(this.value)">
-    <div class="filters">
-        <div class="filter active" id="fPow" onclick="setMode('power', this)">⚡ SỨC MẠNH BIẾN ĐỘNG</div>
-        <div class="filter" id="fKill" onclick="setMode('kill', this)">🔥 TIÊU DIỆT BIẾN ĐỘNG</div>
-        <div class="filter" id="fDead" onclick="setMode('dead', this)">💀 ĐIỂM CHẾT BIẾN ĐỘNG</div>
-    </div>
-    <div class="grid" id="grid">{cards_html}</div>
-    <div class="modal" id="modal"><div class="profile-box" id="profileContent"></div></div>
-
-<script>
-    let lang = "vn";
-    const TEXT = {{
-        vn: {{ search: "🔍 Nhập tên hoặc ID...", pow: "⚡ SỨC MẠNH BIẾN ĐỘNG", kill: "🔥 TIÊU DIỆT BIẾN ĐỘNG", dead: "💀 ĐIỂM CHẾT BIẾN ĐỘNG", kK_label: "🔥 KPI Tiêu diệt", kD_label: "💀 KPI Điểm chết", exit: "QUAY LẠI" }},
-        en: {{ search: "🔍 Search name or ID...", pow: "⚡ POWER CHANGE", kill: "🔥 KILLS CHANGE", dead: "💀 DEAD CHANGE", kK_label: "🔥 Kills KPI", kD_label: "💀 Dead KPI", exit: "CLOSE" }}
-    }};
-
-    document.getElementById("langBtn").onclick = function() {{
-        lang = lang === "vn" ? "en" : "vn";
-        this.innerText = lang.toUpperCase();
-        document.getElementById("searchInput").placeholder = TEXT[lang].search;
-        document.getElementById("fPow").innerText = TEXT[lang].pow;
-        document.getElementById("fKill").innerText = TEXT[lang].kill;
-        document.getElementById("fDead").innerText = TEXT[lang].dead;
-    }};
-
-    fn_search = function(v) {{
-        v = v.toLowerCase();
-        document.querySelectorAll('.card').forEach(c => {{
-            const name = c.querySelector('.card-name').innerText.toLowerCase();
-            const id = c.getAttribute('data-id').toLowerCase();
-            if (name.includes(v) || id.includes(v)) {{
-                c.style.display = 'block';
-            }} else {{
-                c.style.display = 'none';
-            }}
-        }});
-    }}
-    document.getElementById("searchInput").onkeyup = function() {{ fn_search(this.value); }};
-
-    function setMode(m, el) {{
-        document.querySelectorAll('.filter').forEach(f => f.classList.remove('active'));
-        el.classList.add('active');
-        let grid = document.getElementById('grid');
-        let cards = Array.from(grid.getElementsByClassName('card'));
-        cards.sort((a,b) => Number(b.dataset[m]) - Number(a.dataset[m]));
-        grid.innerHTML = "";
-        cards.forEach(c => {{
-            let prefix = m === 'power' ? '⚡ ' : (m === 'kill' ? '🔥 ' : '💀 ');
-            c.querySelector('.value').innerText = prefix + Number(c.dataset[m]).toLocaleString();
-            grid.appendChild(c);
-        }});
-    }}
-
-    function openProfile(name, id, all, tPow, tKill, tDead, dKill, dDead, kK, kD, realPctK, realPctD, barK, barD, avatar) {{
-        let t = TEXT[lang];
-        document.getElementById('modal').style.display = 'flex';
-        document.getElementById('profileContent').innerHTML = `
-            <center>
-                <div class="avatar-wrap" style="width:70px; height:70px;"><img src="${{avatar}}"></div>
-                <h3 style="margin:10px 0 5px 0;">${{name}}</h3>
-                <small style="color:#888;">ID: ${{id}} | ${{all}}</small>
-            </center>
-            <div class="stat-row">
-                <div class="stat-card">⚡ SỨC MẠNH<br><b>${{Number(tPow).toLocaleString()}}</b></div>
-                <div class="stat-card">🔥 TIÊU DIỆT<br><b>${{Number(tKill).toLocaleString()}}</b></div>
-                <div class="stat-card">💀 ĐIỂM CHẾT<br><b>${{Number(tDead).toLocaleString()}}</b></div>
-            </div>
-            <div class="kpi-section">
-                <div class="kpi-label">
-                    <span>${{t.kK_label}} <span class="pct-tag">${{realPctK}}%</span></span>
-                    <span>${{Number(dKill).toLocaleString()}} / ${{Number(kK).toLocaleString()}}</span>
-                </div>
-                <div class="bar"><div class="fill" style="width: ${{barK}}%;"></div></div>
-                
-                <div class="kpi-label">
-                    <span>${{t.kD_label}} <span class="pct-tag">${{realPctD}}%</span></span>
-                    <span>${{Number(dDead).toLocaleString()}} / ${{Number(kD).toLocaleString()}}</span>
-                </div>
-                <div class="bar"><div class="fill" style="width: ${{barD}}%;"></div></div>
-            </div>
-            <button class="close-btn" onclick="document.getElementById('modal').style.display='none'">${{t.exit}}</button>
-        `;
-    }}
-</script>
-</body>
-</html>
-"""
-
-components.html(html_content, height=1000, scrolling=True)
+    <div id="
