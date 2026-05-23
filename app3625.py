@@ -50,16 +50,16 @@ def load_and_process_data():
         try: return int(str(x).replace(",", ""))
         except: return 0
 
-    # Chuyển ID sang string và xóa khoảng trắng để map chính xác tuyệt đối
+    # Đồng bộ ID dạng chuỗi text sạch để so khớp
     df1["ID_str"] = df1["ID"].astype(str).str.strip()
     df2["ID_str"] = df2["ID"].astype(str).str.strip()
 
-    # Tạo từ điển lưu dữ liệu mới từ Sheet 2 phục vụ phép trừ
+    # Tạo danh mục lưu dữ liệu từ Sheet 2 phục vụ tính toán phần tăng thêm
     kill_sheet2 = df2.set_index("ID_str")["Tổng Tiêu Diệt"].to_dict()
     dead_sheet2 = df2.set_index("ID_str")["Điểm Chết"].to_dict()
 
-    # Các logic tính toán cơ bản dựa theo dữ liệu nền (Sức mạnh nền ở Sheet 1)
-    df1["Power"] = df1["Sức Mạnh"].apply(to_int)
+    # Tính toán các logic nhóm dựa trên dữ liệu gốc ban đầu (Sheet 1)
+    df1["Power"] = df1["Sức Mạch"].apply(to_int)
     df1['Indiv_KPI_Dead'] = df1['Power'].apply(get_kpi_dead_value)
     df1['Group'] = df1['Tên'].apply(lambda x: str(x).split()[0].upper() if pd.notnull(x) else "")
     group_kpi_dead_sum = df1.groupby('Group')['Indiv_KPI_Dead'].transform('sum')
@@ -72,25 +72,38 @@ def load_and_process_data():
         final_target_dead = group_kpi_dead_sum[i] if is_main else row['Indiv_KPI_Dead']
         final_target_kill = get_kpi_kill_value(row['Power'])
         
-        # Số liệu gốc tại trận (Sheet 1)
+        # 1. Dữ liệu mốc ban đầu (Sheet 1)
         kill_s1 = to_int(row["Tổng Tiêu Diệt"])
         dead_s1 = to_int(row["Điểm Chết"])
         
-        # Số liệu mới nhất sau khi tăng (Sheet 2)
+        # 2. Dữ liệu tổng hiện tại (Sheet 2)
         kill_s2 = to_int(kill_sheet2.get(p_id, kill_s1))
         dead_s2 = to_int(dead_sheet2.get(p_id, dead_s1))
         
-        # Lấy hiệu số: Dữ liệu thực tế tăng thêm = Sheet 2 - Sheet 1
-        increased_kill = max(0, kill_s2 - kill_s1)
-        increased_dead = max(0, dead_s2 - dead_s1)
+        # 3. Tính toán CHÊNH LỆCH ĐÃ TĂNG (Dành riêng cho thanh KPI)
+        diff_kill = max(0, kill_s2 - kill_s1)
+        diff_dead = max(0, dead_s2 - dead_s1)
+        
+        # Tính toán % chiều dài thanh fill (từ 0% đến tối đa 100%)
+        pct_fill_kill = min(100, int((diff_kill / final_target_kill) * 100)) if final_target_kill > 0 else 0
+        pct_fill_dead = min(100, int((diff_dead / final_target_dead) * 100)) if final_target_dead > 0 else 0
         
         processed_list.append({
             "name": row["Tên"],
             "id": str(row["ID"]),
             "alliance": row["Liên Minh"],
             "pow": row["Power"],
-            "kill": increased_kill, # Đưa lượng dữ liệu tăng thêm lên Web
-            "dead": increased_dead, # Đưa lượng dữ liệu tăng thêm lên Web
+            
+            # Giữ nguyên hiển thị tổng số lớn ở trang chủ (Lấy từ Sheet 2 mới nhất)
+            "kill": kill_s2, 
+            "dead": dead_s2, 
+            
+            # Gửi thêm dữ liệu chênh lệch tăng trưởng vào cấu trúc để nạp vào thanh KPI
+            "diff_kill": diff_kill,
+            "diff_dead": diff_dead,
+            "pct_kill": pct_fill_kill,
+            "pct_dead": pct_fill_dead,
+            
             "final_kpi_dead": final_target_dead,
             "final_kpi_kill": final_target_kill,
             "is_farm": not is_main
@@ -100,23 +113,24 @@ def load_and_process_data():
 try:
     final_data = load_and_process_data()
 except Exception as e:
-    st.error(f"Lỗi xử lý dữ liệu tăng trưởng: {e}")
+    st.error(f"Lỗi đồng bộ dữ liệu KPI: {e}")
     st.stop()
 
 # ===== 4. BUILD HTML CARDS =====
 cards_html = ""
 for item in final_data:
     avatar = f"https://api.dicebear.com/7.x/adventurer/svg?seed={item['name']}"
+    # Đưa thêm các tham số diff_kill, diff_dead, pct_kill, pct_dead vào hàm onClick openProfile
     cards_html += f"""
     <div class="card" data-id="{item['id']}" data-power="{item['pow']}" data-kill="{item['kill']}" data-dead="{item['dead']}"
-        onclick="openProfile('{item['name']}','{item['id']}','{item['alliance']}','{item['pow']}','{item['kill']}','{item['dead']}','{item['final_kpi_kill']}','{item['final_kpi_dead']}','{avatar}')">
+        onclick="openProfile('{item['name']}','{item['id']}','{item['alliance']}','{item['pow']}','{item['kill']}','{item['dead']}','{item['final_kpi_kill']}','{item['final_kpi_dead']}','{item['diff_kill']}','{item['diff_dead']}','{item['pct_kill']}','{item['pct_dead']}','{avatar}')">
         <div class="avatar-wrap"><img src="{avatar}"></div>
         <div class="card-name">{item['name']}</div>
         <div class="value">⚡ {item['pow']:,}</div>
     </div>
     """
 
-# ===== 5. GIAO DIỆN HTML/CSS/JS (GIỮ NGUYÊN HOÀN TOÀN) =====
+# ===== 5. GIAO DIỆN HTML/CSS/JS =====
 html_content = f"""
 <!DOCTYPE html>
 <html>
@@ -154,7 +168,7 @@ html_content = f"""
         .kpi-section {{ font-size: 12px; margin-top: 15px; }}
         .kpi-label {{ display: flex; justify-content: space-between; margin-bottom: 5px; }}
         .bar {{ height: 10px; background: #333; border-radius: 5px; margin-bottom: 12px; overflow: hidden; }}
-        .fill {{ height: 100%; background: linear-gradient(90deg, gold, orange); width: 0%; }}
+        .fill {{ height: 100%; background: linear-gradient(90deg, #ffd700, #ff8c00); width: 0%; transition: width 0.4s ease-in-out; }}
         .close-btn {{ width: 100%; padding: 12px; background: #ff4b4b; color: white; border: none; border-radius: 10px; cursor: pointer; margin-top: 15px; font-weight: bold; }}
     </style>
 </head>
@@ -190,7 +204,6 @@ html_content = f"""
         document.querySelectorAll('.card').forEach(c => {{
             const name = c.querySelector('.card-name').innerText.toLowerCase();
             const id = c.getAttribute('data-id').toLowerCase();
-            
             if (name.includes(v) || id.includes(v)) {{
                 c.style.display = 'block';
             }} else {{
@@ -213,7 +226,8 @@ html_content = f"""
         }});
     }}
 
-    function openProfile(name, id, all, pow, kill, dead, kK, kD, avatar) {{
+    // Hàm nhận thêm biến diffK, diffD (số tăng thêm) và pctK, pctD (phần trăm của thanh bar)
+    function openProfile(name, id, all, pow, kill, dead, kK, kD, diffK, diffD, pctK, pctD, avatar) {{
         let t = TEXT[lang];
         document.getElementById('modal').style.display = 'flex';
         document.getElementById('profileContent').innerHTML = `
@@ -228,10 +242,11 @@ html_content = f"""
                 <div class="stat-card">💀 DEAD<br><b>${{Number(dead).toLocaleString()}}</b></div>
             </div>
             <div class="kpi-section">
-                <div class="kpi-label"><span>${{t.kK_label}}</span><span>0 / ${{Number(kK).toLocaleString()}}</span></div>
-                <div class="bar"><div class="fill"></div></div>
-                <div class="kpi-label"><span>${{t.kD_label}}</span><span>0 / ${{Number(kD).toLocaleString()}}</span></div>
-                <div class="bar"><div class="fill"></div></div>
+                <div class="kpi-label"><span>${{t.kK_label}}</span><span>${{Number(diffK).toLocaleString()}} / ${{Number(kK).toLocaleString()}}</span></div>
+                <div class="bar"><div class="fill" style="width: ${{pctK}}%;"></div></div>
+                
+                <div class="kpi-label"><span>${{t.kD_label}}</span><span>${{Number(diffD).toLocaleString()}} / ${{Number(kD).toLocaleString()}}</span></div>
+                <div class="bar"><div class="fill" style="width: ${{pctD}}%;"></div></div>
             </div>
             <button class="close-btn" onclick="document.getElementById('modal').style.display='none'">${{t.exit}}</button>
         `;
