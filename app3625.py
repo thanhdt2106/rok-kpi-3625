@@ -92,7 +92,7 @@ def load_and_process_data():
         diff_kill = kill_s2 - kill_s1
         diff_dead = dead_s2 - dead_s1
         
-        # TÍNH TOÁN % KPI TĂNG DẦN KHÔNG GIỚI HẠN (Phục vụ hiển thị text số % đạt được)
+        # Tính toán % KPI tăng dần không giới hạn
         real_pct_kill = round((diff_kill / final_target_kill) * 100, 1) if final_target_kill > 0 else 0.0
         real_pct_dead = round((diff_dead / final_target_dead) * 100, 1) if final_target_dead > 0 else 0.0
         
@@ -115,7 +115,7 @@ def load_and_process_data():
             "total_kill": kill_s2,
             "total_dead": dead_s2,
             
-            # Dữ liệu % thực tế (Không giới hạn ở 100%) và độ rộng thanh Bar
+            # Dữ liệu % thực tế và độ rộng thanh Bar
             "real_pct_kill": real_pct_kill,
             "real_pct_dead": real_pct_dead,
             "bar_fill_kill": bar_fill_kill,
@@ -136,13 +136,14 @@ except Exception as e:
 cards_html = ""
 for item in final_data:
     avatar = f"https://api.dicebear.com/7.x/adventurer/svg?seed={item['name']}"
+    # Đã sửa lỗi viết lặp dấu nháy đơn ở tham số real_pct_dead giúp kích hoạt onclick bình thường
     cards_html += f"""
     <div class="card" data-id="{item['id']}" data-power="{item['diff_pow']}" data-kill="{item['diff_kill']}" data-dead="{item['diff_dead']}"
         onclick="openProfile('{item['name']}','{item['id']}','{item['alliance']}',
                              '{item['total_pow']}','{item['total_kill']}','{item['total_dead']}',
                              '{item['diff_kill']}','{item['diff_dead']}',
                              '{item['final_kpi_kill']}','{item['final_kpi_dead']}',
-                             '{item['real_pct_kill']}',''{item['real_pct_dead']}',
+                             '{item['real_pct_kill']}','{item['real_pct_dead']}',
                              '{item['bar_fill_kill']}','{item['bar_fill_dead']}','{avatar}')">
         <div class="avatar-wrap"><img src="{avatar}"></div>
         <div class="card-name">{item['name']}</div>
@@ -220,7 +221,7 @@ html_content = f"""
         document.getElementById("fDead").innerText = TEXT[lang].dead;
     }};
 
-    function search(v) {{
+    fn_search = function(v) {{
         v = v.toLowerCase();
         document.querySelectorAll('.card').forEach(c => {{
             const name = c.querySelector('.card-name').innerText.toLowerCase();
@@ -232,6 +233,7 @@ html_content = f"""
             }}
         }});
     }}
+    document.getElementById("searchInput").onkeyup = function() {{ fn_search(this.value); }};
 
     function setMode(m, el) {{
         document.querySelectorAll('.filter').forEach(f => f.classList.remove('active'));
@@ -247,7 +249,6 @@ html_content = f"""
         }});
     }}
 
-    // Hàm nhận tham số và xử lý hiển thị phần trăm KPI lũy tiến vô hạn
     function openProfile(name, id, all, tPow, tKill, tDead, dKill, dDead, kK, kD, realPctK, realPctD, barK, barD, avatar) {{
         let t = TEXT[lang];
         document.getElementById('modal').style.display = 'flex';
