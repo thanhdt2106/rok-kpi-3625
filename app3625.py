@@ -76,13 +76,14 @@ def load_and_process_data():
     t4_sheet2 = df2.set_index("ID_str")[col_t4].to_dict() if col_t4 in df2.columns else {}
     t5_sheet2 = df2.set_index("ID_str")[col_t5].to_dict() if col_t5 in df2.columns else {}
 
-    # Tính toán trước biến động điểm chết cá nhân cho từng dòng trên df1 để gom nhóm
     col_dead_s1 = find_col(df1, ["chết"]) or "Điểm Chết"
     df1["Power_Goc"] = df1[find_col(df1, ["sức", "mạnh"]) or "Sức Mạnh"].apply(to_int)
     df1['Indiv_KPI_Dead'] = df1['Power_Goc'].apply(get_kpi_dead_value)
+    
+    # Định nghĩa Nhóm dựa trên từ đầu tiên của Tên (giống cách bắt KPI cũ của bạn)
     df1['Group'] = df1['Tên'].apply(lambda x: str(x).split()[0].upper() if pd.notnull(x) else "")
     
-    # Tính toán diff_dead riêng lẻ của từng dòng trước khi gộp nhóm
+    # Tính biến động điểm chết (thực tế tăng thêm) của riêng từng tài khoản trước
     def calc_indiv_diff_dead(row):
         p_id = row['ID_str']
         d_s1 = to_int(row[col_dead_s1])
@@ -91,7 +92,7 @@ def load_and_process_data():
 
     df1['Indiv_Diff_Dead'] = df1.apply(calc_indiv_diff_dead, axis=1)
 
-    # Tính tổng KPI chết và tổng Điểm chết thực tế biến động theo Nhóm (Group)
+    # Gom nhóm theo chữ đầu tiên: Tính tổng KPI chết và tổng số lính chết thực tế tăng thêm của cả nhóm
     group_kpi_dead_sum = df1.groupby('Group')['Indiv_KPI_Dead'].transform('sum')
     group_diff_dead_sum = df1.groupby('Group')['Indiv_Diff_Dead'].transform('sum')
     group_max_power = df1.groupby('Group')['Power_Goc'].transform('max')
@@ -99,10 +100,13 @@ def load_and_process_data():
     processed_list = []
     for i, row in df1.iterrows():
         p_id = row['ID_str']
+        
+        # Tài khoản chính trong nhóm là tài khoản có Power_Goc lớn nhất nhóm
         is_main = (row['Power_Goc'] == group_max_power[i])
         
-        # Áp dụng quy tắc cộng dồn cho tài khoản chính
+        # Áp dụng logic bắt KPI và cộng dồn điểm chết biến động thực tế
         final_target_dead = group_kpi_dead_sum[i] if is_main else row['Indiv_KPI_Dead']
+        diff_dead = group_diff_dead_sum[i] if is_main else row['Indiv_Diff_Dead']
         
         current_name = name_sheet2.get(p_id, row["Tên"])
         
@@ -123,9 +127,6 @@ def load_and_process_data():
         diff_kill_score = diff_t4_score + diff_t5_score
         diff_pow = pow_s2 - pow_s1
         
-        # THAY ĐỔI TẠI ĐÂY: Nếu là acc chính thì lấy tổng diff_dead của cả nhóm (bao gồm farm)
-        diff_dead = group_diff_dead_sum[i] if is_main else row['Indiv_Diff_Dead']
-        
         final_target_kill = get_kpi_kill_value(row['Power_Goc'])
         
         real_pct_kill = round((diff_kill_score / final_target_kill) * 100, 1) if final_target_kill > 0 else 0.0
@@ -141,11 +142,11 @@ def load_and_process_data():
             
             "diff_pow": diff_pow,
             "diff_kill": diff_kill_score, 
-            "diff_dead": diff_dead,          # Đã được cộng dồn từ farm nếu là acc chính
+            "diff_dead": diff_dead,          # Đã cộng dồn lính chết từ acc farm nếu là acc chính
             
             "total_pow": pow_s2,
             "total_kill": kill_s2, 
-            "total_dead": dead_s2,           # Đây là tổng điểm chết tích lũy hiển thị trên thông tin chung
+            "total_dead": dead_s2,           
             
             "diff_t4": diff_t4_score,
             "diff_t5": diff_t5_score,
@@ -185,7 +186,7 @@ for item in final_data:
     </div>
     """
 
-# ===== 5. GIAO DIỆN HTML/CSS/JS (FULL MULTI-LANGUAGE TEXT) =====
+# ===== 5. GIAO DIỆN HTML/CSS/JS =====
 html_content = f"""
 <!DOCTYPE html>
 <html>
@@ -216,7 +217,6 @@ html_content = f"""
         .card-name {{ font-weight: bold; font-size: 14px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
         .value {{ color: gold; font-family: monospace; font-size: 12px; }}
         
-        /* Modal Profile */
         .modal {{ position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 3000; }}
         .profile-box {{ width: 88%; max-width: 360px; background: #1b1f2e; padding: 25px; border-radius: 25px; border: 1px solid gold; position: relative; }}
         .stat-row {{ display: flex; gap: 8px; margin: 20px 0; }}
