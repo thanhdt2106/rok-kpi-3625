@@ -76,23 +76,38 @@ def load_and_process_data():
     t4_sheet2 = df2.set_index("ID_str")[col_t4].to_dict() if col_t4 in df2.columns else {}
     t5_sheet2 = df2.set_index("ID_str")[col_t5].to_dict() if col_t5 in df2.columns else {}
 
+    # Tính toán trước biến động điểm chết cá nhân cho từng dòng trên df1 để gom nhóm
+    col_dead_s1 = find_col(df1, ["chết"]) or "Điểm Chết"
     df1["Power_Goc"] = df1[find_col(df1, ["sức", "mạnh"]) or "Sức Mạnh"].apply(to_int)
     df1['Indiv_KPI_Dead'] = df1['Power_Goc'].apply(get_kpi_dead_value)
     df1['Group'] = df1['Tên'].apply(lambda x: str(x).split()[0].upper() if pd.notnull(x) else "")
+    
+    # Tính toán diff_dead riêng lẻ của từng dòng trước khi gộp nhóm
+    def calc_indiv_diff_dead(row):
+        p_id = row['ID_str']
+        d_s1 = to_int(row[col_dead_s1])
+        d_s2 = to_int(dead_sheet2.get(p_id, d_s1))
+        return d_s2 - d_s1
+
+    df1['Indiv_Diff_Dead'] = df1.apply(calc_indiv_diff_dead, axis=1)
+
+    # Tính tổng KPI chết và tổng Điểm chết thực tế biến động theo Nhóm (Group)
     group_kpi_dead_sum = df1.groupby('Group')['Indiv_KPI_Dead'].transform('sum')
+    group_diff_dead_sum = df1.groupby('Group')['Indiv_Diff_Dead'].transform('sum')
     group_max_power = df1.groupby('Group')['Power_Goc'].transform('max')
 
     processed_list = []
     for i, row in df1.iterrows():
         p_id = row['ID_str']
         is_main = (row['Power_Goc'] == group_max_power[i])
+        
+        # Áp dụng quy tắc cộng dồn cho tài khoản chính
         final_target_dead = group_kpi_dead_sum[i] if is_main else row['Indiv_KPI_Dead']
-        final_target_kill = get_kpi_kill_value(row['Power_Goc'])
         
         current_name = name_sheet2.get(p_id, row["Tên"])
         
         pow_s1 = to_int(row[find_col(df1, ["sức", "mạnh"]) or "Sức Mạnh"])
-        dead_s1 = to_int(row[find_col(df1, ["chết"]) or "Điểm Chết"])
+        dead_s1 = to_int(row[col_dead_s1])
         t4_s1 = to_int(t4_sheet1.get(p_id, 0))
         t5_s1 = to_int(t5_sheet1.get(p_id, 0))
         
@@ -107,7 +122,11 @@ def load_and_process_data():
         
         diff_kill_score = diff_t4_score + diff_t5_score
         diff_pow = pow_s2 - pow_s1
-        diff_dead = dead_s2 - dead_s1
+        
+        # THAY ĐỔI TẠI ĐÂY: Nếu là acc chính thì lấy tổng diff_dead của cả nhóm (bao gồm farm)
+        diff_dead = group_diff_dead_sum[i] if is_main else row['Indiv_Diff_Dead']
+        
+        final_target_kill = get_kpi_kill_value(row['Power_Goc'])
         
         real_pct_kill = round((diff_kill_score / final_target_kill) * 100, 1) if final_target_kill > 0 else 0.0
         real_pct_dead = round((diff_dead / final_target_dead) * 100, 1) if final_target_dead > 0 else 0.0
@@ -122,11 +141,11 @@ def load_and_process_data():
             
             "diff_pow": diff_pow,
             "diff_kill": diff_kill_score, 
-            "diff_dead": diff_dead,
+            "diff_dead": diff_dead,          # Đã được cộng dồn từ farm nếu là acc chính
             
             "total_pow": pow_s2,
             "total_kill": kill_s2, 
-            "total_dead": dead_s2,
+            "total_dead": dead_s2,           # Đây là tổng điểm chết tích lũy hiển thị trên thông tin chung
             
             "diff_t4": diff_t4_score,
             "diff_t5": diff_t5_score,
@@ -231,11 +250,9 @@ html_content = f"""
     <div class="modal" id="modal"><div class="profile-box" id="profileContent"></div></div>
 
 <script>
-    // Khai báo biến lưu trữ dữ liệu tạm để xử lý dịch thuật khi đang mở modal
     let activeProfileData = null; 
     let lang = "vn";
 
-    // MẢNG TỪ ĐIỂN SONG NGỮ CHO TOÀN BỘ TEXT TRONG FILE
     const TEXT = {{
         vn: {{ 
             search: "🔍 Nhập tên hoặc ID...", 
@@ -277,25 +294,21 @@ html_content = f"""
         }}
     }};
 
-    // Sự kiện chuyển đổi ngôn ngữ đầu trang toàn cục
     document.getElementById("langBtn").onclick = function() {{
         lang = lang === "vn" ? "en" : "vn";
         this.innerText = lang.toUpperCase();
         
-        // Cập nhật text phần bộ lọc & tìm kiếm
         document.getElementById("searchInput").placeholder = TEXT[lang].search;
         document.getElementById("fPow").innerText = TEXT[lang].pow;
         document.getElementById("fKill").innerText = TEXT[lang].kill;
         document.getElementById("fDead").innerText = TEXT[lang].dead;
         
-        // Render lại bộ giá trị ngoài trang chủ theo đúng tiền tố ngôn ngữ hiện tại
         let activeFilter = document.querySelector('.filter.active');
         if(activeFilter) {{
             let mode = activeFilter.id === 'fPow' ? 'power' : (activeFilter.id === 'fKill' ? 'kill' : 'dead');
             updateCardValues(mode);
         }}
         
-        // Nếu người dùng đang mở xem Profile của ai đó, dịch trực tiếp luôn nội dung modal
         if (activeProfileData) {{
             renderModalContent();
         }}
@@ -341,14 +354,12 @@ html_content = f"""
         }}
     }}
 
-    // Hàm nhận dữ liệu thô từ cấu trúc thẻ
     function openProfile(name, id, all, tPow, tKill, tDead, dKill, dDead, kK, kD, realPctK, realPctD, barK, barD, dt4, dt5, avatar) {{
         activeProfileData = {{ name, id, all, tPow, tKill, tDead, dKill, dDead, kK, kD, realPctK, realPctD, barK, barD, dt4, dt5, avatar }};
         document.getElementById('modal').style.display = 'flex';
         renderModalContent();
     }}
 
-    // Hàm xuất mã HTML cấu trúc nội dung đã dịch sang Modal
     function renderModalContent() {{
         if (!activeProfileData) return;
         let d = activeProfileData;
@@ -396,7 +407,7 @@ html_content = f"""
 
     function closeProfile() {{
         document.getElementById('modal').style.display = 'none';
-        activeProfileData = null; // Reset bộ nhớ đệm
+        activeProfileData = null;
     }}
 </script>
 </body>
