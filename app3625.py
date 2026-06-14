@@ -80,10 +80,8 @@ def load_and_process_data():
     df1["Power_Goc"] = df1[find_col(df1, ["sức", "mạnh"]) or "Sức Mạnh"].apply(to_int)
     df1['Indiv_KPI_Dead'] = df1['Power_Goc'].apply(get_kpi_dead_value)
     
-    # Định nghĩa Nhóm dựa trên từ đầu tiên của Tên (giống cách bắt KPI cũ của bạn)
     df1['Group'] = df1['Tên'].apply(lambda x: str(x).split()[0].upper() if pd.notnull(x) else "")
     
-    # Tính biến động điểm chết (thực tế tăng thêm) của riêng từng tài khoản trước
     def calc_indiv_diff_dead(row):
         p_id = row['ID_str']
         d_s1 = to_int(row[col_dead_s1])
@@ -92,7 +90,6 @@ def load_and_process_data():
 
     df1['Indiv_Diff_Dead'] = df1.apply(calc_indiv_diff_dead, axis=1)
 
-    # Gom nhóm theo chữ đầu tiên: Tính tổng KPI chết và tổng số lính chết thực tế tăng thêm của cả nhóm
     group_kpi_dead_sum = df1.groupby('Group')['Indiv_KPI_Dead'].transform('sum')
     group_diff_dead_sum = df1.groupby('Group')['Indiv_Diff_Dead'].transform('sum')
     group_max_power = df1.groupby('Group')['Power_Goc'].transform('max')
@@ -100,11 +97,8 @@ def load_and_process_data():
     processed_list = []
     for i, row in df1.iterrows():
         p_id = row['ID_str']
-        
-        # Tài khoản chính trong nhóm là tài khoản có Power_Goc lớn nhất nhóm
         is_main = (row['Power_Goc'] == group_max_power[i])
         
-        # Áp dụng logic bắt KPI và cộng dồn điểm chết biến động thực tế
         final_target_dead = group_kpi_dead_sum[i] if is_main else row['Indiv_KPI_Dead']
         diff_dead = group_diff_dead_sum[i] if is_main else row['Indiv_Diff_Dead']
         
@@ -132,8 +126,12 @@ def load_and_process_data():
         real_pct_kill = round((diff_kill_score / final_target_kill) * 100, 1) if final_target_kill > 0 else 0.0
         real_pct_dead = round((diff_dead / final_target_dead) * 100, 1) if final_target_dead > 0 else 0.0
         
+        # --- TÍNH TOÁN THÊM KPI TỔNG CHO QUY TRÌNH SORT/LỌC (NẾU CẦN) ---
+        real_pct_total = round((real_pct_kill + real_pct_dead) / 2, 1)
+        
         bar_fill_kill = min(100, max(0, int(real_pct_kill)))
         bar_fill_dead = min(100, max(0, int(real_pct_dead)))
+        bar_fill_total = min(100, max(0, int(real_pct_total)))
         
         processed_list.append({
             "name": current_name,
@@ -142,7 +140,7 @@ def load_and_process_data():
             
             "diff_pow": diff_pow,
             "diff_kill": diff_kill_score, 
-            "diff_dead": diff_dead,          # Đã cộng dồn lính chết từ acc farm nếu là acc chính
+            "diff_dead": diff_dead,          
             
             "total_pow": pow_s2,
             "total_kill": kill_s2, 
@@ -153,8 +151,11 @@ def load_and_process_data():
             
             "real_pct_kill": real_pct_kill,
             "real_pct_dead": real_pct_dead,
+            "real_pct_total": real_pct_total,
+            
             "bar_fill_kill": bar_fill_kill,
             "bar_fill_dead": bar_fill_dead,
+            "bar_fill_total": bar_fill_total,
             
             "final_kpi_dead": final_target_dead,
             "final_kpi_kill": final_target_kill
@@ -177,8 +178,8 @@ for item in final_data:
                              '{item['total_pow']}','{item['total_kill']}','{item['total_dead']}',
                              '{item['diff_kill']}','{item['diff_dead']}',
                              '{item['final_kpi_kill']}','{item['final_kpi_dead']}',
-                             '{item['real_pct_kill']}','{item['real_pct_dead']}',
-                             '{item['bar_fill_kill']}','{item['bar_fill_dead']}',
+                             '{item['real_pct_kill']}','{item['real_pct_dead']}','{item['real_pct_total']}',
+                             '{item['bar_fill_kill']}','{item['bar_fill_dead']}','{item['bar_fill_total']}',
                              '{item['diff_t4']}','{item['diff_t5']}','{avatar}')">
         <div class="avatar-wrap"><img src="{avatar}"></div>
         <div class="card-name">{item['name']}</div>
@@ -218,7 +219,7 @@ html_content = f"""
         .value {{ color: gold; font-family: monospace; font-size: 12px; }}
         
         .modal {{ position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 3000; }}
-        .profile-box {{ width: 88%; max-width: 360px; background: #1b1f2e; padding: 25px; border-radius: 25px; border: 1px solid gold; position: relative; }}
+        .profile-box {{ width: 88%; max-width: 380px; background: #1b1f2e; padding: 25px; border-radius: 25px; border: 1px solid gold; position: relative; }}
         .stat-row {{ display: flex; gap: 8px; margin: 20px 0; }}
         .stat-card {{ flex: 1; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; text-align: center; font-size: 10px; position: relative; }}
         .stat-card b {{ font-size: 11px; color: gold; display: block; margin-top: 5px; }}
@@ -235,6 +236,9 @@ html_content = f"""
         .pct-tag {{ color: #00ffcc; font-family: monospace; background: rgba(0,255,204,0.1); padding: 1px 6px; border-radius: 4px; margin-left: 5px; }}
         .bar {{ height: 10px; background: #333; border-radius: 5px; margin-bottom: 12px; overflow: hidden; }}
         .fill {{ height: 100%; background: linear-gradient(90deg, #ffd700, #ff8c00); width: 0%; transition: width 0.4s ease-in-out; }}
+        .fill-total {{ background: linear-gradient(90deg, #00ffcc, #0099ff) !important; }}
+        
+        .alert-box {{ background: rgba(255,255,255,0.04); border-left: 4px solid gold; padding: 12px; border-radius: 6px; margin-top: 15px; font-size: 12px; line-height: 1.4; text-align: left; }}
         .close-btn {{ width: 100%; padding: 12px; background: #ff4b4b; color: white; border: none; border-radius: 10px; cursor: pointer; margin-top: 15px; font-weight: bold; }}
     </style>
 </head>
@@ -271,7 +275,14 @@ html_content = f"""
             
             kK_label: "🔥 KPI Tiêu Diệt (T4+T5)", 
             kD_label: "💀 KPI Điểm chết", 
-            exit: "QUAY LẠI" 
+            kT_label: "📊 KPI TỔNG ĐẠT ĐƯỢC",
+            exit: "QUAY LẠI",
+            
+            // Hệ thông báo
+            msg_perfect: "Đỉnh đấy bro 😎",
+            msg_good: "Cũng khá ổn đấy nhưng cần cố gắng thêm 🫣",
+            msg_warn: "Bạn cần nộp phạt Rss để ở lại hoặc nhận vé bay miễn phí và rời đi 💸",
+            msg_kick: "Vui lòng rời đi trước ngày 26/9 🚨"
         }},
         en: {{ 
             search: "🔍 Search name or ID...", 
@@ -290,7 +301,14 @@ html_content = f"""
             
             kK_label: "🔥 Kills KPI (T4+T5)", 
             kD_label: "💀 Dead KPI", 
-            exit: "CLOSE" 
+            kT_label: "📊 OVERALL KPI ACHIEVED",
+            exit: "CLOSE",
+            
+            // Hệ thông báo
+            msg_perfect: "Absolute beast, bro! 😎",
+            msg_good: "Not bad, but you need to push harder 🫣",
+            msg_warn: "Pay RSS fine to stay, or take a free passport and leave 💸",
+            msg_kick: "Please migrate out before Sept 26th 🚨"
         }}
     }};
 
@@ -354,8 +372,8 @@ html_content = f"""
         }}
     }}
 
-    function openProfile(name, id, all, tPow, tKill, tDead, dKill, dDead, kK, kD, realPctK, realPctD, barK, barD, dt4, dt5, avatar) {{
-        activeProfileData = {{ name, id, all, tPow, tKill, tDead, dKill, dDead, kK, kD, realPctK, realPctD, barK, barD, dt4, dt5, avatar }};
+    function openProfile(name, id, all, tPow, tKill, tDead, dKill, dDead, kK, kD, realPctK, realPctD, realPctT, barK, barD, barT, dt4, dt5, avatar) {{
+        activeProfileData = {{ name, id, all, tPow, tKill, tDead, dKill, dDead, kK, kD, realPctK, realPctD, realPctT, barK, barD, barT, dt4, dt5, avatar }};
         document.getElementById('modal').style.display = 'flex';
         renderModalContent();
     }}
@@ -364,6 +382,25 @@ html_content = f"""
         if (!activeProfileData) return;
         let d = activeProfileData;
         let t = TEXT[lang];
+        
+        // Xác định thông báo tương ứng với các mức KPI Tổng
+        let systemMsg = "";
+        let alertBorderColor = "#ff4b4b"; // Mặc định đỏ cho các mốc thấp
+        let pct = Number(d.realPctT);
+        
+        if(pct >= 100) {{
+            systemMsg = t.msg_perfect;
+            alertBorderColor = "#00ffcc";
+        }} else if(pct >= 70) {{
+            systemMsg = t.msg_good;
+            alertBorderColor = "gold";
+        }} else if(pct >= 50) {{
+            systemMsg = t.msg_warn;
+            alertBorderColor = "#ff9900";
+        }} else {{
+            systemMsg = t.msg_kick;
+            alertBorderColor = "#ff4b4b";
+        }}
         
         document.getElementById('profileContent').innerHTML = `
             <center>
@@ -400,7 +437,20 @@ html_content = f"""
                     <span>${{Number(d.dDead).toLocaleString()}} / ${{Number(d.kD).toLocaleString()}}</span>
                 </div>
                 <div class="bar"><div class="fill" style="width: ${{d.barD}}%;"></div></div>
+                
+                <hr style="border: 0; border-top: 1px solid #333; margin: 15px 0;">
+                
+                <div class="kpi-label" style="color: #00ffcc;">
+                    <span>${{t.kT_label}} <span class="pct-tag" style="background: rgba(0,255,150,0.2); color: #00ffcc; font-weight: bold;">${{d.realPctT}}%</span></span>
+                </div>
+                <div class="bar"><div class="fill fill-total" style="width: ${{d.barT}}%;"></div></div>
             </div>
+            
+            <div class="alert-box" style="border-left-color: ${alertBorderColor};">
+                <b style="color: ${alertBorderColor}; font-size: 11px; display:block; margin-bottom:4px;">SYSTEM NOTICE:</b>
+                <span>${systemMsg}</span>
+            </div>
+            
             <button class="close-btn" onclick="closeProfile()">${{t.exit}}</button>
         `;
     }}
