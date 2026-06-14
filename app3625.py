@@ -126,7 +126,6 @@ def load_and_process_data():
         real_pct_kill = round((diff_kill_score / final_target_kill) * 100, 1) if final_target_kill > 0 else 0.0
         real_pct_dead = round((diff_dead / final_target_dead) * 100, 1) if final_target_dead > 0 else 0.0
         
-        # --- TÍNH TOÁN THÊM KPI TỔNG CHO QUY TRÌNH SORT/LỌC (NẾU CẦN) ---
         real_pct_total = round((real_pct_kill + real_pct_dead) / 2, 1)
         
         bar_fill_kill = min(100, max(0, int(real_pct_kill)))
@@ -278,7 +277,6 @@ html_content = f"""
             kT_label: "📊 KPI TỔNG ĐẠT ĐƯỢC",
             exit: "QUAY LẠI",
             
-            // Hệ thông báo
             msg_perfect: "Đỉnh đấy bro 😎",
             msg_good: "Cũng khá ổn đấy nhưng cần cố gắng thêm 🫣",
             msg_warn: "Bạn cần nộp phạt Rss để ở lại hoặc nhận vé bay miễn phí và rời đi 💸",
@@ -304,7 +302,6 @@ html_content = f"""
             kT_label: "📊 OVERALL KPI ACHIEVED",
             exit: "CLOSE",
             
-            // Hệ thông báo
             msg_perfect: "Absolute beast, bro! 😎",
             msg_good: "Not bad, but you need to push harder 🫣",
             msg_warn: "Pay RSS fine to stay, or take a free passport and leave 💸",
@@ -383,9 +380,8 @@ html_content = f"""
         let d = activeProfileData;
         let t = TEXT[lang];
         
-        // Xác định thông báo tương ứng với các mức KPI Tổng
         let systemMsg = "";
-        let alertBorderColor = "#ff4b4b"; // Mặc định đỏ cho các mốc thấp
+        let alertBorderColor = "#ff4b4b"; 
         let pct = Number(d.realPctT);
         
         if(pct >= 100) {{
@@ -446,9 +442,9 @@ html_content = f"""
                 <div class="bar"><div class="fill fill-total" style="width: ${{d.barT}}%;"></div></div>
             </div>
             
-            <div class="alert-box" style="border-left-color: ${alertBorderColor};">
-                <b style="color: ${alertBorderColor}; font-size: 11px; display:block; margin-bottom:4px;">SYSTEM NOTICE:</b>
-                <span>${systemMsg}</span>
+            <div class="alert-box" style="border-left-color: ${{alertBorderColor}};">
+                <b style="color: ${{alertBorderColor}}; font-size: 11px; display:block; margin-bottom:4px;">SYSTEM NOTICE:</b>
+                <span>${{systemMsg}}</span>
             </div>
             
             <button class="close-btn" onclick="closeProfile()">${{t.exit}}</button>
