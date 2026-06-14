@@ -280,7 +280,7 @@ html_content = f"""
             msg_perfect: "Đỉnh đấy bro 😎",
             msg_good: "Cũng khá ổn đấy nhưng cần cố gắng thêm 🫣",
             msg_warn: "Bạn cần nộp phạt Rss để ở lại hoặc nhận vé bay miễn phí và rời đi 💸",
-            msg_kick: "Vui lòng rời đi trước ngày 26/9 🚨"
+            msg_kick: "Vui lòng rời đi trước ngày 29/6 🚨"
         }},
         en: {{ 
             search: "🔍 Search name or ID...", 
@@ -305,7 +305,7 @@ html_content = f"""
             msg_perfect: "Absolute beast, bro! 😎",
             msg_good: "Not bad, but you need to push harder 🫣",
             msg_warn: "Pay RSS fine to stay, or take a free passport and leave 💸",
-            msg_kick: "Please migrate out before Sept 26th 🚨"
+            msg_kick: "Please migrate out before June 29th 🚨"
         }}
     }};
 
