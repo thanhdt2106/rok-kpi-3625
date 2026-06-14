@@ -10,6 +10,8 @@ st.markdown("""
         [data-testid="stSidebar"] {display: none;}
         .block-container {padding: 0 !important; max-width: 100% !important;}
         #MainMenu, footer, header {visibility: hidden;}
+        /* Đảm bảo component iframe của Streamlit chiếm trọn 100% chiều rộng màn hình */
+        iframe {width: 100% !important; border: none;}
     </style>
 """, unsafe_allow_html=True)
 
@@ -191,54 +193,73 @@ html_content = f"""
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        body {{ background: #05070d; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; }}
-        #langBtn {{ position: fixed; top: 15px; right: 15px; background: gold; color: black; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; z-index: 2000; }}
+        /* Ép toàn bộ phần tử tính toán kích thước bao gồm cả padding để không bị tràn viền */
+        * {{ box-sizing: border-box; }}
+        
+        body {{ background: #05070d; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 10px; width: 100%; overflow-x: hidden; }}
+        
+        #langBtn {{ position: fixed; top: 12px; right: 12px; background: gold; color: black; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; z-index: 2000; font-size: 12px; }}
+        
         .avatar-wrap {{
-            width: 75px; height: 75px; margin: 0 auto 10px; border-radius: 50%; padding: 3px;
+            width: 70px; height: 70px; margin: 0 auto 10px; border-radius: 50%; padding: 3px;
             background: linear-gradient(45deg, #ffd700, #ff8c00);
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+            box-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
             animation: pulse-gold 2s infinite;
         }}
         @keyframes pulse-gold {{
-            0% {{ box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); transform: scale(1); }}
-            50% {{ box-shadow: 0 0 25px rgba(255, 215, 0, 0.8); transform: scale(1.03); }}
-            100% {{ box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); transform: scale(1); }}
+            0% {{ box-shadow: 0 0 8px rgba(255, 215, 0, 0.4); transform: scale(1); }}
+            50% {{ box-shadow: 0 0 20px rgba(255, 215, 0, 0.7); transform: scale(1.03); }}
+            100% {{ box-shadow: 0 0 8px rgba(255, 215, 0, 0.4); transform: scale(1); }}
         }}
         .avatar-wrap img {{ width: 100%; height: 100%; border-radius: 50%; background: #111; }}
-        .search {{ width: 100%; padding: 12px; background: #111; border: 1px solid #333; color: white; border-radius: 12px; margin-bottom: 15px; box-sizing: border-box; }}
-        .filters {{ display: flex; gap: 8px; margin-bottom: 15px; }}
-        .filter {{ flex: 1; padding: 10px; background: #222; border-radius: 8px; text-align: center; font-size: 11px; cursor: pointer; border: 1px solid #333; }}
-        .filter.active {{ background: gold; color: black; font-weight: bold; }}
-        .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }}
-        .card {{ background: #161b22; padding: 15px; border-radius: 18px; text-align: center; border: 1px solid #222; cursor: pointer; transition: 0.3s; }}
-        .card:hover {{ border-color: gold; transform: translateY(-5px); }}
-        .card-name {{ font-weight: bold; font-size: 14px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
-        .value {{ color: gold; font-family: monospace; font-size: 12px; }}
         
-        .modal {{ position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 3000; }}
-        .profile-box {{ width: 88%; max-width: 380px; background: #1b1f2e; padding: 25px; border-radius: 25px; border: 1px solid gold; position: relative; }}
-        .stat-row {{ display: flex; gap: 8px; margin: 20px 0; }}
-        .stat-card {{ flex: 1; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; text-align: center; font-size: 10px; position: relative; }}
-        .stat-card b {{ font-size: 11px; color: gold; display: block; margin-top: 5px; }}
+        .search {{ width: 100%; padding: 12px; background: #111; border: 1px solid #333; color: white; border-radius: 12px; margin-bottom: 12px; font-size: 14px; -webkit-appearance: none; }}
         
-        .info-trigger {{ background: #ffd700; color: #000; border: none; border-radius: 50%; width: 16px; height: 16px; font-size: 10px; font-weight: bold; cursor: pointer; display: inline-block; margin-left: 4px; line-height: 16px; text-align: center; vertical-align: middle; }}
-        .info-trigger:hover {{ background: #fff; }}
+        /* Bộ lọc tối ưu hiển thị dạng cuộn ngang hoặc thu nhỏ đều trên di động */
+        .filters {{ display: flex; gap: 6px; margin-bottom: 12px; width: 100%; }}
+        .filter {{ flex: 1; padding: 10px 4px; background: #222; border-radius: 8px; text-align: center; font-size: 10px; cursor: pointer; border: 1px solid #333; font-weight: 500; word-break: break-word; display: flex; align-items: center; justify-content: center; }}
+        .filter.active {{ background: gold; color: black; font-weight: bold; border-color: gold; }}
+        
+        /* Grid tự động chia cột thông minh tương thích mobile */
+        .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 10px; width: 100%; }}
+        .card {{ background: #161b22; padding: 12px; border-radius: 16px; text-align: center; border: 1px solid #222; cursor: pointer; transition: transform 0.2s, border-color 0.2s; }}
+        .card:hover {{ border-color: gold; transform: translateY(-3px); }}
+        .card-name {{ font-weight: bold; font-size: 13px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+        .value {{ color: gold; font-family: monospace; font-size: 11px; }}
+        
+        /* Modal tối ưu giao diện tràn viền chống lỗi bị khuất góc trên màn hình nhỏ */
+        .modal {{ position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 3000; padding: 10px; }}
+        .profile-box {{ width: 100%; max-width: 360px; background: #1b1f2e; padding: 20px; border-radius: 20px; border: 1px solid gold; position: relative; max-height: 94vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }}
+        
+        /* Khối hiển thị 3 chỉ số chính trên 1 hàng ngang */
+        .stat-row {{ display: flex; gap: 6px; margin: 15px 0; width: 100%; }}
+        .stat-card {{ flex: 1; background: rgba(255,255,255,0.05); padding: 8px 4px; border-radius: 10px; text-align: center; font-size: 9px; min-width: 0; }}
+        .stat-card b {{ font-size: 11px; color: gold; display: block; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+        
+        .info-trigger {{ background: #ffd700; color: #000; border: none; border-radius: 50%; width: 15px; height: 15px; font-size: 9px; font-weight: bold; cursor: pointer; display: inline-block; margin-left: 2px; line-height: 15px; text-align: center; vertical-align: middle; }}
         
         .t-detail-box {{ display: none; background: #0f111a; border: 1px dashed #ffd700; padding: 10px; margin-top: 8px; border-radius: 8px; font-size: 11px; text-align: left; }}
         .t-detail-box div {{ display: flex; justify-content: space-between; margin: 4px 0; color: #ccc; }}
         .t-detail-box span {{ color: #00ffcc; font-family: monospace; font-weight: bold; }}
 
-        .kpi-section {{ font-size: 12px; margin-top: 15px; }}
-        .kpi-label {{ display: flex; justify-content: space-between; margin-bottom: 5px; font-weight: bold; }}
-        .pct-tag {{ color: #00ffcc; font-family: monospace; background: rgba(0,255,204,0.1); padding: 1px 6px; border-radius: 4px; margin-left: 5px; }}
-        .bar {{ height: 10px; background: #333; border-radius: 5px; margin-bottom: 12px; overflow: hidden; }}
+        .kpi-section {{ font-size: 11px; margin-top: 12px; }}
+        .kpi-label {{ display: flex; justify-content: space-between; margin-bottom: 4px; font-weight: bold; align-items: center; }}
+        .pct-tag {{ color: #00ffcc; font-family: monospace; background: rgba(0,255,204,0.1); padding: 1px 4px; border-radius: 4px; font-size: 10px; }}
+        .bar {{ height: 8px; background: #333; border-radius: 4px; margin-bottom: 10px; overflow: hidden; width: 100%; }}
         .fill {{ height: 100%; background: linear-gradient(90deg, #ffd700, #ff8c00); width: 0%; transition: width 0.4s ease-in-out; }}
         .fill-total {{ background: linear-gradient(90deg, #00ffcc, #0099ff) !important; }}
         
-        .alert-box {{ background: rgba(255,255,255,0.04); border-left: 4px solid gold; padding: 12px; border-radius: 6px; margin-top: 15px; font-size: 12px; line-height: 1.4; text-align: left; }}
-        .close-btn {{ width: 100%; padding: 12px; background: #ff4b4b; color: white; border: none; border-radius: 10px; cursor: pointer; margin-top: 15px; font-weight: bold; }}
+        .alert-box {{ background: rgba(255,255,255,0.04); border-left: 4px solid gold; padding: 10px; border-radius: 6px; margin-top: 12px; font-size: 11px; line-height: 1.4; text-align: left; word-break: break-word; }}
+        .close-btn {{ width: 100%; padding: 12px; background: #ff4b4b; color: white; border: none; border-radius: 10px; cursor: pointer; margin-top: 12px; font-weight: bold; font-size: 13px; }}
+        
+        /* Tối ưu hóa kích thước chữ khi xem trên các thiết bị màn hình siêu nhỏ (như iPhone SE) */
+        @media (max-width: 350px) {{
+            .filter {{ font-size: 9px; }}
+            .stat-card b {{ font-size: 10px; }}
+            .profile-box {{ padding: 15px; }}
+        }}
     </style>
 </head>
 <body>
@@ -400,9 +421,9 @@ html_content = f"""
         
         document.getElementById('profileContent').innerHTML = `
             <center>
-                <div class="avatar-wrap" style="width:70px; height:70px;"><img src="${{d.avatar}}"></div>
-                <h3 style="margin:10px 0 5px 0;">${{d.name}}</h3>
-                <small style="color:#888;">ID: ${{d.id}} | ${{d.all}}</small>
+                <div class="avatar-wrap" style="width:65px; height:65px;"><img src="${{d.avatar}}"></div>
+                <h3 style="margin:5px 0 3px 0; font-size:16px;">${{d.name}}</h3>
+                <small style="color:#888; font-size:11px;">ID: ${{d.id}} | ${{d.all}}</small>
             </center>
             
             <div class="stat-row">
@@ -424,17 +445,17 @@ html_content = f"""
             <div class="kpi-section">
                 <div class="kpi-label">
                     <span>${{t.kK_label}} <span class="pct-tag">${{d.realPctK}}%</span></span>
-                    <span>${{Number(d.dKill).toLocaleString()}} / ${{Number(d.kK).toLocaleString()}}</span>
+                    <span style="font-family: monospace;">${{Number(d.dKill).toLocaleString()}}/${{Number(d.kK).toLocaleString()}}</span>
                 </div>
                 <div class="bar"><div class="fill" style="width: ${{d.barK}}%;"></div></div>
                 
                 <div class="kpi-label">
                     <span>${{t.kD_label}} <span class="pct-tag">${{d.realPctD}}%</span></span>
-                    <span>${{Number(d.dDead).toLocaleString()}} / ${{Number(d.kD).toLocaleString()}}</span>
+                    <span style="font-family: monospace;">${{Number(d.dDead).toLocaleString()}}/${{Number(d.kD).toLocaleString()}}</span>
                 </div>
                 <div class="bar"><div class="fill" style="width: ${{d.barD}}%;"></div></div>
                 
-                <hr style="border: 0; border-top: 1px solid #333; margin: 15px 0;">
+                <hr style="border: 0; border-top: 1px solid #333; margin: 12px 0;">
                 
                 <div class="kpi-label" style="color: #00ffcc;">
                     <span>${{t.kT_label}} <span class="pct-tag" style="background: rgba(0,255,150,0.2); color: #00ffcc; font-weight: bold;">${{d.realPctT}}%</span></span>
@@ -443,7 +464,7 @@ html_content = f"""
             </div>
             
             <div class="alert-box" style="border-left-color: ${{alertBorderColor}};">
-                <b style="color: ${{alertBorderColor}}; font-size: 11px; display:block; margin-bottom:4px;">SYSTEM NOTICE:</b>
+                <b style="color: ${{alertBorderColor}}; font-size: 10px; display:block; margin-bottom:2px;">SYSTEM NOTICE:</b>
                 <span>${{systemMsg}}</span>
             </div>
             
@@ -460,4 +481,5 @@ html_content = f"""
 </html>
 """
 
-components.html(html_content, height=1000, scrolling=True)
+# Sử dụng chiều cao tự động hoặc đảm bảo vừa vặn, bật scrolling mượt mà cho điện thoại
+components.html(html_content, height=900, scrolling=True)
