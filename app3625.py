@@ -12,17 +12,17 @@ import os
 st.set_page_config(page_title="FTD KPI SYSTEM", layout="wide", initial_sidebar_state="expanded")
 
 # Inject CSS tối ưu khung nhìn chính và tùy chỉnh giao diện Sidebar Admin cho rực rỡ
+# Inject CSS tối ưu khung nhìn chính và tùy chỉnh giao diện Sidebar Admin cho rực rỡ
 st.markdown("""
     <style>
         #MainMenu, footer, header {visibility: hidden;}
         .block-container {padding: 10px !important; max-width: 100% !important;}
         iframe {width: 100% !important; border: none;}
         
-        /* Đã sửa: Xóa bỏ lệnh display: none cũ để hiển thị lại Sidebar mượt mà */
+        /* Cấu hình chuẩn: Chỉ thay đổi màu sắc và viền, để Streamlit tự quản lý việc hiển thị */
         [data-testid="stSidebar"] {
             background-color: #0d1117 !important;
             border-right: 1px solid #21262d !important;
-            display: flex !important;
         }
     </style>
 """, unsafe_allow_html=True)
