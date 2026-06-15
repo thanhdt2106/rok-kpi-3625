@@ -8,7 +8,7 @@ import os
 # ==============================================================================
 # 1. CẤU HÌNH GIAO DIỆN CHUẨN ĐỒ HỌA FULL SCREEN
 # ==============================================================================
-# Cho phép mở Sidebar mặc định để tiện thao tác
+# Cho phép mở Sidebar mặc định để thuận tiện thao tác quản trị
 st.set_page_config(page_title="FTD KPI SYSTEM", layout="wide", initial_sidebar_state="expanded")
 
 # Inject CSS tối ưu khung nhìn chính và tùy chỉnh giao diện Sidebar Admin cho rực rỡ
@@ -18,10 +18,11 @@ st.markdown("""
         .block-container {padding: 10px !important; max-width: 100% !important;}
         iframe {width: 100% !important; border: none;}
         
-        /* Tùy chỉnh hiệu ứng cho thanh Sidebar mượt mà hơn */
+        /* Đã sửa: Xóa bỏ lệnh display: none cũ để hiển thị lại Sidebar mượt mà */
         [data-testid="stSidebar"] {
-            background-color: #0d1117;
-            border-right: 1px solid #21262d;
+            background-color: #0d1117 !important;
+            border-right: 1px solid #21262d !important;
+            display: flex !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -91,13 +92,13 @@ with st.sidebar:
                 "Bảng 2: Cập Nhật Mới (1325084102)"
             ])
             
-            # ⚠️ CHÚ Ý: Đảm bảo viết đúng tên Tab vật lý hiển thị dưới đáy file Google Sheets của bạn
+            # Khớp tên tab vật lý hiển thị dưới đáy file Google Sheets của bạn
             if "Bảng 1" in sheet_option:
                 target_gid = GID1
-                worksheet_name = "Sheet1"  # Sửa lại thành tên Tab chính xác nếu bạn đổi tên trên Sheets
+                worksheet_name = "Sheet1"  
             else:
                 target_gid = GID2
-                worksheet_name = "Sheet2"  # Sửa lại thành tên Tab chính xác nếu bạn đổi tên trên Sheets
+                worksheet_name = "Sheet2"  
                 
             # Đọc trước dữ liệu thô từ Google Sheets phục vụ cho việc chỉnh sửa trực tiếp
             df_to_edit = load_csv_data(target_gid)
@@ -266,7 +267,7 @@ for item in final_data:
     </div>
     """
 
-# Đọc file giao diện CSS và HTML Template
+# Đọc file giao diện CSS và HTML Template thông qua hàm UTF-8 an toàn đã gom lên trên
 style_css_content = read_file("style.css")
 html_template_content = read_file("template.html")
 
