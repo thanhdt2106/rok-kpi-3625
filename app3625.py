@@ -48,7 +48,7 @@ GID1 = "0"
 GID2 = "1325084102"
 
 # ==============================================================================
-# 2. ĐỊNH NGHĨA CÁC HÀM BỔ TRỢ
+# 2. ĐỊNH NGHĨA CÁC HÀM BỔ TRỢ & NGÔN NGỮ EN/VN
 # ==============================================================================
 def read_file(filename):
     if os.path.exists(filename):
@@ -86,69 +86,150 @@ if "current_page" not in st.session_state:
 if "is_admin_verified" not in st.session_state:
     st.session_state["is_admin_verified"] = False
 
+# Khởi tạo ngôn ngữ mặc định (Tiếng Việt)
+if "lang" not in st.session_state:
+    st.session_state["lang"] = "VN"
+
+# Từ điển quản lý từ vựng ngôn ngữ
+lang_dict = {
+    "VN": {
+        "welcome": "👋 CHÀO MỪNG",
+        "title": "Chào mừng đến với Hệ thống DKP / KPI của Vương Quốc 3625",
+        "select_role": "Vui lòng lựa chọn vai trò của bạn để tiếp tục truy cập hệ thống:",
+        "btn_member": "👤 Bạn là Member",
+        "btn_admin": "🛡️ Bạn là ADMIN ?",
+        "admin_title": "🛡️ KHU VỰC QUẢN TRỊ VIÊN",
+        "pass_placeholder": "Nhập mật khẩu Admin để mở khóa hệ thống...",
+        "pass_label": "Mật khẩu Admin:",
+        "login_success": "🔓 Xác thực thành công!",
+        "login_fail": "❌ Mật khẩu không chính xác!",
+        "select_sheet": "Chọn bảng tính cần thao tác:",
+        "edit_title": "📝 Chỉnh sửa dữ liệu trực tiếp tab:",
+        "save_btn": "💾 XÁC NHẬN LƯU VÀ ĐỒNG BỘ LÊN GOOGLE SHEETS",
+        "syncing": "🚀 Đang tiến hành đồng bộ hóa lên Google Sheets...",
+        "sync_success": "Thành công",
+        "sync_fail": "Thất bại từ hệ thống Sheets",
+        "conn_error": "Lỗi kết nối API Web App",
+        "menu_view_kpi": "📊 Chuyển sang Xem KPI",
+        "menu_logout": "↩️ Đăng xuất / Về màn hình chính",
+        "menu_back_admin": "⚙️ Quay lại trang Setting Admin",
+        "view_title_admin": "### 📊 CHẾ ĐỘ XEM TRƯỚC KPI THÀNH VIÊN",
+        "view_title_member": "### 📊 TRA CỨU KPI THÀNH VIÊN CORES",
+        "btn_back_welcome": "↩️ Quay lại Trang Đầu",
+        "sheet_err": "Lỗi đồng bộ cấu trúc dữ liệu bảng tính:",
+        "file_err": "Hệ thống không tìm thấy file style.css hoặc template.html tại thư mục gốc GitHub!",
+        "tip": "💡 Mẹo: Bạn có thể click đúp vào ô để sửa số liệu, hoặc kéo thả, thêm hàng ở dưới bảng."
+    },
+    "EN": {
+        "welcome": "👋 WELCOME",
+        "title": "Welcome to Kingdom 3625 DKP / KPI System",
+        "select_role": "Please select your role to proceed into the system:",
+        "btn_member": "👤 I am a Member",
+        "btn_admin": "🛡️ I am an ADMIN ?",
+        "admin_title": "🛡️ ADMINISTRATOR PANEL",
+        "pass_placeholder": "Enter Admin password to unlock system...",
+        "pass_label": "Admin Password:",
+        "login_success": "🔓 Verification successful!",
+        "login_fail": "❌ Incorrect password!",
+        "select_sheet": "Select worksheet to manage:",
+        "edit_title": "📝 Direct data editor tab:",
+        "save_btn": "💾 CONFIRM SAVE AND SYNC TO GOOGLE SHEETS",
+        "syncing": "🚀 Synchronizing data to Google Sheets...",
+        "sync_success": "Success",
+        "sync_fail": "Failed from Sheets system",
+        "conn_error": "Web App API Connection Error",
+        "menu_view_kpi": "📊 Switch to KPI View",
+        "menu_logout": "↩️ Logout / Home Screen",
+        "menu_back_admin": "⚙️ Back to Admin Settings",
+        "view_title_admin": "### 📊 MEMBERS KPI PREVIEW MODE",
+        "view_title_member": "### 📊 CORES MEMBER KPI LOOKUP",
+        "btn_back_welcome": "↩️ Back to Home",
+        "sheet_err": "Worksheet structural synchronization error:",
+        "file_err": "System missing style.css or template.html in GitHub root!",
+        "tip": "💡 Tip: Double-click cells to edit data, drag-and-drop, or append new rows at the bottom."
+    }
+}
+
+T = lang_dict[st.session_state["lang"]]
 
 # ==============================================================================
-# 3. ĐIỀU HƯỚNG GIAO DIỆN THEO LỰA CHỌN
+# 3. ĐIỀU HƯỚNG GIAO DIỆN THEO LỰA CHỌN VÀ NGÔN NGỮ
 # ==============================================================================
 
 # ─── TRANG 1: TRANG CHÀO MỪNG CHÍNH (WELCOME PAGE) ───
 if st.session_state["current_page"] == "👋 CHÀO MỪNG":
-    st.markdown("""
+    # Nút chuyển đổi ngôn ngữ EN/VN đặt trên cùng góc phải trang chào mừng
+    lang_col1, lang_col2 = st.columns([8, 1.5])
+    with lang_col2:
+        lang_choice = st.selectbox("🌐 Language", ["Tiếng Việt (VN)", "English (EN)"], 
+                                   index=0 if st.session_state["lang"] == "VN" else 1)
+        new_lang = "VN" if "Tiếng Việt" in lang_choice else "EN"
+        if new_lang != st.session_state["lang"]:
+            st.session_state["lang"] = new_lang
+            st.rerun()
+
+    st.markdown(f"""
         <div class="welcome-box">
-            <h1 style='color: #ffaa00; margin-bottom: 10px;'>👋 WELCOME</h1>
-            <h3 style='color: #ffffff; margin-bottom: 30px;'>Chào mừng đến với Hệ thống DKP / KPI của Vương Quốc 3625</h3>
-            <p style='color: #8b949e; margin-bottom: 40px;'>Vui lòng lựa chọn vai trò của bạn để tiếp tục truy cập hệ thống:</p>
+            <h1 style='color: #ffaa00; margin-bottom: 10px;'>{T['welcome']}</h1>
+            <h3 style='color: #ffffff; margin-bottom: 30px;'>{T['title']}</h3>
+            <p style='color: #8b949e; margin-bottom: 40px;'>{T['select_role']}</p>
         </div>
     """, unsafe_allow_html=True)
     
-    # Tạo 2 cột nút bấm lớn ở giữa màn hình chào mừng
+    # 2 Cột lựa chọn quyền truy cập
     w_col1, w_col2 = st.columns(2)
     with w_col1:
-        if st.button("👤 Bạn là Member", use_container_width=True, type="secondary"):
+        if st.button(T["btn_member"], use_container_width=True, type="secondary"):
             st.session_state["current_page"] = "📊 TRANG CHỦ KPI"
             st.rerun()
             
     with w_col2:
-        if st.button("🛡️ Bạn là ADMIN ?", use_container_width=True, type="primary"):
+        if st.button(T["btn_admin"], use_container_width=True, type="primary"):
             st.session_state["current_page"] = "⚙️ QUẢN TRỊ ADMIN"
             st.rerun()
 
 # ─── TRANG 2: TRANG CHỈNH SỬA ADMIN ───
 elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
-    # Menu ngang cho phép Admin chuyển đổi qua lại nhanh giữa 2 trang
     st.markdown('<div class="menu-container">', unsafe_allow_html=True)
-    m_col1, m_col2, m_col3 = st.columns([5, 2, 2])
-    with m_col1: st.markdown("### ⚙️ BAN QUẢN TRỊ ADMIN")
+    m_col1, m_col2, m_col3, m_col4 = st.columns([3.5, 2, 2.5, 2])
+    with m_col1: 
+        st.markdown(f"### {T['admin_title']}")
     with m_col2:
-        if st.button("📊 Chuyển sang Xem KPI", use_container_width=True):
+        if st.button(T["menu_view_kpi"], use_container_width=True):
             st.session_state["current_page"] = "📊 TRANG CHỦ KPI"
             st.rerun()
     with m_col3:
-        if st.button("↩️ Đăng xuất / Về màn hình chính", use_container_width=True):
+        if st.button(T["menu_logout"], use_container_width=True):
             st.session_state["is_admin_verified"] = False
             st.session_state["current_page"] = "👋 CHÀO MỪNG"
             st.rerun()
+    with m_col4:
+        # Chuyển đổi ngôn ngữ trực tiếp trong menu hệ thống
+        lang_choice = st.selectbox("🌐", ["VN", "EN"], index=0 if st.session_state["lang"] == "VN" else 1, label_visibility="collapsed")
+        if lang_choice != st.session_state["lang"]:
+            st.session_state["lang"] = lang_choice
+            st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Nếu chưa xác thực mật khẩu thì bắt nhập mật khẩu trước
+    # Xác thực mật khẩu nếu chưa login
     if not st.session_state["is_admin_verified"]:
-        admin_password = st.text_input("Nhập mật khẩu Admin để mở khóa hệ thống:", type="password", placeholder="••••••••")
+        admin_password = st.text_input(T["pass_label"], type="password", placeholder=T["pass_placeholder"])
         if admin_password:
             if admin_password == st.secrets["admin"]["password"]:
                 st.session_state["is_admin_verified"] = True
-                st.success("🔓 Xác thực thành công!")
+                st.success(T["login_success"])
                 st.rerun()
             else:
-                st.error("❌ Mật khẩu không chính xác!")
+                st.error(T["login_fail"])
     
-    # Khi đã xác thực mật khẩu thành công, mở toàn bộ bảng sửa dữ liệu
+    # Giao diện quản trị chỉnh sửa dữ liệu
     if st.session_state["is_admin_verified"]:
-        sheet_option = st.selectbox("Chọn bảng tính cần thao tác:", [
-            "Bảng 1: KPI Gốc (0)", 
-            "Bảng 2: Cập Nhật Mới (1325084102)"
+        sheet_option = st.selectbox(T["select_sheet"], [
+            "Bảng 1: KPI Gốc (0)" if st.session_state["lang"] == "VN" else "Table 1: Base KPI (0)", 
+            "Bảng 2: Cập Nhật Mới (1325084102)" if st.session_state["lang"] == "VN" else "Table 2: New Update (1325084102)"
         ])
         
-        if "Bảng 1" in sheet_option:
+        if "0" in sheet_option:
             target_gid = GID1
             worksheet_name = "Sheet1"  
         else:
@@ -157,10 +238,11 @@ elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
             
         df_to_edit = load_csv_data(target_gid)
         
-        st.markdown(f"#### 📝 Chỉnh sửa dữ liệu trực tiếp tab: `{worksheet_name}`")
+        st.markdown(f"#### {T['edit_title']} `{worksheet_name}`")
+        st.info(T["tip"])
         edited_df = st.data_editor(df_to_edit, num_rows="dynamic", use_container_width=True)
         
-        if st.button("💾 XÁC NHẬN LƯU VÀ ĐỒNG BỘ LÊN GOOGLE SHEETS"):
+        if st.button(T["save_btn"]):
             header = edited_df.columns.tolist()
             matrix_data = [header] + edited_df.fillna("").values.tolist()
             
@@ -169,42 +251,52 @@ elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
                 "data": matrix_data
             }
             
-            with st.spinner("🚀 Đang tiến hành đồng bộ hóa lên Google Sheets..."):
+            with st.spinner(T["syncing"]):
                 try:
                     response = requests.post(st.secrets["api"]["app_url"], json=payload)
                     res_json = response.json()
                     
                     if res_json.get("status") == "success":
                         st.balloons()
-                        st.success(f"Thành công: {res_json.get('message')}")
+                        st.success(f"{T['sync_success']}: {res_json.get('message')}")
                         st.cache_data.clear()
                     else:
-                        st.error(f"Thất bại từ hệ thống Sheets: {res_json.get('message')}")
+                        st.error(f"{T['sync_fail']}: {res_json.get('message')}")
                 except Exception as e:
-                    st.error(f"Lỗi kết nối API Web App: {e}")
+                    st.error(f"{T['conn_error']}: {e}")
 
 # ─── TRANG 3: TRANG CHỦ XEM CARDS KPI CỦA THÀNH VIÊN ───
 elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
-    # Nếu là Admin đang đứng ở trang xem KPI, hiện thanh Menu ngang để quay lại Setting
     if st.session_state["is_admin_verified"]:
         st.markdown('<div class="menu-container">', unsafe_allow_html=True)
-        u_col1, u_col2 = st.columns([7, 2])
-        with u_col1: st.markdown("### 📊 CHẾ ĐỘ XEM TRƯỚC KPI THÀNH VIÊN")
+        u_col1, u_col2, u_col3 = st.columns([6, 2, 1])
+        with u_col1: st.markdown(T["view_title_admin"])
         with u_col2:
-            if st.button("⚙️ Quay lại trang Setting Admin", use_container_width=True, type="primary"):
+            if st.button(T["menu_back_admin"], use_container_width=True, type="primary"):
                 st.session_state["current_page"] = "⚙️ QUẢN TRỊ ADMIN"
+                st.rerun()
+        with u_col3:
+            lang_choice = st.selectbox("🌐", ["VN", "EN"], index=0 if st.session_state["lang"] == "VN" else 1, label_visibility="collapsed")
+            if lang_choice != st.session_state["lang"]:
+                st.session_state["lang"] = lang_choice
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
     else:
-        # Nếu là Member thường, hiện nút nhỏ ở góc trên để quay lại trang chào mừng nếu muốn
-        m_c1, m_c2 = st.columns([7, 2])
-        with m_c1: st.markdown("### 📊 TRA CỨU KPI THÀNH VIÊN CORES")
+        st.markdown('<div class="menu-container">', unsafe_allow_html=True)
+        m_c1, m_c2, m_c3 = st.columns([6, 2, 1])
+        with m_c1: st.markdown(T["view_title_member"])
         with m_c2:
-            if st.button("↩️ Quay lại Trang Đầu", use_container_width=True):
+            if st.button(T["btn_back_welcome"], use_container_width=True):
                 st.session_state["current_page"] = "👋 CHÀO MỪNG"
                 st.rerun()
+        with m_c3:
+            lang_choice = st.selectbox("🌐", ["VN", "EN"], index=0 if st.session_state["lang"] == "VN" else 1, label_visibility="collapsed")
+            if lang_choice != st.session_state["lang"]:
+                st.session_state["lang"] = lang_choice
+                st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    # Thao tác xử lý và tính toán Cards Data
+    # Thao tác tải và tính toán dữ liệu
     @st.cache_data(ttl=60)
     def process_cards_data():
         df1 = load_csv_data(GID1)
@@ -301,7 +393,7 @@ elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
     try:
         final_data = process_cards_data()
     except Exception as e:
-        st.error(f"Lỗi đồng bộ cấu trúc dữ liệu bảng tính: {e}")
+        st.error(f"{T['sheet_err']} {e}")
         st.stop()
 
     # DỰNG THẺ CARDS HTML
@@ -327,7 +419,8 @@ elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
     html_template_content = read_file("template.html")
 
     if html_template_content and style_css_content:
+        # Gửi kèm biến ngôn ngữ sang cấu trúc HTML template nếu cần xử lý JS
         final_html = html_template_content.replace("{style_css}", style_css_content).replace("{cards_html}", cards_html)
         components.html(final_html, height=900, scrolling=True)
     else:
-        st.error("Hệ thống không tìm thấy file style.css hoặc template.html tại thư mục gốc GitHub!")
+        st.error(T["file_err"])
