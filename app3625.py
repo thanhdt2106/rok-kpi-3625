@@ -15,7 +15,7 @@ def read_file(filename):
     return ""
 
 # ==============================================================================
-# 2. CẤU HÌNH GIAO DIỆN CHUẨN ĐỒ HỌA HIGH-END UI (KHÔNG VIỀN + GRADIENT GLOW)
+# 2. CẤU HÌNH GIAO DIỆN CHUẨN ĐỒ HỌA HIGH-END UI (CINEMA GLOW EFFECT)
 # ==============================================================================
 st.set_page_config(page_title="FTD KPI SYSTEM", layout="wide", initial_sidebar_state="collapsed")
 
@@ -37,70 +37,71 @@ st.markdown("""
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
 
-        /* Khung bọc hộp chào mừng */
+        /* KHỐI FORM CHÀO MỪNG CHUẨN CINEMA ĐỒ HỌA CAO */
         .welcome-box-outer {
             text-align: center;
-            padding: 40px 30px;
+            padding: 50px 40px;
             background: linear-gradient(180deg, #1f242c 0%, #0f1319 100%);
             border-radius: 20px;
             border: 1px solid #38444d;
-            margin: 40px auto;
-            margin-bottom: 20px;
-            max-width: 650px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            margin: 60px auto;
+            max-width: 600px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
         .welcome-box-outer h1 {
-            color: #ffaa00; font-size: 32px; font-weight: 800; letter-spacing: 1px; margin-bottom: 5px;
-            text-shadow: 0 0 20px rgba(255, 170, 0, 0.3);
+            color: #ffaa00; font-size: 34px; font-weight: 800; letter-spacing: 1.5px; margin-bottom: 5px;
+            text-shadow: 0 0 25px rgba(255, 170, 0, 0.35);
         }
-        .welcome-box-outer p { color: #8b949e; font-size: 15px; margin-bottom: 15px; }
+        .welcome-box-outer p { color: #8b949e; font-size: 15px; margin-bottom: 40px; font-weight: 500; }
 
-        /* ÉP KIỂU CHUNG CHO CẢ 2 NÚT BẤM CỦA STREAMLIT */
-        div[data-testid="stBlock"] button[key="btn_member_key"],
-        div[data-testid="stBlock"] button[key="btn_admin_key"] {
-            border: none !important;              /* Bỏ hoàn toàn viền xám mặc định */
-            outline: none !important;             /* Khử viền focus khi click */
-            padding: 14px 28px !important;
-            font-size: 15px !important;
-            font-weight: 700 !important;
-            text-transform: uppercase !important;
-            letter-spacing: 1px !important;
-            border-radius: 12px !important;
-            width: 100% !important;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
-            min-height: 55px !important;
+        /* VÙNG CHỨA NÚT BẤM BÊN TRONG FORM */
+        .gaming-btn-group {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
         }
 
-        /* NÚT BẤM MEMBER: MÀU XANH GAMING ĐẬM NỀN GRADIENT */
-        div[data-testid="stBlock"] button[key="btn_member_key"] {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+        /* ĐỊNH DẠNG NÚT BẤM GAMING KHÔNG VIỀN, CÓ ĐỔ BÓNG PHÁT SÁNG */
+        .btn-cinema {
+            flex: 1;
+            text-decoration: none !important;
+            padding: 16px 25px;
+            font-size: 15px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: inline-block;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+            text-align: center;
+            border: none !important;
+        }
+
+        /* MÀU NÚT MEMBER: XANH GAMING ĐẬM CHUYỂN MÀU */
+        .btn-cinema-member {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
             color: #38bdf8 !important;
         }
-        div[data-testid="stBlock"] button[key="btn_member_key"]:hover {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+        .btn-cinema-member:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
             color: #ffffff !important;
-            box-shadow: 0 0 25px rgba(37, 99, 235, 0.6) !important;
-            transform: translateY(-2px) !important;
+            box-shadow: 0 0 28px rgba(37, 99, 235, 0.65);
+            transform: translateY(-3px);
         }
 
-        /* NÚT BẤM ADMIN: MÀU VÀNG HỔ PHÁCH CHÁY RỰC RỠ */
-        div[data-testid="stBlock"] button[key="btn_admin_key"] {
-            background: linear-gradient(135deg, #ffaa00 0%, #d97706 100%) !important;
+        /* MÀU NÚT ADMIN: VÀNG HỔ PHÁCH RỰC RỠ */
+        .btn-cinema-admin {
+            background: linear-gradient(135deg, #ffaa00 0%, #d97706 100%);
             color: #0d1117 !important;
         }
-        div[data-testid="stBlock"] button[key="btn_admin_key"]:hover {
-            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+        .btn-cinema-admin:hover {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
             color: #000000 !important;
-            box-shadow: 0 0 25px rgba(245, 158, 11, 0.6) !important;
-            transform: translateY(-2px) !important;
-        }
-        
-        /* Căn chỉnh vị trí cột chứa nút bấm sát với form trên */
-        .button-row-container {
-            max-width: 650px;
-            margin: 0 auto;
+            box-shadow: 0 0 28px rgba(245, 158, 11, 0.65);
+            transform: translateY(-3px);
         }
     </style>
 """, unsafe_allow_html=True)
@@ -110,8 +111,18 @@ GID1 = "0"
 GID2 = "1325084102"
 
 # ==============================================================================
-# 3. KHỞI TẠO TRẠNG THÁI & TỪ ĐIỂN NGÔN NGỮ
+# 3. KIỂM TRA ĐIỀU HƯỚNG TỪ URL PARAMETERS & KHỞI TẠO TRẠNG THÁI
 # ==============================================================================
+# Lấy tham số ẩn từ URL để kiểm tra xem người dùng nhấn nút nào
+query_params = st.query_params
+
+if "page" in query_params:
+    page_target = query_params["page"]
+    if page_target == "member":
+        st.session_state["current_page"] = "📊 TRANG CHỦ KPI"
+    elif page_target == "admin":
+        st.session_state["current_page"] = "⚙️ QUẢN TRỊ ADMIN"
+
 if "current_page" not in st.session_state:
     st.session_state["current_page"] = "👋 CHÀO MỪNG"
 
@@ -221,7 +232,7 @@ def on_sheet_change():
 # 4. ĐIỀU HƯỚNG GIAO DIỆN CHÍNH
 # ==============================================================================
 
-# ─── TRANG 1: MÀN HÌNH CHÀO MỪNG (CLICK LÀ CHUYỂN TRANG 100%) ───
+# ─── TRANG 1: MÀN HÌNH CHÀO MỪNG (FULL KHỐI HOÀN HẢO - KHÔNG LỖI - ĐẸP 100%) ───
 if st.session_state["current_page"] == "👋 CHÀO MỪNG":
     st.markdown('<div class="menu-container">', unsafe_allow_html=True)
     top_col1, top_col2 = st.columns([8, 2])
@@ -234,31 +245,25 @@ if st.session_state["current_page"] == "👋 CHÀO MỪNG":
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Khung hộp chứa nội dung text chào mừng
+    # Toàn bộ text và nút bấm tích hợp chung vào 1 khối duy nhất để đạt thẩm mỹ cao nhất
     st.markdown(f"""
         <div class="welcome-box-outer">
             <h1>{T['title']}</h1>
             <div style="height: 2px; background: linear-gradient(90deg, transparent, #ffaa00, transparent); max-width: 400px; margin: 20px auto;"></div>
             <p>{T['select_role']}</p>
+            
+            <div class="gaming-btn-group">
+                <a href="?page=member" target="_self" class="btn-cinema btn-cinema-member">{T['btn_member']}</a>
+                <a href="?page=admin" target="_self" class="btn-cinema btn-cinema-admin">{T['btn_admin']}</a>
+            </div>
         </div>
     """, unsafe_allow_html=True)
 
-    # Hàng chứa 2 nút bấm gốc Streamlit đã được CSS ép kiểu sang giao diện High-end
-    st.markdown('<div class="button-row-container">', unsafe_allow_html=True)
-    btn_col1, btn_col2 = st.columns([1, 1])
-    with btn_col1:
-        if st.button(T['btn_member'], key="btn_member_key", use_container_width=True):
-            st.session_state["current_page"] = "📊 TRANG CHỦ KPI"
-            st.rerun()
-            
-    with btn_col2:
-        if st.button(T['btn_admin'], key="btn_admin_key", use_container_width=True):
-            st.session_state["current_page"] = "⚙️ QUẢN TRỊ ADMIN"
-            st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
-
 # ─── TRANG 2: TRANG CHỈNH SỬA ADMIN ───
 elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
+    # Xóa param trên URL khi đã vào trang trong để tránh lặp logic quay lại trang đầu ngoài ý muốn
+    st.query_params.clear()
+    
     st.markdown('<div class="menu-container">', unsafe_allow_html=True)
     m_col1, m_col2, m_col3, m_col4 = st.columns([3.5, 2, 2.5, 2])
     with m_col1: 
@@ -344,6 +349,8 @@ elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
 
 # ─── TRANG 3: TRANG CHỦ XEM CARDS KPI CỦA THÀNH VIÊN ───
 elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
+    st.query_params.clear() # Xóa param URL ẩn
+    
     if st.session_state["is_admin_verified"]:
         st.markdown('<div class="menu-container">', unsafe_allow_html=True)
         u_col1, u_col2, u_col3 = st.columns([6, 2, 1])
@@ -403,8 +410,8 @@ elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
         
         t4_sheet1 = df1.set_index("ID_str")[col_t4].to_dict() if col_t4 in df1.columns else {}
         t5_sheet1 = df1.set_index("ID_str")[col_t5].to_dict() if col_t5 in df1.columns else {}
-        t4_sheet2 = df2.set_index("ID_str")[col_t4].to_dict() if col_t4 in df2.columns else {}
-        t5_sheet2 = df2.set_index("ID_str")[col_t5].to_dict() if col_t5 in df2.columns else {}
+        t4_sheet2 = df2.set_index("ID_str")[col_t4].to_dict() if col_t4 in df1.columns else {}
+        t5_sheet2 = df2.set_index("ID_str")[col_t5].to_dict() if col_t5 in df1.columns else {}
 
         col_dead_s1 = find_col(df1, ["chết"]) or "Điểm Chết"
         df1["Power_Goc"] = df1[find_col(df1, ["sức", "mạnh"]) or "Sức Mạnh"].apply(to_int)
