@@ -1,4 +1,4 @@
-# app.py
+# app3625.py
 import streamlit as st
 import pandas as pd
 import streamlit.components.v1 as components
@@ -8,115 +8,119 @@ import os
 # ==============================================================================
 # 1. CẤU HÌNH GIAO DIỆN CHUẨN ĐỒ HỌA FULL SCREEN
 # ==============================================================================
-st.set_page_config(page_title="FTD KPI SYSTEM", layout="wide", initial_sidebar_state="collapsed")
+# Cho phép mở Sidebar mặc định để tiện thao tác (hoặc đổi thành "collapsed" nếu muốn mặc định ẩn)
+st.set_page_config(page_title="FTD KPI SYSTEM", layout="wide", initial_sidebar_state="expanded")
 
-# Inject CSS ẩn menu mặc định của Streamlit và tối ưu khung nhìn
+# Inject CSS tối ưu khung nhìn chính và tùy chỉnh giao diện Sidebar Admin cho rực rỡ
 st.markdown("""
     <style>
-        [data-testid="stSidebar"] {display: none;}
         #MainMenu, footer, header {visibility: hidden;}
         .block-container {padding: 10px !important; max-width: 100% !important;}
         iframe {width: 100% !important; border: none;}
         
-        /* Giao diện khung điều khiển Admin */
-        .admin-zone {
-            background: linear-gradient(135deg, #11152c 0%, #1a1f3c 100%);
-            padding: 20px; 
-            border-radius: 12px; 
-            border: 1px dashed #ff4b4b; 
-            margin-bottom: 20px;
-            box-shadow: 0px 4px 15px rgba(255, 75, 75, 0.1);
+        /* Tùy chỉnh hiệu ứng cho thanh Sidebar mượt mà hơn */
+        [data-testid="stSidebar"] {
+            background-color: #0d1117;
+            border-right: 1px solid #21262d;
         }
     </style>
 """, unsafe_allow_html=True)
 
 # ─── THÔNG TIN GOOGLE SHEETS CỦA BẠN ───
-SHEET_ID = "15CrOFNFsIno34mX0EuXkLKdwiJgn3rrmcM-sEKmoKUQ"
-GID1 = "0"
-GID2 = "1325084102"
+SHEET_ID = "1CzGPseLzdRK1V-6qy7KD5T58sBRSGjQi"
+GID1 = "855089129"
+GID2 = "316243863"
 
 # ==============================================================================
 # 2. HÀM TẢI DỮ LIỆU TỪ GOOGLE SHEETS (DẠNG CSV ĐỂ ĐẠT TỐC ĐỘ CAO NHẤT)
 # ==============================================================================
 def load_csv_data(gid):
     url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={gid}"
-    # Đọc toàn bộ dưới dạng chuỗi (str) để bảo toàn ID, không làm mất số 0 ở đầu
     df = pd.read_csv(url, dtype=str)
-    # Tự động dọn khoảng trắng thừa ở tên các cột
     df.columns = df.columns.str.strip()
     return df
 
 # ==============================================================================
-# 3. KHU VỰC THIẾT LẬP VÀ ĐĂNG NHẬP ĐIỀU KHIỂN CỦA ADMIN
+# 3. ĐƯA TOÀN BỘ KHU VỰC ĐIỀU KHIỂN ĐĂNG NHẬP / SỬA DATA VÀO SIDEBAR
 # ==============================================================================
-st.markdown('<div class="admin-zone">', unsafe_allow_html=True)
-col_title, col_login = st.columns([3, 1])
-
-with col_title:
-    st.subheader("🛡️ FTD KPI CONTROL CENTER & REALTIME SYNC")
-    st.caption("Nhập mật khẩu quản trị để chỉnh sửa trực tiếp dữ liệu Google Sheets ngay tại giao diện này.")
-
-with col_login:
-    admin_password = st.text_input("Mật khẩu Admin", type="password", placeholder="Nhập pass để kích hoạt...", label_visibility="collapsed")
-
-st.markdown('</div>', unsafe_allow_html=True)
-
-# Xử lý Logic khi kích hoạt chế độ Admin
-if admin_password:
-    if admin_password == st.secrets["admin"]["password"]:
-        st.success("🔓 ĐỒNG BỘ REALTIME ĐÃ MỞ: Bạn có thể chỉnh sửa trực tiếp, thêm hoặc xóa dòng.")
-        
-        sheet_option = st.selectbox("Chọn bảng tính cần thao tác dữ liệu:", [
-            "Bảng 1: Dữ liệu KPI Gốc (Gid 0)", 
-            "Bảng 2: Dữ liệu Cập Nhật Mới (Gid 1325084102)"
-        ])
-        
-        # ⚠️ CHÚ Ý: Bạn hãy đổi đúng tên Tab viết trên Google Sheets vào 2 biến worksheet_name ở dưới
-        if "Bảng 1" in sheet_option:
-            target_gid = GID1
-            worksheet_name = "Sheet1"  # 👈 Thay bằng tên chính xác của Tab Gid 855089129 trên Google Sheet
+with st.sidebar:
+    st.markdown("## 🛡️ ADMIN PANEL")
+    st.caption("Khu vực dành riêng cho Ban Quản Trị liên minh.")
+    
+    # Ô nhập mật khẩu Admin (Dữ liệu lấy từ mục Secrets đã cấu hình trên web)
+    admin_password = st.text_input("Mật khẩu Admin", type="password", placeholder="Nhập pass để sửa...")
+    
+    # Khởi tạo trạng thái đăng nhập
+    is_admin = False
+    
+    if admin_password:
+        if admin_password == st.secrets["admin"]["password"]:
+            is_admin = True
+            st.success("🔓 Kích hoạt quyền Admin!")
+            st.markdown("---")
+            
+            # Form chọn bảng tính cần chỉnh sửa
+            sheet_option = st.selectbox("Chọn bảng tính cần thao tác:", [
+                "Bảng 1: KPI Gốc (855089129)", 
+                "Bảng 2: Cập Nhật Mới (316243863)"
+            ])
+            
+            # ⚠️ CHÚ Ý: Đảm bảo viết đúng tên Tab hiển thị trên file Google Sheets của bạn
+            if "Bảng 1" in sheet_option:
+                target_gid = GID1
+                worksheet_name = "Sheet1"  # Thay bằng tên tab thực tế của Gid 855089129
+            else:
+                target_gid = GID2
+                worksheet_name = "Sheet2"  # Thay bằng tên tab thực tế của Gid 316243863
+                
+            # Đọc dữ liệu thô phục vụ cho việc chỉnh sửa
+            df_to_edit = load_csv_data(target_gid)
         else:
-            target_gid = GID2
-            worksheet_name = "Sheet2"  # 👈 Thay bằng tên chính xác của Tab Gid 316243863 trên Google Sheet
-            
-        # Load dữ liệu thô phục vụ cho việc chỉnh sửa
-        df_to_edit = load_csv_data(target_gid)
-        
-        # Tạo bảng tương tác thông minh cho phép sửa xóa trực tiếp
-        edited_df = st.data_editor(df_to_edit, num_rows="dynamic", use_container_width=True)
-        
-        # Nút bấm kích hoạt đồng bộ ngược
-        if st.button("💾 XÁC NHẬN LƯU VÀ ĐỒNG BỘ LÊN GOOGLE SHEETS"):
-            # Chuyển đổi dữ liệu bảng thành mảng Matrix (bao gồm Header) gửi lên Apps Script
-            header = edited_df.columns.tolist()
-            matrix_data = [header] + edited_df.fillna("").values.tolist()
-            
-            payload = {
-                "worksheet": worksheet_name,
-                "data": matrix_data
-            }
-            
-            with st.spinner("🚀 Đang đồng bộ hóa trực tiếp lên Google Sheets... Vui lòng đợi trong giây lát."):
-                try:
-                    response = requests.post(st.secrets["api"]["app_url"], json=payload)
-                    res_json = response.json()
-                    
-                    if res_json.get("status") == "success":
-                        st.balloons()
-                        st.success(f"Thành công: {res_json.get('message')}")
-                        # Xóa bỏ bộ nhớ đệm cache để hệ thống Card cập nhật số liệu mới ngay lập tức
-                        st.cache_data.clear()
-                    else:
-                        st.error(f"Thất bại từ hệ thống Sheets: {res_json.get('message')}")
-                except Exception as e:
-                    st.error(f"Lỗi kết nối API Web App: {e}. Vui lòng kiểm tra lại cấu hình link trong secrets.toml!")
-    else:
-        st.error("❌ Mật khẩu quyền Admin không chính xác!")
+            st.error("❌ Mật khẩu không chính xác!")
 
 st.markdown("---")
 
 # ==============================================================================
-# 4. LOGIC XỬ LÝ DỮ LIỆU KPI & BIẾN ĐỔI SANG THẺ CARDS (USER VIEW)
+# 4. HIỂN THỊ BẢNG CHỈNH SỬA Ở KHU VỰC CHÍNH KHI ADMIN ĐĂNG NHẬP THÀNH CÔNG
+# ==============================================================================
+# Nếu Admin đã log-in đúng, hiển thị bảng dữ liệu to rõ ràng ngay phía trên hệ thống Card
+if is_admin:
+    st.subheader(f"📝 Chỉnh sửa dữ liệu trực tiếp: {worksheet_name}")
+    st.info("💡 Mẹo: Bạn có thể click đúp vào ô để sửa số liệu, hoặc kéo thả, thêm hàng ở dưới bảng.")
+    
+    # Tạo bảng tương tác thông minh diện tích lớn ở màn hình chính
+    edited_df = st.data_editor(df_to_edit, num_rows="dynamic", use_container_width=True)
+    
+    # Nút bấm kích hoạt đồng bộ ngược lên Google Sheets
+    if st.button("💾 XÁC NHẬN LƯU VÀ ĐỒNG BỘ LÊN GOOGLE SHEETS"):
+        # Chuyển đổi dữ liệu bảng thành mảng Matrix (bao gồm Header) gửi lên Apps Script
+        header = edited_df.columns.tolist()
+        matrix_data = [header] + edited_df.fillna("").values.tolist()
+        
+        payload = {
+            "worksheet": worksheet_name,
+            "data": matrix_data
+        }
+        
+        with st.spinner("🚀 Đang tiến hành đồng bộ hóa lên Google Sheets..."):
+            try:
+                response = requests.post(st.secrets["api"]["app_url"], json=payload)
+                res_json = response.json()
+                
+                if res_json.get("status") == "success":
+                    st.balloons()
+                    st.success(f"Thành công: {res_json.get('message')}")
+                    # Xóa bỏ bộ nhớ đệm cache để hệ thống Card cập nhật số liệu mới ngay lập tức
+                    st.cache_data.clear()
+                else:
+                    st.error(f"Thất bại từ hệ thống Sheets: {res_json.get('message')}")
+            except Exception as e:
+                st.error(f"Lỗi kết nối API Web App: {e}")
+                
+    st.markdown("---")
+
+# ==============================================================================
+# 5. LOGIC XỬ LÝ DỮ LIỆU KPI & BIẾN ĐỔI SANG THẺ CARDS (USER VIEW)
 # ==============================================================================
 def get_kpi_kill_value(p):
     if p >= 100_000_000: return 600_000_000
@@ -227,14 +231,13 @@ def process_cards_data():
         })
     return processed_list
 
-# Đọc và render giao diện HTML dựng sẵn
 try:
     final_data = process_cards_data()
 except Exception as e:
-    st.error(f"Cấu trúc bảng tính không đồng nhất hoặc bị lỗi cột: {e}")
+    st.error(f"Lỗi đồng bộ cấu trúc dữ liệu bảng tính: {e}")
     st.stop()
 
-# Build chuỗi HTML Cards để đưa vào Iframe hiển thị
+# DỰNG CARDS HTML
 cards_html = ""
 for item in final_data:
     avatar = f"https://api.dicebear.com/7.x/adventurer/svg?seed={item['name']}"
@@ -253,16 +256,11 @@ for item in final_data:
     </div>
     """
 
-def read_file(filename):
-    if os.path.exists(filename):
-        with open(filename, "r", encoding="utf-8") as f: return f.read()
-    return ""
-
-style_css_content = read_file("style.css")
-html_template_content = read_file("template.html")
+style_css_content = read_file("style.css") if os.path.exists("style.css") else ""
+html_template_content = read_file("template.html") if os.path.exists("template.html") else ""
 
 if html_template_content and style_css_content:
     final_html = html_template_content.replace("{style_css}", style_css_content).replace("{cards_html}", cards_html)
     components.html(final_html, height=900, scrolling=True)
 else:
-    st.error("Hệ thống không tìm thấy file style.css hoặc template.html tại thư mục gốc!")
+    st.error("Thiếu file style.css hoặc template.html!")
