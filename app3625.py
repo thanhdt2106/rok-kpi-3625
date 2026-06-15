@@ -6,18 +6,20 @@ import requests
 import os
 
 # ==============================================================================
-# 1. CẤU HÌNH GIAO DIỆN CHUẨN ĐỒ HỌA FULL SCREEN & HIGH-END UI
+# 1. KHAI BÁO HÀM ĐỌC FILE (Đưa lên đầu để sửa triệt để lỗi NameError)
 # ==============================================================================
-st.set_page_config(page_title="FTD KPI SYSTEM", layout="wide", initial_sidebar_state="collapsed")
-
-# Định nghĩa hàm đọc file ở đầu trang để tránh lỗi NameError
 def read_file(filename):
     if os.path.exists(filename):
         with open(filename, "r", encoding="utf-8") as f:
             return f.read()
     return ""
 
-# Inject CSS nâng cấp giao diện Cinema hiện đại, hiệu ứng hover mượt mà và nút bấm gaming
+# ==============================================================================
+# 2. CẤU HÌNH GIAO DIỆN CHUẨN ĐỒ HỌA FULL SCREEN & HIGH-END UI
+# ==============================================================================
+st.set_page_config(page_title="FTD KPI SYSTEM", layout="wide", initial_sidebar_state="collapsed")
+
+# Inject CSS nâng cấp giao diện Cinema hiện đại và ẩn các thành phần thừa của Streamlit
 st.markdown("""
     <style>
         #MainMenu, footer, header {visibility: hidden;}
@@ -37,85 +39,6 @@ st.markdown("""
             margin-bottom: 25px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
-        
-        /* KHU VỰC WELCOME BOX ĐƯỢC THIẾT KẾ LẠI CỰC CHẤT */
-        .welcome-box {
-            text-align: center;
-            padding: 60px 40px;
-            background: linear-gradient(180deg, #1f242c 0%, #0f1319 100%);
-            border-radius: 20px;
-            border: 1px solid #38444d;
-            margin: 5% auto 2% auto;
-            max-width: 700px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-
-        .welcome-box h1 {
-            color: #ffaa00; 
-            font-size: 32px; 
-            font-weight: 800;
-            letter-spacing: 1px; 
-            margin-bottom: 10px;
-            text-shadow: 0 0 20px rgba(255, 170, 0, 0.2);
-        }
-
-        .welcome-box p {
-            color: #8b949e; 
-            font-size: 16px; 
-            margin-bottom: 40px;
-        }
-        
-        /* KHU VỰC NÚT BẤM HTML GAMING ĐỒNG BỘ */
-        .btn-wrapper {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-top: 20px;
-        }
-
-        .btn-gaming {
-            flex: 1;
-            min-width: 240px;
-            max-width: 280px;
-            padding: 16px 32px;
-            font-size: 16px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            border: none;
-        }
-
-        /* Nút Member - Xanh Neon huyền bí */
-        .btn-member {
-            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-            color: #38bdf8;
-            border: 1px solid #1e3a8a;
-        }
-        .btn-member:hover {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            color: #ffffff;
-            box-shadow: 0 0 25px rgba(37, 99, 235, 0.5);
-            transform: translateY(-3px);
-        }
-
-        /* Nút Admin - Vàng Hổ Phách rực lửa */
-        .btn-admin {
-            background: linear-gradient(135deg, #ffaa00 0%, #d97706 100%);
-            color: #0f1319;
-        }
-        .btn-admin:hover {
-            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-            box-shadow: 0 0 25px rgba(245, 158, 11, 0.6);
-            transform: translateY(-3px);
-        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -125,7 +48,7 @@ GID1 = "0"
 GID2 = "1325084102"
 
 # ==============================================================================
-# 2. KHỞI TẠO TRẠNG THÁI & TỪ ĐIỂN NGÔN NGỮ QUỐC TẾ
+# 3. KHỞI TẠO TRẠNG THÁI & TỪ ĐIỂN NGÔN NGỮ QUỐC TẾ
 # ==============================================================================
 if "current_page" not in st.session_state:
     st.session_state["current_page"] = "👋 CHÀO MỪNG"
@@ -207,11 +130,15 @@ def load_csv_data(gid):
     return df
 
 def get_kpi_kill_value(p):
+    try: p = int(p)
+    except: p = 0
     if p >= 100_000_000: return 600_000_000
     elif p >= 80_000_000: return 450_000_000
     return 300_000_000
 
 def get_kpi_dead_value(p):
+    try: p = int(p)
+    except: p = 0
     if p >= 100_000_000: return 1_500_000
     elif p >= 90_000_000: return 1_200_000
     elif p >= 80_000_000: return 1_000_000
@@ -229,12 +156,12 @@ def on_sheet_change():
         st.session_state["selected_sheet_index"] = 1
 
 # ==============================================================================
-# 3. ĐIỀU HƯỚNG GIAO DIỆN CHÍNH
+# 4. ĐIỀU HƯỚNG GIAO DIỆN CHÍNH
 # ==============================================================================
 
-# ─── TRANG 1: TRANG CHÀO MỪNG CHÍNH (PREMIUM WELCOME SCREEN) ───
+# ─── TRANG 1: TRANG CHÀO MỪNG CHÍNH (FIX LỖI BOTTOM & HIỂN THỊ HTML) ───
 if st.session_state["current_page"] == "👋 CHÀO MỪNG":
-    # MENU BAR PHÍA TRÊN
+    # MENU BAR PHÍA TRÊN VỚI NÚT CHỌN NGÔN NGỮ DUY NHẤT
     st.markdown('<div class="menu-container">', unsafe_allow_html=True)
     top_col1, top_col2 = st.columns([8, 2])
     with top_col1:
@@ -246,31 +173,63 @@ if st.session_state["current_page"] == "👋 CHÀO MỪNG":
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # KHU VỰC THIẾT KẾ CARD TRUNG TÂM & NÚT BẤM HTML CAO CẤP
-    st.markdown(f"""
-        <div class="welcome-box">
-            <h1>{T['title']}</h1>
-            <div style='height: 2px; background: linear-gradient(90deg, transparent, #ffaa00, transparent); max-width: 400px; margin: 25px auto;'></div>
-            <p>{T['select_role']}</p>
-            
-            <!-- Bộ nút bấm tùy biến HTML cao cấp tránh lỗi giao diện Streamlit -->
-            <div class="btn-wrapper">
-                <button class="btn-gaming btn-member" onclick="document.getElementById('hidden_member_trigger').click()">{T['btn_member']}</button>
-                <button class="btn-gaming btn-admin" onclick="document.getElementById('hidden_admin_trigger').click()">{T['btn_admin']}</button>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+    # RENDER KHUNG CHÀO MỪNG BẰNG COMPONENTS.HTML ĐỂ TRÁNH LỖI HIỂN THỊ CODE RA NGOÀI
+    welcome_html_code = f"""
+    <style>
+        .welcome-box {{
+            text-align: center;
+            padding: 50px 30px;
+            background: linear-gradient(180deg, #1f242c 0%, #0f1319 100%);
+            border-radius: 20px;
+            border: 1px solid #38444d;
+            margin: 20px auto;
+            max-width: 650px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }}
+        .welcome-box h1 {{
+            color: #ffaa00; font-size: 30px; font-weight: 800; letter-spacing: 1px; margin-bottom: 5px;
+            text-shadow: 0 0 20px rgba(255, 170, 0, 0.2);
+        }}
+        .welcome-box p {{ color: #8b949e; font-size: 15px; margin-bottom: 35px; }}
+        .btn-wrapper {{ display: flex; gap: 20px; justify-content: center; align-items: center; flex-wrap: wrap; }}
+        .btn-gaming {{
+            flex: 1; min-width: 220px; max-width: 260px; padding: 15px 30px; font-size: 15px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px; border-radius: 12px; cursor: pointer;
+            transition: all 0.3s ease; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.4); border: none;
+        }}
+        .btn-member {{ background: linear-gradient(135deg, #1f2937 0%, #111827 100%); color: #38bdf8; border: 1px solid #1e3a8a; }}
+        .btn-member:hover {{ background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; box-shadow: 0 0 25px rgba(37, 99, 235, 0.5); transform: translateY(-3px); }}
+        .btn-admin {{ background: linear-gradient(135deg, #ffaa00 0%, #d97706 100%); color: #0f1319; }}
+        .btn-admin:hover {{ background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); box-shadow: 0 0 25px rgba(245, 158, 11, 0.6); transform: translateY(-3px); }}
+    </style>
     
-    # Các nút kích hoạt ẩn của Streamlit để đồng bộ logic chuyển trang mà không làm xấu giao diện
-    with st.container():
-        st.markdown("<div style='display:none;'>", unsafe_allow_html=True)
-        if st.button("M_TRIG", key="hidden_member_trigger"):
-            st.session_state["current_page"] = "📊 TRANG CHỦ KPI"
-            st.rerun()
-        if st.button("A_TRIG", key="hidden_admin_trigger"):
-            st.session_state["current_page"] = "⚙️ QUẢN TRỊ ADMIN"
-            st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
+    <div class="welcome-box">
+        <h1>{T['title']}</h1>
+        <div style="height: 2px; background: linear-gradient(90deg, transparent, #ffaa00, transparent); max-width: 400px; margin: 20px auto;"></div>
+        <p>{T['select_role']}</p>
+        <div class="btn-wrapper">
+            <button class="btn-gaming btn-member" onclick="window.parent.postMessage({{type: 'streamlit:setComponentValue', value: 'MEMBER'}}, '*')">{T['btn_member']}</button>
+            <button class="btn-gaming btn-admin" onclick="window.parent.postMessage({{type: 'streamlit:setComponentValue', value: 'ADMIN'}}, '*')">{T['btn_admin']}</button>
+        </div>
+    </div>
+    """
+    
+    # Nhận phản hồi tương tác từ nút bấm HTML gửi về Streamlit xử lý trang chuyển mượt mà
+    response_action = components.html(welcome_html_code, height=380, scrolling=False)
+    
+    # Tạo cổng nhận diện click từ iframe chuyển trang chuẩn xác
+    st.markdown("<div style='display:none;'>", unsafe_allow_html=True)
+    ctx_btn = st.text_input("Hidden Gate", key="hidden_gate_input", label_visibility="collapsed")
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # Logic bắt sự kiện chuyển hướng trang từ cụm nút HTML bấm trên
+    if response_action == "MEMBER":
+        st.session_state["current_page"] = "📊 TRANG CHỦ KPI"
+        st.rerun()
+    elif response_action == "ADMIN":
+        st.session_state["current_page"] = "⚙️ QUẢN TRỊ ADMIN"
+        st.rerun()
 
 # ─── TRANG 2: TRANG CHỈNH SỬA ADMIN ───
 elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
@@ -297,8 +256,7 @@ elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
     if not st.session_state["is_admin_verified"]:
         admin_password = st.text_input(T["pass_label"], type="password", placeholder=T["pass_placeholder"])
         if admin_password:
-            try:
-                target_pass = st.secrets["admin"]["password"]
+            try: target_pass = st.secrets["admin"]["password"]
             except KeyError:
                 target_pass = "123"
                 st.warning("⚠️ Chưa phát hiện cấu hình Secrets trên Cloud. Đang dùng pass tạm: 123")
@@ -340,17 +298,12 @@ elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
         if st.button(T["save_btn"]):
             header = edited_df.columns.tolist()
             matrix_data = [header] + edited_df.fillna("").values.tolist()
-            
-            payload = {
-                "worksheet": worksheet_name,
-                "data": matrix_data
-            }
+            payload = {"worksheet": worksheet_name, "data": matrix_data}
             
             with st.spinner(T["syncing"]):
                 try:
                     try: app_url = st.secrets["api"]["app_url"]
                     except KeyError: app_url = ""
-                    
                     response = requests.post(app_url, json=payload)
                     res_json = response.json()
                     
@@ -487,8 +440,7 @@ elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
             })
         return processed_list
 
-    try:
-        final_data = process_cards_data()
+    try: final_data = process_cards_data()
     except Exception as e:
         st.error(f"{T['sheet_err']} {e}")
         st.stop()
