@@ -158,7 +158,6 @@ T = lang_dict[st.session_state["lang"]]
 
 # ─── TRANG 1: TRANG CHÀO MỪNG CHÍNH (WELCOME PAGE) ───
 if st.session_state["current_page"] == "👋 CHÀO MỪNG":
-    # Nút chuyển đổi ngôn ngữ EN/VN đặt trên cùng góc phải trang chào mừng
     lang_col1, lang_col2 = st.columns([8, 1.5])
     with lang_col2:
         lang_choice = st.selectbox("🌐 Language", ["Tiếng Việt (VN)", "English (EN)"], 
@@ -176,7 +175,6 @@ if st.session_state["current_page"] == "👋 CHÀO MỪNG":
         </div>
     """, unsafe_allow_html=True)
     
-    # 2 Cột lựa chọn quyền truy cập
     w_col1, w_col2 = st.columns(2)
     with w_col1:
         if st.button(T["btn_member"], use_container_width=True, type="secondary"):
@@ -204,14 +202,12 @@ elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
             st.session_state["current_page"] = "👋 CHÀO MỪNG"
             st.rerun()
     with m_col4:
-        # Chuyển đổi ngôn ngữ trực tiếp trong menu hệ thống
         lang_choice = st.selectbox("🌐", ["VN", "EN"], index=0 if st.session_state["lang"] == "VN" else 1, label_visibility="collapsed")
         if lang_choice != st.session_state["lang"]:
             st.session_state["lang"] = lang_choice
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Xác thực mật khẩu nếu chưa login
     if not st.session_state["is_admin_verified"]:
         admin_password = st.text_input(T["pass_label"], type="password", placeholder=T["pass_placeholder"])
         if admin_password:
@@ -222,14 +218,17 @@ elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
             else:
                 st.error(T["login_fail"])
     
-    # Giao diện quản trị chỉnh sửa dữ liệu
     if st.session_state["is_admin_verified"]:
-        sheet_option = st.selectbox(T["select_sheet"], [
+        # Tạo danh sách bảng hiển thị tùy theo ngôn ngữ đang chọn
+        sheet_options = [
             "Bảng 1: KPI Gốc (0)" if st.session_state["lang"] == "VN" else "Table 1: Base KPI (0)", 
             "Bảng 2: Cập Nhật Mới (1325084102)" if st.session_state["lang"] == "VN" else "Table 2: New Update (1325084102)"
-        ])
+        ]
         
-        if "0" in sheet_option:
+        sheet_option = st.selectbox(T["select_sheet"], sheet_options)
+        
+        # ĐÃ SỬA: Nhận diện Sheet thông minh dựa trên ký tự số có trong chuỗi (bất kể tiếng Anh hay Việt)
+        if "(0)" in sheet_option:
             target_gid = GID1
             worksheet_name = "Sheet1"  
         else:
@@ -296,7 +295,6 @@ elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # Thao tác tải và tính toán dữ liệu
     @st.cache_data(ttl=60)
     def process_cards_data():
         df1 = load_csv_data(GID1)
@@ -419,7 +417,6 @@ elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
     html_template_content = read_file("template.html")
 
     if html_template_content and style_css_content:
-        # Gửi kèm biến ngôn ngữ sang cấu trúc HTML template nếu cần xử lý JS
         final_html = html_template_content.replace("{style_css}", style_css_content).replace("{cards_html}", cards_html)
         components.html(final_html, height=900, scrolling=True)
     else:
