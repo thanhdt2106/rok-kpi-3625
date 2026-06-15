@@ -6,7 +6,7 @@ import requests
 import os
 
 # ==============================================================================
-# 1. KHAI BÁO HÀM ĐỌC FILE (Đưa lên đầu để sửa triệt để lỗi NameError)
+# 1. KHAI BÁO HÀM ĐỌC FILE (Tránh lỗi NameError)
 # ==============================================================================
 def read_file(filename):
     if os.path.exists(filename):
@@ -159,7 +159,7 @@ def on_sheet_change():
 # 4. ĐIỀU HƯỚNG GIAO DIỆN CHÍNH
 # ==============================================================================
 
-# ─── TRANG 1: TRANG CHÀO MỪNG CHÍNH (FIX LỖI BOTTOM & HIỂN THỊ HTML) ───
+# ─── TRANG 1: TRANG CHÀO MỪNG CHÍNH ───
 if st.session_state["current_page"] == "👋 CHÀO MỪNG":
     # MENU BAR PHÍA TRÊN VỚI NÚT CHỌN NGÔN NGỮ DUY NHẤT
     st.markdown('<div class="menu-container">', unsafe_allow_html=True)
@@ -173,7 +173,27 @@ if st.session_state["current_page"] == "👋 CHÀO MỪNG":
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # RENDER KHUNG CHÀO MỪNG BẰNG COMPONENTS.HTML ĐỂ TRÁNH LỖI HIỂN THỊ CODE RA NGOÀI
+    # Đặt 2 nút bấm thật của Streamlit vào trong block ẩn bằng CSS để JS kích hoạt click
+    st.markdown("""
+        <style>
+            .hidden-buttons { display: none !important; }
+        </style>
+    """, unsafe_allow_html=True)
+    
+    with st.container():
+        st.markdown('<div class="hidden-buttons">', unsafe_allow_html=True)
+        btn_member_trigger = st.button("GO_MEMBER", key="real_member_btn")
+        btn_admin_trigger = st.button("GO_ADMIN", key="real_admin_btn")
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+    if btn_member_trigger:
+        st.session_state["current_page"] = "📊 TRANG CHỦ KPI"
+        st.rerun()
+    if btn_admin_trigger:
+        st.session_state["current_page"] = "⚙️ QUẢN TRỊ ADMIN"
+        st.rerun()
+
+    # RENDER KHUNG CHÀO MỪNG HTML GAMING - FIX LỖI CLICK CHUYỂN TRANG
     welcome_html_code = f"""
     <style>
         .welcome-box {{
@@ -209,27 +229,36 @@ if st.session_state["current_page"] == "👋 CHÀO MỪNG":
         <div style="height: 2px; background: linear-gradient(90deg, transparent, #ffaa00, transparent); max-width: 400px; margin: 20px auto;"></div>
         <p>{T['select_role']}</p>
         <div class="btn-wrapper">
-            <button class="btn-gaming btn-member" onclick="window.parent.postMessage({{type: 'streamlit:setComponentValue', value: 'MEMBER'}}, '*')">{T['btn_member']}</button>
-            <button class="btn-gaming btn-admin" onclick="window.parent.postMessage({{type: 'streamlit:setComponentValue', value: 'ADMIN'}}, '*')">{T['btn_admin']}</button>
+            <button class="btn-gaming btn-member" onclick="triggerStreamlit('real_member_btn')">{T['btn_member']}</button>
+            <button class="btn-gaming btn-admin" onclick="triggerStreamlit('real_admin_btn')">{T['btn_admin']}</button>
         </div>
     </div>
+
+    <script>
+        function triggerStreamlit(elementKey) {{
+            // Truy cập trực tiếp vào DOM của Streamlit cha từ Iframe để kích hoạt click button thật
+            var buttons = window.parent.document.getElementsByTagName('button');
+            for (var i = 0; i < buttons.length; i++) {{
+                if (buttons[i].textContent.includes(elementKey) || buttons[i].getAttribute('data-testid') === 'stBaseButton-secondary' && buttons[i].innerHTML.includes(elementKey)) {{
+                    buttons[i].click();
+                    break;
+                }}
+                // Tìm kiếm theo cấu trúc key định danh của Streamlit
+                if (buttons[i].id && buttons[i].id.includes(elementKey)) {{
+                    buttons[i].click();
+                    break;
+                }}
+            }}
+            // Hướng dự phòng quét chính xác text của button ẩn
+            const parentDoc = window.parent.document;
+            const targetBtn = Array.from(parentDoc.querySelectorAll('button')).find(el => el.textContent.trim() === elementKey);
+            if (targetBtn) {{
+                targetBtn.click();
+            }}
+        }}
+    </script>
     """
-    
-    # Nhận phản hồi tương tác từ nút bấm HTML gửi về Streamlit xử lý trang chuyển mượt mà
-    response_action = components.html(welcome_html_code, height=380, scrolling=False)
-    
-    # Tạo cổng nhận diện click từ iframe chuyển trang chuẩn xác
-    st.markdown("<div style='display:none;'>", unsafe_allow_html=True)
-    ctx_btn = st.text_input("Hidden Gate", key="hidden_gate_input", label_visibility="collapsed")
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    # Logic bắt sự kiện chuyển hướng trang từ cụm nút HTML bấm trên
-    if response_action == "MEMBER":
-        st.session_state["current_page"] = "📊 TRANG CHỦ KPI"
-        st.rerun()
-    elif response_action == "ADMIN":
-        st.session_state["current_page"] = "⚙️ QUẢN TRỊ ADMIN"
-        st.rerun()
+    components.html(welcome_html_code, height=400, scrolling=False)
 
 # ─── TRANG 2: TRANG CHỈNH SỬA ADMIN ───
 elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
