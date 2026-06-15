@@ -67,8 +67,8 @@ if admin_password:
         st.success("🔓 ĐỒNG BỘ REALTIME ĐÃ MỞ: Bạn có thể chỉnh sửa trực tiếp, thêm hoặc xóa dòng.")
         
         sheet_option = st.selectbox("Chọn bảng tính cần thao tác dữ liệu:", [
-            "Bảng 1: Dữ liệu KPI Gốc (Gid 855089129)", 
-            "Bảng 2: Dữ liệu Cập Nhật Mới (Gid 316243863)"
+            "Bảng 1: Dữ liệu KPI Gốc (Gid 0)", 
+            "Bảng 2: Dữ liệu Cập Nhật Mới (Gid 1325084102)"
         ])
         
         # ⚠️ CHÚ Ý: Bạn hãy đổi đúng tên Tab viết trên Google Sheets vào 2 biến worksheet_name ở dưới
