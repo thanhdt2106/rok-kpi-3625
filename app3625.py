@@ -78,17 +78,19 @@ def get_kpi_dead_value(p):
     elif p >= 30_000_000: return 400_000
     else: return 300_000
 
-# Khởi tạo trạng thái trang mặc định khi vừa truy cập là trang Chào Mừng
+# Khởi tạo các trạng thái session_state hệ thống
 if "current_page" not in st.session_state:
     st.session_state["current_page"] = "👋 CHÀO MỪNG"
 
-# Khởi tạo quyền Admin
 if "is_admin_verified" not in st.session_state:
     st.session_state["is_admin_verified"] = False
 
-# Khởi tạo ngôn ngữ mặc định (Tiếng Việt)
 if "lang" not in st.session_state:
     st.session_state["lang"] = "VN"
+
+# Khởi tạo vị trí index bảng tính mặc định (0 là Bảng 1, 1 là Bảng 2)
+if "selected_sheet_index" not in st.session_state:
+    st.session_state["selected_sheet_index"] = 0
 
 # Từ điển quản lý từ vựng ngôn ngữ
 lang_dict = {
@@ -151,6 +153,13 @@ lang_dict = {
 }
 
 T = lang_dict[st.session_state["lang"]]
+
+# Hàm xử lý khi Admin thay đổi selectbox chọn bảng tính
+def on_sheet_change():
+    if "Bảng 1" in st.session_state["sheet_select_key"] or "Base KPI" in st.session_state["sheet_select_key"]:
+        st.session_state["selected_sheet_index"] = 0
+    else:
+        st.session_state["selected_sheet_index"] = 1
 
 # ==============================================================================
 # 3. ĐIỀU HƯỚNG GIAO DIỆN THEO LỰA CHỌN VÀ NGÔN NGỮ
@@ -219,16 +228,22 @@ elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
                 st.error(T["login_fail"])
     
     if st.session_state["is_admin_verified"]:
-        # Tạo danh sách bảng hiển thị tùy theo ngôn ngữ đang chọn
         sheet_options = [
             "Bảng 1: KPI Gốc (0)" if st.session_state["lang"] == "VN" else "Table 1: Base KPI (0)", 
             "Bảng 2: Cập Nhật Mới (1325084102)" if st.session_state["lang"] == "VN" else "Table 2: New Update (1325084102)"
         ]
         
-        sheet_option = st.selectbox(T["select_sheet"], sheet_options)
+        # ĐÃ TỐI ƯU: Sử dụng thuộc tính key và on_change để ép Streamlit lưu trạng thái index chính xác tuyệt đối
+        st.selectbox(
+            T["select_sheet"], 
+            sheet_options, 
+            index=st.session_state["selected_sheet_index"],
+            key="sheet_select_key",
+            on_change=on_sheet_change
+        )
         
-        # ĐÃ SỬA: Nhận diện Sheet thông minh dựa trên ký tự số có trong chuỗi (bất kể tiếng Anh hay Việt)
-        if "(0)" in sheet_option:
+        # Quyết định GID và tên hiển thị dựa trên index trạng thái đã được lưu cứng
+        if st.session_state["selected_sheet_index"] == 0:
             target_gid = GID1
             worksheet_name = "Sheet1"  
         else:
