@@ -8,7 +8,7 @@ import os
 # ==============================================================================
 # 1. CẤU HÌNH GIAO DIỆN CHUẨN ĐỒ HỌA FULL SCREEN
 # ==============================================================================
-# Cho phép mở Sidebar mặc định để tiện thao tác (hoặc đổi thành "collapsed" nếu muốn mặc định ẩn)
+# Cho phép mở Sidebar mặc định để tiện thao tác
 st.set_page_config(page_title="FTD KPI SYSTEM", layout="wide", initial_sidebar_state="expanded")
 
 # Inject CSS tối ưu khung nhìn chính và tùy chỉnh giao diện Sidebar Admin cho rực rỡ
@@ -32,25 +32,51 @@ GID1 = "0"
 GID2 = "1325084102"
 
 # ==============================================================================
-# 2. HÀM TẢI DỮ LIỆU TỪ GOOGLE SHEETS (DẠNG CSV ĐỂ ĐẠT TỐC ĐỘ CAO NHẤT)
+# 2. ĐỊNH NGHĨA CÁC HÀM BỔ TRỢ (HÀM ĐỌC FILE VÀ TẢI DATA GOOGLE SHEETS)
 # ==============================================================================
+def read_file(filename):
+    """Hàm kiểm tra file có tồn tại không và đọc nội dung UTF-8 an toàn"""
+    if os.path.exists(filename):
+        with open(filename, "r", encoding="utf-8") as f:
+            return f.read()
+    return ""
+
 def load_csv_data(gid):
+    """Tải dữ liệu từ Google Sheets dưới dạng CSV để đạt tốc độ cao nhất"""
     url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={gid}"
     df = pd.read_csv(url, dtype=str)
     df.columns = df.columns.str.strip()
     return df
 
+def get_kpi_kill_value(p):
+    """Tính toán mốc KPI tiêu diệt dựa trên Sức mạnh gốc"""
+    if p >= 100_000_000: return 600_000_000
+    elif p >= 80_000_000: return 450_000_000
+    return 300_000_000
+
+def get_kpi_dead_value(p):
+    """Tính toán mốc KPI điểm chết dựa trên Sức mạnh gốc"""
+    if p >= 100_000_000: return 1_500_000
+    elif p >= 90_000_000: return 1_200_000
+    elif p >= 80_000_000: return 1_000_000
+    elif p >= 70_000_000: return 800_000
+    elif p >= 60_000_000: return 700_000
+    elif p >= 50_000_000: return 600_000
+    elif p >= 40_000_000: return 500_000
+    elif p >= 30_000_000: return 400_000
+    else: return 300_000
+
 # ==============================================================================
-# 3. ĐƯA TOÀN BỘ KHU VỰC ĐIỀU KHIỂN ĐĂNG NHẬP / SỬA DATA VÀO SIDEBAR
+# 3. ĐƯA TOÀN BỘ KHU VỰC ĐIỀU KHIỂN ĐĂNG NHẬP SỬA DATA VÀO SIDEBAR
 # ==============================================================================
 with st.sidebar:
     st.markdown("## 🛡️ ADMIN PANEL")
     st.caption("Khu vực dành riêng cho Ban Quản Trị liên minh.")
     
-    # Ô nhập mật khẩu Admin (Dữ liệu lấy từ mục Secrets đã cấu hình trên web)
+    # Ô nhập mật khẩu Admin (Dữ liệu cấu hình lấy trực tiếp trong mục Secrets trên web)
     admin_password = st.text_input("Mật khẩu Admin", type="password", placeholder="Nhập pass để sửa...")
     
-    # Khởi tạo trạng thái đăng nhập
+    # Khởi tạo trạng thái đăng nhập mặc định là False
     is_admin = False
     
     if admin_password:
@@ -65,15 +91,15 @@ with st.sidebar:
                 "Bảng 2: Cập Nhật Mới (1325084102)"
             ])
             
-            # ⚠️ CHÚ Ý: Đảm bảo viết đúng tên Tab hiển thị trên file Google Sheets của bạn
+            # ⚠️ CHÚ Ý: Đảm bảo viết đúng tên Tab vật lý hiển thị dưới đáy file Google Sheets của bạn
             if "Bảng 1" in sheet_option:
                 target_gid = GID1
-                worksheet_name = "Sheet1"  # Thay bằng tên tab thực tế của Gid 855089129
+                worksheet_name = "Sheet1"  # Sửa lại thành tên Tab chính xác nếu bạn đổi tên trên Sheets
             else:
                 target_gid = GID2
-                worksheet_name = "Sheet2"  # Thay bằng tên tab thực tế của Gid 316243863
+                worksheet_name = "Sheet2"  # Sửa lại thành tên Tab chính xác nếu bạn đổi tên trên Sheets
                 
-            # Đọc dữ liệu thô phục vụ cho việc chỉnh sửa
+            # Đọc trước dữ liệu thô từ Google Sheets phục vụ cho việc chỉnh sửa trực tiếp
             df_to_edit = load_csv_data(target_gid)
         else:
             st.error("❌ Mật khẩu không chính xác!")
@@ -83,7 +109,6 @@ st.markdown("---")
 # ==============================================================================
 # 4. HIỂN THỊ BẢNG CHỈNH SỬA Ở KHU VỰC CHÍNH KHI ADMIN ĐĂNG NHẬP THÀNH CÔNG
 # ==============================================================================
-# Nếu Admin đã log-in đúng, hiển thị bảng dữ liệu to rõ ràng ngay phía trên hệ thống Card
 if is_admin:
     st.subheader(f"📝 Chỉnh sửa dữ liệu trực tiếp: {worksheet_name}")
     st.info("💡 Mẹo: Bạn có thể click đúp vào ô để sửa số liệu, hoặc kéo thả, thêm hàng ở dưới bảng.")
@@ -91,9 +116,8 @@ if is_admin:
     # Tạo bảng tương tác thông minh diện tích lớn ở màn hình chính
     edited_df = st.data_editor(df_to_edit, num_rows="dynamic", use_container_width=True)
     
-    # Nút bấm kích hoạt đồng bộ ngược lên Google Sheets
+    # Nút bấm kích hoạt đồng bộ ngược lên Google Sheets qua Apps Script URL
     if st.button("💾 XÁC NHẬN LƯU VÀ ĐỒNG BỘ LÊN GOOGLE SHEETS"):
-        # Chuyển đổi dữ liệu bảng thành mảng Matrix (bao gồm Header) gửi lên Apps Script
         header = edited_df.columns.tolist()
         matrix_data = [header] + edited_df.fillna("").values.tolist()
         
@@ -110,7 +134,7 @@ if is_admin:
                 if res_json.get("status") == "success":
                     st.balloons()
                     st.success(f"Thành công: {res_json.get('message')}")
-                    # Xóa bỏ bộ nhớ đệm cache để hệ thống Card cập nhật số liệu mới ngay lập tức
+                    # Xóa bộ nhớ đệm cache để hệ thống Card cập nhật số liệu mới ngay lập tức
                     st.cache_data.clear()
                 else:
                     st.error(f"Thất bại từ hệ thống Sheets: {res_json.get('message')}")
@@ -122,22 +146,6 @@ if is_admin:
 # ==============================================================================
 # 5. LOGIC XỬ LÝ DỮ LIỆU KPI & BIẾN ĐỔI SANG THẺ CARDS (USER VIEW)
 # ==============================================================================
-def get_kpi_kill_value(p):
-    if p >= 100_000_000: return 600_000_000
-    elif p >= 80_000_000: return 450_000_000
-    return 300_000_000
-
-def get_kpi_dead_value(p):
-    if p >= 100_000_000: return 1_500_000
-    elif p >= 90_000_000: return 1_200_000
-    elif p >= 80_000_000: return 1_000_000
-    elif p >= 70_000_000: return 800_000
-    elif p >= 60_000_000: return 700_000
-    elif p >= 50_000_000: return 600_000
-    elif p >= 40_000_000: return 500_000
-    elif p >= 30_000_000: return 400_000
-    else: return 300_000
-
 @st.cache_data(ttl=60)
 def process_cards_data():
     df1 = load_csv_data(GID1)
@@ -237,7 +245,9 @@ except Exception as e:
     st.error(f"Lỗi đồng bộ cấu trúc dữ liệu bảng tính: {e}")
     st.stop()
 
-# DỰNG CARDS HTML
+# ==============================================================================
+# 6. DỰNG CARDS HTML VÀ RENDER GIAO DIỆN CHUẨN ĐỒ HỌA
+# ==============================================================================
 cards_html = ""
 for item in final_data:
     avatar = f"https://api.dicebear.com/7.x/adventurer/svg?seed={item['name']}"
@@ -256,11 +266,12 @@ for item in final_data:
     </div>
     """
 
-style_css_content = read_file("style.css") if os.path.exists("style.css") else ""
-html_template_content = read_file("template.html") if os.path.exists("template.html") else ""
+# Đọc file giao diện CSS và HTML Template
+style_css_content = read_file("style.css")
+html_template_content = read_file("template.html")
 
 if html_template_content and style_css_content:
     final_html = html_template_content.replace("{style_css}", style_css_content).replace("{cards_html}", cards_html)
     components.html(final_html, height=900, scrolling=True)
 else:
-    st.error("Thiếu file style.css hoặc template.html!")
+    st.error("Hệ thống không tìm thấy file style.css hoặc template.html tại thư mục gốc GitHub!")
