@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        {style_css}
+    </style>
+</head>
+<body>
+    <div id="langBtn">EN</div>
+    <input class="search" id="searchInput" placeholder="🔍 Nhập tên hoặc ID..." onkeyup="search(this.value)">
+    <div class="filters">
+        <div class="filter active" id="fPow" onclick="setMode('power', this)">⚡ SỨC MẠNH BIẾN ĐỘNG</div>
+        <div class="filter" id="fKill" onclick="setMode('kill', this)">🔥 TIÊU DIỆT BIẾN ĐỘNG</div>
+        <div class="filter" id="fDead" onclick="setMode('dead', this)">💀 ĐIỂM CHẾT BIẾN ĐỘNG</div>
+    </div>
+    <div class="grid" id="grid">
+        {cards_html}
+    </div>
+    <div class="modal" id="modal">
+        <div class="profile-box" id="profileContent"></div>
+    </div>
+
+<script>
+    let activeProfileData = null; 
+    let lang = "vn";
+
+    const TEXT = {
+        vn: { 
+            search: "🔍 Nhập tên hoặc ID...", 
+            pow: "⚡ SỨC MẠNH BIẾN ĐỘNG", 
+            kill: "🔥 TIÊU DIỆT BIẾN ĐỘNG", 
+            dead: "💀 ĐIỂM CHẾT BIẾN ĐỘNG", 
+            lbl_pow: "⚡ SỨC MẠNH",
+            lbl_kill: "🔥 TIÊU DIỆT",
+            lbl_dead: "💀 ĐIỂM CHẾT",
+            box_title: "BIẾN ĐỘNG ĐIỂM TIÊU DIỆT",
+            box_t4: "• Điểm T4 tăng thêm:",
+            box_t5: "• Điểm T5 tăng thêm:",
+            box_total: "• Tổng điểm (T4 + T5):",
+            kK_label: "🔥 KPI Tiêu Diệt (T4+T5)", 
+            kD_label: "💀 KPI Điểm chết", 
+            kT_label: "📊 KPI TỔNG ĐẠT ĐƯỢC",
+            exit: "QUAY LẠI",
+            msg_perfect: "Đỉnh đấy bro 😎",
+            msg_good: "Cũng khá ổn đấy nhưng cần cố gắng thêm 🫣",
+            msg_warn: "Bạn cần nộp phạt Rss để ở lại hoặc nhận vé bay miễn phí và rời đi 💸",
+            msg_kick: "Vui lòng rời đi trước ngày 29/6 🚨"
+        },
+        en: { 
+            search: "🔍 Search name or ID...", 
+            pow: "⚡ POWER CHANGE", 
+            kill: "🔥 KILLS CHANGE", 
+            dead: "💀 DEAD CHANGE", 
+            lbl_pow: "⚡ POWER",
+            lbl_kill: "🔥 KILLS",
+            lbl_dead: "💀 DEAD",
+            box_title: "KILL POINTS CHANGE",
+            box_t4: "• T4 Points Gained:",
+            box_t5: "• T5 Points Gained:",
+            box_total: "• Total Points (T4 + T5):",
+            kK_label: "🔥 Kills KPI (T4+T5)", 
+            kD_label: "💀 Dead KPI", 
+            kT_label: "📊 OVERALL KPI ACHIEVED",
+            exit: "CLOSE",
+            msg_perfect: "Absolute beast, bro! 😎",
+            msg_good: "Not bad, but you need to push harder 🫣",
+            msg_warn: "Pay RSS fine to stay, or take a free passport and leave 💸",
+            msg_kick: "Please migrate out before June 29th 🚨"
+        }
+    };
+
+    document.getElementById("langBtn").onclick = function() {
+        lang = lang === "vn" ? "en" : "vn";
+        this.innerText = lang.toUpperCase();
+        
+        document.getElementById("searchInput").placeholder = TEXT[lang].search;
+        document.getElementById("fPow").innerText = TEXT[lang].pow;
+        document.getElementById("fKill").innerText = TEXT[lang].kill;
+        document.getElementById("fDead").innerText = TEXT[lang].dead;
+        
+        let activeFilter = document.querySelector('.filter.active');
+        if(activeFilter) {
+            let mode = activeFilter.id === 'fPow' ? 'power' : (activeFilter.id === 'fKill' ? 'kill' : 'dead');
+            updateCardValues(mode);
+        }
+        
+        if (activeProfileData) {
+            renderModalContent();
+        }
+    };
+
+    function search(v) {
+        v = v.toLowerCase();
+        document.querySelectorAll('.card').forEach(c => {
+            const name = c.querySelector('.card-name').innerText.toLowerCase();
+            const id = c.getAttribute('data-id').toLowerCase();
+            if (name.includes(v) || id.includes(v)) {
+                c.style.display = 'block';
+            } else {
+                c.style.display = 'none';
+            }
+        });
+    }
+
+    function setMode(m, el) {
+        document.querySelectorAll('.filter').forEach(f => f.classList.remove('active'));
+        el.classList.add('active');
+        let grid = document.getElementById('grid');
+        let cards = Array.from(grid.getElementsByClassName('card'));
+        cards.sort((a,b) => Number(b.dataset[m]) - Number(a.dataset[m]));
+        grid.innerHTML = "";
+        cards.forEach(c => grid.appendChild(c));
+        updateCardValues(m);
+    }
+
+    function updateCardValues(m) {
+        document.querySelectorAll('.card').forEach(c => {
+            let prefix = m === 'power' ? '⚡ ' : (m === 'kill' ? '🔥 ' : '💀 ');
+            c.querySelector('.value').innerText = prefix + Number(c.dataset[m]).toLocaleString();
+        });
+    }
+
+    function toggleTDetail() {
+        let box = document.getElementById('tDetailBox');
+        box.style.display = (box.style.display === 'none' || box.style.display === '') ? 'block' : 'none';
+    }
+
+    function openProfile(name, id, all, tPow, tKill, tDead, dKill, dDead, kK, kD, realPctK, realPctD, realPctT, barK, barD, barT, dt4, dt5, avatar) {
+        activeProfileData = { name, id, all, tPow, tKill, tDead, dKill, dDead, kK, kD, realPctK, realPctD, realPctT, barK, barD, barT, dt4, dt5, avatar };
+        document.getElementById('modal').style.display = 'flex';
+        renderModalContent();
+    }
+
+    function renderModalContent() {
+        if (!activeProfileData) return;
+        let d = activeProfileData;
+        let t = TEXT[lang];
+        
+        let systemMsg = "";
+        let alertBorderColor = "#ff4b4b"; 
+        let pct = Number(d.realPctT);
+        
+        if(pct >= 100) {
+            systemMsg = t.msg_perfect;
+            alertBorderColor = "#00ffcc";
+        } else if(pct >= 70) {
+            systemMsg = t.msg_good;
+            alertBorderColor = "gold";
+        } else if(pct >= 50) {
+            systemMsg = t.msg_warn;
+            alertBorderColor = "#ff9900";
+        } else {
+            systemMsg = t.msg_kick;
+            alertBorderColor = "#ff4b4b";
+        }
+        
+        document.getElementById('profileContent').innerHTML = `
+            <center>
+                <div class="avatar-wrap" style="width:65px; height:65px;"><img src="${d.avatar}"></div>
+                <h3 style="margin:5px 0 3px 0; font-size:16px;">${d.name}</h3>
+                <small style="color:#888; font-size:11px;">ID: ${d.id} | ${d.all}</small>
+            </center>
+            
+            <div class="stat-row">
+                <div class="stat-card">${t.lbl_pow}<br><b>${Number(d.tPow).toLocaleString()}</b></div>
+                <div class="stat-card">
+                    ${t.lbl_kill} <button class="info-trigger" onclick="toggleTDetail()">!</button>
+                    <br><b>${Number(d.tKill).toLocaleString()}</b>
+                </div>
+                <div class="stat-card">${t.lbl_dead}<br><b>${Number(d.tDead).toLocaleString()}</b></div>
+            </div>
+            
+            <div class="t-detail-box" id="tDetailBox">
+                <div style="color: gold; font-weight: bold; margin-bottom: 5px; text-align: center;">${t.box_title}</div>
+                <div>${t.box_t4} <span>${Number(d.dt4) > 0 ? '+' : ''}${Number(d.dt4).toLocaleString()}</span></div>
+                <div>${t.box_t5} <span>${Number(d.dt5) > 0 ? '+' : ''}${Number(d.dt5).toLocaleString()}</span></div>
+                <div style="border-top: 1px dashed #333; margin-top: 5px; padding-top: 5px;">${t.box_total} <span style="color: gold;">${Number(d.dKill).toLocaleString()}</span></div>
+            </div>
+
+            <div class="kpi-section">
+                <div class="kpi-label">
+                    <span>${t.kK_label} <span class="pct-tag">${d.realPctK}%</span></span>
+                    <span style="font-family: monospace;">${Number(d.dKill).toLocaleString()}/${Number(d.kK).toLocaleString()}</span>
+                </div>
+                <div class="bar"><div class="fill" style="width: ${d.barK}%;"></div></div>
+                
+                <div class="kpi-label">
+                    <span>${t.kD_label} <span class="pct-tag">${d.realPctD}%</span></span>
+                    <span style="font-family: monospace;">${Number(d.dDead).toLocaleString()}/${Number(d.kD).toLocaleString()}</span>
+                </div>
+                <div class="bar"><div class="fill" style="width: ${d.barD}%;"></div></div>
+                
+                <hr style="border: 0; border-top: 1px solid #333; margin: 12px 0;">
+                
+                <div class="kpi-label" style="color: #00ffcc;">
+                    <span>${t.kT_label} <span class="pct-tag" style="background: rgba(0,255,150,0.2); color: #00ffcc; font-weight: bold;">${d.realPctT}%</span></span>
+                </div>
+                <div class="bar"><div class="fill fill-total" style="width: ${d.barT}%;"></div></div>
+            </div>
+            
+            <div class="alert-box" style="border-left-color: ${alertBorderColor};">
+                <b style="color: ${alertBorderColor}; font-size: 10px; display:block; margin-bottom:2px;">SYSTEM NOTICE:</b>
+                <span>${systemMsg}</span>
+            </div>
+            
+            <button class="close-btn" onclick="closeProfile()">${t.exit}</button>
+        `;
+    }
+
+    function closeProfile() {
+        document.getElementById('modal').style.display = 'none';
+        activeProfileData = null;
+    }
+</script>
+</body>
+</html>
