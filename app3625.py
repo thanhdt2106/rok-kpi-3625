@@ -88,7 +88,6 @@ if "is_admin_verified" not in st.session_state:
 if "lang" not in st.session_state:
     st.session_state["lang"] = "VN"
 
-# Khởi tạo vị trí index bảng tính mặc định (0 là Bảng 1, 1 là Bảng 2)
 if "selected_sheet_index" not in st.session_state:
     st.session_state["selected_sheet_index"] = 0
 
@@ -98,8 +97,9 @@ lang_dict = {
         "welcome": "👋 CHÀO MỪNG",
         "title": "Chào mừng đến với Hệ thống DKP / KPI của Vương Quốc 3625",
         "select_role": "Vui lòng lựa chọn vai trò của bạn để tiếp tục truy cập hệ thống:",
-        "btn_member": "👤 Bạn là Member",
-        "btn_admin": "🛡️ Bạn là ADMIN ?",
+        "btn_member": "👤 Bạn là Member (Tiếng Việt)",
+        "btn_member_en": "👤 I am a Member (English)",
+        "btn_admin": "🛡️ Quản trị Admin",
         "admin_title": "🛡️ KHU VỰC QUẢN TRỊ VIÊN",
         "pass_placeholder": "Nhập mật khẩu Admin để mở khóa hệ thống...",
         "pass_label": "Mật khẩu Admin:",
@@ -126,8 +126,9 @@ lang_dict = {
         "welcome": "👋 WELCOME",
         "title": "Welcome to Kingdom 3625 DKP / KPI System",
         "select_role": "Please select your role to proceed into the system:",
-        "btn_member": "👤 I am a Member",
-        "btn_admin": "🛡️ I am an ADMIN ?",
+        "btn_member": "👤 Bạn là Member (Tiếng Việt)",
+        "btn_member_en": "👤 I am a Member (English)",
+        "btn_admin": "🛡️ Admin Dashboard",
         "admin_title": "🛡️ ADMINISTRATOR PANEL",
         "pass_placeholder": "Enter Admin password to unlock system...",
         "pass_label": "Admin Password:",
@@ -154,7 +155,6 @@ lang_dict = {
 
 T = lang_dict[st.session_state["lang"]]
 
-# Hàm xử lý khi Admin thay đổi selectbox chọn bảng tính
 def on_sheet_change():
     if "Bảng 1" in st.session_state["sheet_select_key"] or "Base KPI" in st.session_state["sheet_select_key"]:
         st.session_state["selected_sheet_index"] = 0
@@ -167,14 +167,7 @@ def on_sheet_change():
 
 # ─── TRANG 1: TRANG CHÀO MỪNG CHÍNH (WELCOME PAGE) ───
 if st.session_state["current_page"] == "👋 CHÀO MỪNG":
-    lang_col1, lang_col2 = st.columns([8, 1.5])
-    with lang_col2:
-        lang_choice = st.selectbox("🌐 Language", ["Tiếng Việt (VN)", "English (EN)"], 
-                                   index=0 if st.session_state["lang"] == "VN" else 1)
-        new_lang = "VN" if "Tiếng Việt" in lang_choice else "EN"
-        if new_lang != st.session_state["lang"]:
-            st.session_state["lang"] = new_lang
-            st.rerun()
+    # ĐÃ XÓA: Thanh selectbox màu vàng cũ góc trên cùng bên phải đã được loại bỏ hoàn toàn
 
     st.markdown(f"""
         <div class="welcome-box">
@@ -184,13 +177,21 @@ if st.session_state["current_page"] == "👋 CHÀO MỪNG":
         </div>
     """, unsafe_allow_html=True)
     
-    w_col1, w_col2 = st.columns(2)
+    # Thiết kế hệ thống 3 Nút Bấm Lựa Chọn Vai Trò kiêm Ngôn Ngữ trực quan
+    w_col1, w_col2, w_col3 = st.columns(3)
     with w_col1:
         if st.button(T["btn_member"], use_container_width=True, type="secondary"):
+            st.session_state["lang"] = "VN"          # Ép ngôn ngữ sang Tiếng Việt
             st.session_state["current_page"] = "📊 TRANG CHỦ KPI"
             st.rerun()
             
     with w_col2:
+        if st.button(T["btn_member_en"], use_container_width=True, type="secondary"):
+            st.session_state["lang"] = "EN"          # Ép ngôn ngữ sang Tiếng Anh
+            st.session_state["current_page"] = "📊 TRANG CHỦ KPI"
+            st.rerun()
+
+    with w_col3:
         if st.button(T["btn_admin"], use_container_width=True, type="primary"):
             st.session_state["current_page"] = "⚙️ QUẢN TRỊ ADMIN"
             st.rerun()
@@ -233,7 +234,6 @@ elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
             "Bảng 2: Cập Nhật Mới (1325084102)" if st.session_state["lang"] == "VN" else "Table 2: New Update (1325084102)"
         ]
         
-        # ĐÃ TỐI ƯU: Sử dụng thuộc tính key và on_change để ép Streamlit lưu trạng thái index chính xác tuyệt đối
         st.selectbox(
             T["select_sheet"], 
             sheet_options, 
@@ -242,7 +242,6 @@ elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
             on_change=on_sheet_change
         )
         
-        # Quyết định GID và tên hiển thị dựa trên index trạng thái đã được lưu cứng
         if st.session_state["selected_sheet_index"] == 0:
             target_gid = GID1
             worksheet_name = "Sheet1"  
