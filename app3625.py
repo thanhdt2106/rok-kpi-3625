@@ -16,154 +16,169 @@ def read_file(filename):
     return ""
 
 # ==============================================================================
-# 2. CẤU HÌNH GIAO DIỆN CHUẨN ĐỒ HỌA HIGH-END UI (CÓ HIỆU ỨNG ĐỘNG CINEMA)
+# 2. CẤU HÌNH GIAO DIỆN CHUẨN ĐỒ HỌA HIGH-END UI (ĐÃ FIX RESPONSIVE MOBILE)
 # ==============================================================================
 st.set_page_config(page_title="FTD KPI SYSTEM", layout="wide", initial_sidebar_state="collapsed")
 
-# Inject CSS nâng cấp hiệu ứng động Neon Phát Sáng cho Trang Chào Mừng
+# Inject CSS để ép Darkmode và sửa lỗi giao diện trên điện thoại
 st.markdown("""
     <style>
-        /* Ẩn triệt để menu bar, footer, viền đen trên đầu và các khoảng trống mặc định của Streamlit */
+        /* ÉP TOÀN BỘ GIAO DIỆN HỆ THỐNG SANG DARK THEME (FIX LỖI TRÊN ĐIỆN THOẠI LIGHT MODE) */
+        html, body, [data-testid="stAppViewContainer"] {
+            background-color: #0d1117 !important;
+            color: #c9d1d9 !important;
+        }
+
+        /* Ẩn triệt để các thành phần thừa của Streamlit */
         #MainMenu, footer, header, [data-testid="stHeader"] {
             visibility: hidden !important;
             display: none !important;
         }
         
-        /* Đẩy toàn bộ nội dung sát lên trên, xóa padding thừa thãi */
         .block-container {
-            padding-top: 0px !important;
+            padding-top: 10px !important;
             padding-bottom: 10px !important;
-            padding-left: 10px !important;
-            padding-right: 10px !important;
+            padding-left: 12px !important;
+            padding-right: 12px !important;
             max-width: 100% !important;
         }
         
         iframe {width: 100% !important; border: none;}
         [data-testid="stSidebar"], [data-testid="stSidebarCollapseButton"] {display: none !important;}
         
-        /* Cố định hộp chọn ngôn ngữ ở góc trên cùng bên phải */
+        /* Hộp chọn ngôn ngữ tùy biến thích ứng thiết bị */
         .lang-fixed-topright {
             position: absolute;
-            top: 15px;
-            right: 25px;
-            width: 90px;
+            top: 10px;
+            right: 15px;
+            width: 85px;
             z-index: 999999;
         }
 
-        /* KHU VỰC BOX WELCOME CINEMA CÓ HIỆU ỨNG ĐỘNG GLOW NEON */
+        /* KHU VỰC BOX WELCOME CINEMA - RESPONSIVE TỰ CO GIÃN THEO MÀN HÌNH */
         .welcome-box-outer {
             text-align: center;
-            padding: 60px 40px 50px 40px;
+            padding: 40px 20px 35px 20px;
             background: linear-gradient(180deg, #1f242c 0%, #0f1319 100%);
-            border-radius: 20px;
+            border-radius: 16px;
             border: 1px solid #38444d;
-            margin: 6% auto 25px auto;
-            max-width: 650px;
-            box-shadow: 0 25px 55px rgba(0, 0, 0, 0.85);
+            margin: 40px auto 20px auto;
+            width: 100%;
+            max-width: 500px; /* Thu nhỏ chiều rộng tối đa để vừa vặn mobile */
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            position: relative;
-            overflow: hidden;
+            box-sizing: border-box;
         }
 
-        /* Khung chứa Icon Động phía trên tiêu đề */
+        /* Icon Động Vương Miện Neon */
         .animated-icon-container {
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
-        /* Hiệu ứng nhấp nháy phát sáng (Pulse Glow) cho Icon Vương Miện */
         .crown-glow-ani {
-            width: 70px;
-            height: 70px;
+            width: 65px;
+            height: 65px;
             fill: #ffaa00;
             filter: drop-shadow(0 0 8px rgba(255, 170, 0, 0.6));
             animation: pulseGlow 2.5s infinite ease-in-out;
         }
 
         @keyframes pulseGlow {
-            0% {
-                transform: scale(1);
-                filter: drop-shadow(0 0 6px rgba(255, 170, 0, 0.5));
-                opacity: 0.9;
-            }
-            50% {
-                transform: scale(1.08);
-                filter: drop-shadow(0 0 20px rgba(255, 170, 0, 0.9));
-                opacity: 1;
-            }
-            100% {
-                transform: scale(1);
-                filter: drop-shadow(0 0 6px rgba(255, 170, 0, 0.5));
-                opacity: 0.9;
-            }
+            0% { transform: scale(1); filter: drop-shadow(0 0 6px rgba(255, 170, 0, 0.4)); opacity: 0.9; }
+            50% { transform: scale(1.06); filter: drop-shadow(0 0 18px rgba(255, 170, 0, 0.8)); opacity: 1; }
+            100% { transform: scale(1); filter: drop-shadow(0 0 6px rgba(255, 170, 0, 0.4)); opacity: 0.9; }
         }
 
         .welcome-box-outer h1 {
-            color: #ffaa00; 
-            font-size: 36px; 
+            color: #ffaa00 !important; 
+            font-size: 28px !important; /* Giảm size chữ để không bị xuống hàng trên điện thoại nhỏ */
             font-weight: 800;
-            letter-spacing: 2px; 
-            margin-top: 10px;
-            margin-bottom: 5px;
-            text-shadow: 0 0 25px rgba(255, 170, 0, 0.35);
+            letter-spacing: 1.5px; 
+            margin-top: 5px;
+            margin-bottom: 0px;
+            text-shadow: 0 0 20px rgba(255, 170, 0, 0.35);
         }
 
         .welcome-box-outer p {
-            color: #8b949e; 
-            font-size: 14px; 
-            font-weight: 500;
-            letter-spacing: 0.8px;
+            color: #8b949e !important; 
+            font-size: 12px !important;
+            font-weight: 600;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
+            margin-top: 10px;
         }
 
-        /* KHU VỰC CHỨA BỘ NÚT BẤM CỦA STREAMLIT */
+        /* KHU VỰC BỘ NÚT BẤM STREAMLIT CHỐNG TRÀN KHUNG */
         .buttons-wrapper-inside {
-            max-width: 650px;
+            width: 100%;
+            max-width: 500px;
             margin: 0 auto;
-            padding: 0 40px;
+            padding: 0 5px;
+            box-sizing: border-box;
         }
 
-        /* CUSTOM NÚT BẤM STREAMLIT KHÔNG VIỀN */
+        /* ĐÈ CSS TOÀN DIỆN LÊN NÚT BẤM (BẤT CHẤP THIẾT BỊ HOẶC HỆ ĐIỀU HÀNH) */
         div[data-testid="stBlock"] button[key="btn_member_key"],
         div[data-testid="stBlock"] button[key="btn_admin_key"] {
             border: none !important;
             outline: none !important;
-            padding: 16px 30px !important;
-            font-size: 14px !important;
+            padding: 14px 20px !important;
+            font-size: 13px !important;
             font-weight: 700 !important;
             text-transform: uppercase !important;
-            letter-spacing: 1px !important;
+            letter-spacing: 0.5px !important;
             border-radius: 12px !important;
             width: 100% !important;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.5) !important;
-            min-height: 55px !important;
+            min-height: 52px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: all 0.25s ease !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
+            margin-bottom: 10px !important;
         }
 
-        /* NÚT BẤM MEMBER */
+        /* KIỂU NÚT MEMBER MÀU ĐẬM */
         div[data-testid="stBlock"] button[key="btn_member_key"] {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+            background: linear-gradient(135deg, #141b24 0%, #1a2332 100%) !important;
             color: #38bdf8 !important;
+            border: 1px solid #223147 !important;
         }
-        div[data-testid="stBlock"] button[key="btn_member_key"]:hover {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+        div[data-testid="stBlock"] button[key="btn_member_key"]:hover, 
+        div[data-testid="stBlock"] button[key="btn_member_key"]:active {
+            background: #2563eb !important;
             color: #ffffff !important;
-            box-shadow: 0 0 28px rgba(37, 99, 235, 0.65) !important;
-            transform: translateY(-3px) !important;
+            box-shadow: 0 0 20px rgba(37, 99, 235, 0.6) !important;
         }
 
-        /* NÚT BẤM ADMIN */
+        /* KIỂU NÚT ADMIN MÀU VÀNG CHUẨN ĐÚNG KHUNG TRÊN MÁY TÍNH */
         div[data-testid="stBlock"] button[key="btn_admin_key"] {
             background: linear-gradient(135deg, #ffaa00 0%, #d97706 100%) !important;
             color: #0d1117 !important;
         }
-        div[data-testid="stBlock"] button[key="btn_admin_key"]:hover {
+        div[data-testid="stBlock"] button[key="btn_admin_key"]:hover,
+        div[data-testid="stBlock"] button[key="btn_admin_key"]:active {
             background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
             color: #000000 !important;
-            box-shadow: 0 0 28px rgba(245, 158, 11, 0.65) !important;
-            transform: translateY(-3px) !important;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.6) !important;
+        }
+
+        /* FIX RESPONSIVE TRÊN THIẾT BỊ DI ĐỘNG DỌC (MOBILE SCREEN) */
+        @media (max-width: 768px) {
+            .welcome-box-outer {
+                margin-top: 60px auto 15px auto;
+                padding: 30px 15px;
+            }
+            .welcome-box-outer h1 { font-size: 24px !important; }
+            /* Trên điện thoại chuyển bộ nút thành hàng dọc để không bị bóp nghẹt diện tích */
+            div[data-testid="stHorizontalBlock"] {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 5px !important;
+            }
         }
     </style>
 """, unsafe_allow_html=True)
@@ -282,9 +297,9 @@ def on_sheet_change():
 # 4. ĐIỀU HƯỚNG GIAO DIỆN CHÍNH
 # ==============================================================================
 
-# ─── TRANG 1: MÀN HÌNH CHÀO MỪNG (ĐÃ THÊM ICON VƯƠNG MIỆN ĐỘNG PHÁT SÁNG) ───
+# ─── TRANG 1: MÀN HÌNH CHÀO MỪNG (ĐÃ FIX RESPONSIVE MOBILE TOÀN DIỆN) ───
 if st.session_state["current_page"] == "👋 CHÀO MỪNG":
-    # 1. Hộp chọn ngôn ngữ ở góc trên bên phải trang web
+    # Hộp chọn ngôn ngữ ở góc trên bên phải
     st.markdown('<div class="lang-fixed-topright">', unsafe_allow_html=True)
     lang_choice = st.selectbox("🌐", ["VN", "EN"], index=0 if st.session_state["lang"] == "VN" else 1, label_visibility="collapsed")
     if lang_choice != st.session_state["lang"]:
@@ -292,7 +307,7 @@ if st.session_state["current_page"] == "👋 CHÀO MỪNG":
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 2. Tạo Box Cinema kèm Vector SVG Vương miện nhấp nháy phát sáng Neon
+    # Box Cinema với Vector SVG Vương miện nhấp nháy phát sáng Neon
     st.markdown(f"""
         <div class="welcome-box-outer">
             <div class="animated-icon-container">
@@ -301,12 +316,12 @@ if st.session_state["current_page"] == "👋 CHÀO MỪNG":
                 </svg>
             </div>
             <h1>{T['title']}</h1>
-            <div style="height: 2px; background: linear-gradient(90deg, transparent, #ffaa00, transparent); max-width: 380px; margin: 15px auto 20px auto;"></div>
+            <div style="height: 2px; background: linear-gradient(90deg, transparent, #ffaa00, transparent); max-width: 280px; margin: 15px auto 5px auto;"></div>
             <p>{T['select_role']}</p>
         </div>
     """, unsafe_allow_html=True)
 
-    # 3. Chèn bộ nút bấm thật Streamlit đã ép kiểu không viền dưới khung
+    # Khung chứa bộ nút bấm của Streamlit (Tự động chuyển thành hàng dọc trên Mobile)
     st.markdown('<div class="buttons-wrapper-inside">', unsafe_allow_html=True)
     btn_col1, btn_col2 = st.columns([1, 1])
     with btn_col1:
@@ -542,7 +557,7 @@ elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
     for item in final_data:
         avatar = f"https://api.dicebear.com/7.x/adventurer/svg?seed={item['name']}"
         cards_html += f"""
-        <div class="card" data-id="{item['id']}" data-power="{item['diff_pow']}" data-kill="{item['diff_kill']}" data-dead="{item['diff_dead']}"
+        <div class="card" data-id="{item['id']}" data-power="{item['diff_pow']}" data-id-attr="{item['id']}" data-kill="{item['diff_kill']}" data-dead="{item['diff_dead']}"
             onclick="openProfile('{item['name']}','{item['id']}','{item['alliance']}',
                                  '{item['total_pow']}','{item['total_kill']}','{item['total_dead']}',
                                  '{item['diff_kill']}','{item['diff_dead']}',
@@ -561,7 +576,7 @@ elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
 
     if html_template_content and style_css_content:
         final_html = html_template_content.replace("{style_css}", style_css_content).replace("{cards_html}", cards_html)
-        st.markdown('<div style="padding: 0 15px;">', unsafe_allow_html=True)
+        st.markdown('<div style="padding: 0 12px;">', unsafe_allow_html=True)
         components.html(final_html, height=900, scrolling=True)
         st.markdown('</div>', unsafe_allow_html=True)
     else:
