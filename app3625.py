@@ -19,6 +19,7 @@ def read_file(filename):
 # ==============================================================================
 st.set_page_config(page_title="FTD KPI SYSTEM", layout="wide", initial_sidebar_state="collapsed")
 
+# Thiết lập CSS đỉnh cao để biến nút bấm mặc định của Streamlit thành nút bấm Gaming Cinema
 st.markdown("""
     <style>
         #MainMenu, footer, header {visibility: hidden;}
@@ -27,6 +28,7 @@ st.markdown("""
         [data-testid="stSidebar"] {display: none !important;}
         [data-testid="stSidebarCollapseButton"] {display: none !important;}
         
+        /* Menu bar tổng phía trên */
         .menu-container {
             background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
             padding: 15px 25px;
@@ -34,6 +36,69 @@ st.markdown("""
             border: 1px solid #30363d;
             margin-bottom: 25px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Khung bọc hộp chào mừng */
+        .welcome-box-outer {
+            text-align: center;
+            padding: 40px 30px;
+            background: linear-gradient(180deg, #1f242c 0%, #0f1319 100%);
+            border-radius: 20px;
+            border: 1px solid #38444d;
+            margin: 40px auto;
+            max-width: 650px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .welcome-box-outer h1 {
+            color: #ffaa00; font-size: 32px; font-weight: 800; letter-spacing: 1px; margin-bottom: 5px;
+            text-shadow: 0 0 20px rgba(255, 170, 0, 0.3);
+        }
+        .welcome-box-outer p { color: #8b949e; font-size: 15px; margin-bottom: 35px; }
+
+        /* Ép kiểu NÚT BẤM MEMBER dòng lệnh Streamlit */
+        div[data-testid="stBlock"] button[key="btn_member_key"] {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%) !important;
+            color: #38bdf8 !important;
+            border: 1px solid #1e3a8a !important;
+            padding: 15px 30px !important;
+            font-size: 15px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 1px !important;
+            border-radius: 12px !important;
+            width: 100% !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
+            min-height: 55px !important;
+        }
+        div[data-testid="stBlock"] button[key="btn_member_key"]:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 25px rgba(37, 99, 235, 0.5) !important;
+            transform: translateY(-3px) !important;
+        }
+
+        /* Ép kiểu NÚT BẤM ADMIN dòng lệnh Streamlit */
+        div[data-testid="stBlock"] button[key="btn_admin_key"] {
+            background: linear-gradient(135deg, #ffaa00 0%, #d97706 100%) !important;
+            color: #0f1319 !important;
+            border: none !important;
+            padding: 15px 30px !important;
+            font-size: 15px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 1px !important;
+            border-radius: 12px !important;
+            width: 100% !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
+            min-height: 55px !important;
+        }
+        div[data-testid="stBlock"] button[key="btn_admin_key"]:hover {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.6) !important;
+            transform: translateY(-3px) !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -154,7 +219,7 @@ def on_sheet_change():
 # 4. ĐIỀU HƯỚNG GIAO DIỆN CHÍNH
 # ==============================================================================
 
-# ─── TRANG 1: MAN HÌNH CHÀO MỪNG (FIX HOÀN TOÀN LỖI CLICK) ───
+# ─── TRANG 1: MÀN HÌNH CHÀO MỪNG (FIX TRIỆT ĐỂ, CLICK CHẠY NGAY 100%) ───
 if st.session_state["current_page"] == "👋 CHÀO MỪNG":
     st.markdown('<div class="menu-container">', unsafe_allow_html=True)
     top_col1, top_col2 = st.columns([8, 2])
@@ -167,58 +232,27 @@ if st.session_state["current_page"] == "👋 CHÀO MỪNG":
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Khung HTML giao diện Gaming chuẩn chỉnh, sạch sẽ và an toàn
-    welcome_html_code = f"""
-    <div class="welcome-box">
-        <h1>{T['title']}</h1>
-        <div style="height: 2px; background: linear-gradient(90deg, transparent, #ffaa00, transparent); max-width: 400px; margin: 20px auto;"></div>
-        <p>{T['select_role']}</p>
-        <div class="btn-wrapper">
-            <button class="btn-gaming btn-member" onclick="Streamlit.setComponentValue('MEMBER')">{T['btn_member']}</button>
-            <button class="btn-gaming btn-admin" onclick="Streamlit.setComponentValue('ADMIN')">{T['btn_admin']}</button>
+    # Dựng khung hộp chào mừng bằng HTML thuần để lấy layout chuẩn
+    st.markdown(f"""
+        <div class="welcome-box-outer">
+            <h1>{T['title']}</h1>
+            <div style="height: 2px; background: linear-gradient(90deg, transparent, #ffaa00, transparent); max-width: 400px; margin: 20px auto;"></div>
+            <p>{T['select_role']}</p>
         </div>
-    </div>
+    """, unsafe_allow_html=True)
 
-    <style>
-        .welcome-box {{
-            text-align: center;
-            padding: 50px 30px;
-            background: linear-gradient(180deg, #1f242c 0%, #0f1319 100%);
-            border-radius: 20px;
-            border: 1px solid #38444d;
-            margin: 20px auto;
-            max-width: 650px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        }}
-        .welcome-box h1 {{
-            color: #ffaa00; font-size: 30px; font-weight: 800; letter-spacing: 1px; margin-bottom: 5px;
-            text-shadow: 0 0 20px rgba(255, 170, 0, 0.2);
-        }}
-        .welcome-box p {{ color: #8b949e; font-size: 15px; margin-bottom: 35px; }}
-        .btn-wrapper {{ display: flex; gap: 20px; justify-content: center; align-items: center; flex-wrap: wrap; }}
-        .btn-gaming {{
-            flex: 1; min-width: 220px; max-width: 260px; padding: 15px 30px; font-size: 15px; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 1px; border-radius: 12px; cursor: pointer;
-            transition: all 0.3s ease; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.4); border: none;
-        }}
-        .btn-member {{ background: linear-gradient(135deg, #1f2937 0%, #111827 100%); color: #38bdf8; border: 1px solid #1e3a8a; }}
-        .btn-member:hover {{ background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; box-shadow: 0 0 25px rgba(37, 99, 235, 0.5); transform: translateY(-3px); }}
-        .btn-admin {{ background: linear-gradient(135deg, #ffaa00 0%, #d97706 100%); color: #0f1319; }}
-        .btn-admin:hover {{ background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); box-shadow: 0 0 25px rgba(245, 158, 11, 0.6); transform: translateY(-3px); }}
-    </style>
-    """
-    
-    # Biến response_action hứng dữ liệu đồng bộ khi người dùng tương tác trong Iframe
-    response_action = components.html(welcome_html_code, height=380, scrolling=False)
-    
-    # Xử lý logic chuyển trang mượt mà từ lõi Python
-    if response_action == "MEMBER":
-        st.session_state["current_page"] = "📊 TRANG CHỦ KPI"
-        st.rerun()
-    elif response_action == "ADMIN":
-        st.session_state["current_page"] = "⚙️ QUẢN TRỊ ADMIN"
-        st.rerun()
+    # Đưa các nút bấm thật của Streamlit vào và ép CSS thành giao diện Gaming hoàn chỉnh
+    # Các nút này đặt ngay dưới text chào mừng, nằm cùng cấp trong dòng lệnh Python nên click là chạy
+    btn_col1, btn_col2 = st.columns([1, 1])
+    with btn_col1:
+        if st.button(T['btn_member'], key="btn_member_key", use_container_width=True):
+            st.session_state["current_page"] = "📊 TRANG CHỦ KPI"
+            st.rerun()
+            
+    with btn_col2:
+        if st.button(T['btn_admin'], key="btn_admin_key", use_container_width=True):
+            st.session_state["current_page"] = "⚙️ QUẢN TRỊ ADMIN"
+            st.rerun()
 
 # ─── TRANG 2: TRANG CHỈNH SỬA ADMIN ───
 elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
