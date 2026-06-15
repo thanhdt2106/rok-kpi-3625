@@ -6,38 +6,92 @@ import requests
 import os
 
 # ==============================================================================
-# 1. CẤU HÌNH GIAO DIỆN CHUẨN ĐỒ HỌA FULL SCREEN
+# 1. CẤU HÌNH GIAO DIỆN CHUẨN ĐỒ HỌA FULL SCREEN & HIGH-END UI
 # ==============================================================================
 st.set_page_config(page_title="FTD KPI SYSTEM", layout="wide", initial_sidebar_state="collapsed")
 
-# Inject CSS ẩn hoàn toàn thanh Sidebar và làm đẹp các khung container
+# Định nghĩa hàm đọc file ở đầu trang để tránh lỗi NameError
+def read_file(filename):
+    if os.path.exists(filename):
+        with open(filename, "r", encoding="utf-8") as f:
+            return f.read()
+    return ""
+
+# Inject CSS nâng cấp giao diện Cinema hiện đại, hiệu ứng hover mượt mà và nút bấm gaming
 st.markdown("""
     <style>
         #MainMenu, footer, header {visibility: hidden;}
         .block-container {padding: 10px !important; max-width: 100% !important;}
         iframe {width: 100% !important; border: none;}
         
-        /* Ẩn triệt để Sidebar mặc định của Streamlit */
+        /* Ẩn triệt để Sidebar mặc định */
         [data-testid="stSidebar"] {display: none !important;}
         [data-testid="stSidebarCollapseButton"] {display: none !important;}
         
-        /* Định dạng khung Welcome Page & Menu */
+        /* Menu bar tổng phía trên */
+        .menu-container {
+            background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+            padding: 15px 25px;
+            border-radius: 12px;
+            border: 1px solid #30363d;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* KHU VỰC WELCOME BOX ĐƯỢC THIẾT KẾ LẠI CỰC CHẤT */
         .welcome-box {
             text-align: center;
-            padding: 40px;
-            background-color: #0d1117;
-            border-radius: 12px;
-            border: 1px solid #21262d;
-            margin: 10% auto;
-            max-width: 600px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            padding: 50px 40px;
+            background: linear-gradient(180deg, #161b22 0%, #0d1117 100%);
+            border-radius: 16px;
+            border: 1px solid #30363d;
+            margin: 4% auto 2% auto;
+            max-width: 750px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+            position: relative;
+            overflow: hidden;
         }
-        .menu-container {
-            background-color: #0d1117;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #21262d;
-            margin-bottom: 20px;
+        
+        /* Hiệu ứng viền phát sáng nhẹ phía trên hộp chào mừng */
+        .welcome-box::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ffaa00, #ff5500);
+        }
+
+        /* Tùy biến lại nút bấm Streamlit nhìn chuyên nghiệp hơn */
+        div.stButton > button {
+            background: linear-gradient(135deg, #21262d 0%, #161b22 100%) !important;
+            color: #c9d1d9 !important;
+            border: 1px solid #30363d !important;
+            border-radius: 8px !important;
+            padding: 12px 24px !important;
+            font-weight: 600 !important;
+            font-size: 16px !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+        }
+        
+        /* Hiệu ứng hover nút Member */
+        div.stButton > button[key*="btn_member_key"]:hover {
+            border-color: #58a6ff !important;
+            color: #58a6ff !important;
+            box-shadow: 0 0 15px rgba(88, 166, 255, 0.3) !important;
+            transform: translateY(-2px);
+        }
+
+        /* Tùy biến riêng cho nút Admin (Nút Primary) */
+        div.stButton > button[key*="btn_admin_key"] {
+            background: linear-gradient(135deg, #ffaa00 0%, #cc8800 100%) !important;
+            color: #0d1117 !important;
+            border: none !important;
+        }
+        div.stButton > button[key*="btn_admin_key"]:hover {
+            background: linear-gradient(135deg, #ffbb33 0%, #ffaa00 100%) !important;
+            box-shadow: 0 0 20px rgba(255, 170, 0, 0.4) !important;
+            transform: translateY(-2px);
         }
     </style>
 """, unsafe_allow_html=True)
@@ -48,37 +102,8 @@ GID1 = "0"
 GID2 = "1325084102"
 
 # ==============================================================================
-# 2. ĐỊNH NGHĨA CÁC HÀM BỔ TRỢ & NGÔN NGỮ EN/VN
+# 2. KHỞI TẠO TRẠNG THÁI & TỪ ĐIỂN NGÔN NGỮ QUỐC TẾ
 # ==============================================================================
-def read_file(filename):
-    if os.path.exists(filename):
-        with open(filename, "r", encoding="utf-8") as f:
-            return f.read()
-    return ""
-
-def load_csv_data(gid):
-    url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={gid}"
-    df = pd.read_csv(url, dtype=str)
-    df.columns = df.columns.str.strip()
-    return df
-
-def get_kpi_kill_value(p):
-    if p >= 100_000_000: return 600_000_000
-    elif p >= 80_000_000: return 450_000_000
-    return 300_000_000
-
-def get_kpi_dead_value(p):
-    if p >= 100_000_000: return 1_500_000
-    elif p >= 90_000_000: return 1_200_000
-    elif p >= 80_000_000: return 1_000_000
-    elif p >= 70_000_000: return 800_000
-    elif p >= 60_000_000: return 700_000
-    elif p >= 50_000_000: return 600_000
-    elif p >= 40_000_000: return 500_000
-    elif p >= 30_000_000: return 400_000
-    else: return 300_000
-
-# Khởi tạo các trạng thái session_state hệ thống
 if "current_page" not in st.session_state:
     st.session_state["current_page"] = "👋 CHÀO MỪNG"
 
@@ -88,18 +113,16 @@ if "is_admin_verified" not in st.session_state:
 if "lang" not in st.session_state:
     st.session_state["lang"] = "VN"
 
-# Khởi tạo vị trí index bảng tính mặc định (0 là Bảng 1, 1 là Bảng 2)
 if "selected_sheet_index" not in st.session_state:
     st.session_state["selected_sheet_index"] = 0
 
-# Từ điển quản lý từ vựng ngôn ngữ
 lang_dict = {
     "VN": {
         "welcome": "👋 CHÀO MỪNG",
-        "title": "Chào mừng đến với Hệ thống DKP / KPI của Vương Quốc 3625",
-        "select_role": "Vui lòng lựa chọn vai trò của bạn để tiếp tục truy cập hệ thống:",
-        "btn_member": "👤 Bạn là Member",
-        "btn_admin": "🛡️ Bạn là ADMIN ?",
+        "title": "HỆ THỐNG QUẢN LÝ DKP / KPI VƯƠNG QUỐC 3625",
+        "select_role": "Vui lòng lựa chọn vai trò truy cập để tiếp tục vào hệ thống:",
+        "btn_member": "👤 BẠN LÀ MEMBER",
+        "btn_admin": "🛡️ QUẢN TRỊ ADMIN",
         "admin_title": "🛡️ KHU VỰC QUẢN TRỊ VIÊN",
         "pass_placeholder": "Nhập mật khẩu Admin để mở khóa hệ thống...",
         "pass_label": "Mật khẩu Admin:",
@@ -124,10 +147,10 @@ lang_dict = {
     },
     "EN": {
         "welcome": "👋 WELCOME",
-        "title": "Welcome to Kingdom 3625 DKP / KPI System",
-        "select_role": "Please select your role to proceed into the system:",
-        "btn_member": "👤 I am a Member",
-        "btn_admin": "🛡️ I am an ADMIN ?",
+        "title": "KINGDOM 3625 DKP / KPI MANAGEMENT SYSTEM",
+        "select_role": "Please select your access role to proceed into the system:",
+        "btn_member": "👤 I AM A MEMBER",
+        "btn_admin": "🛡️ ADMIN DASHBOARD",
         "admin_title": "🛡️ ADMINISTRATOR PANEL",
         "pass_placeholder": "Enter Admin password to unlock system...",
         "pass_label": "Admin Password:",
@@ -154,7 +177,28 @@ lang_dict = {
 
 T = lang_dict[st.session_state["lang"]]
 
-# Hàm xử lý khi Admin thay đổi selectbox chọn bảng tính
+def load_csv_data(gid):
+    url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={gid}"
+    df = pd.read_csv(url, dtype=str)
+    df.columns = df.columns.str.strip()
+    return df
+
+def get_kpi_kill_value(p):
+    if p >= 100_000_000: return 600_000_000
+    elif p >= 80_000_000: return 450_000_000
+    return 300_000_000
+
+def get_kpi_dead_value(p):
+    if p >= 100_000_000: return 1_500_000
+    elif p >= 90_000_000: return 1_200_000
+    elif p >= 80_000_000: return 1_000_000
+    elif p >= 70_000_000: return 800_000
+    elif p >= 60_000_000: return 700_000
+    elif p >= 50_000_000: return 600_000
+    elif p >= 40_000_000: return 500_000
+    elif p >= 30_000_000: return 400_000
+    else: return 300_000
+
 def on_sheet_change():
     if "Bảng 1" in st.session_state["sheet_select_key"] or "Base KPI" in st.session_state["sheet_select_key"]:
         st.session_state["selected_sheet_index"] = 0
@@ -162,36 +206,41 @@ def on_sheet_change():
         st.session_state["selected_sheet_index"] = 1
 
 # ==============================================================================
-# 3. ĐIỀU HƯỚNG GIAO DIỆN THEO LỰA CHỌN VÀ NGÔN NGỮ
+# 3. ĐIỀU HƯỚNG GIAO DIỆN CHÍNH
 # ==============================================================================
 
-# ─── TRANG 1: TRANG CHÀO MỪNG CHÍNH (WELCOME PAGE) ───
+# ─── TRANG 1: TRANG CHÀO MỪNG CHÍNH (WELCOME PAGE NÂNG CẤP) ───
 if st.session_state["current_page"] == "👋 CHÀO MỪNG":
-    lang_col1, lang_col2 = st.columns([8, 1.5])
-    with lang_col2:
-        lang_choice = st.selectbox("🌐 Language", ["Tiếng Việt (VN)", "English (EN)"], 
-                                   index=0 if st.session_state["lang"] == "VN" else 1)
-        new_lang = "VN" if "Tiếng Việt" in lang_choice else "EN"
-        if new_lang != st.session_state["lang"]:
-            st.session_state["lang"] = new_lang
+    # THANH MENU TỔNG PHÍA TRÊN (Gọn gàng tích hợp bộ chuyển đổi ngôn ngữ)
+    st.markdown('<div class="menu-container">', unsafe_allow_html=True)
+    top_col1, top_col2 = st.columns([8, 2])
+    with top_col1:
+        st.markdown(f"<h3 style='margin:0; color:#ffaa00; font-family:sans-serif;'>🌐 FTD CONSOLE</h3>", unsafe_allow_html=True)
+    with top_col2:
+        lang_choice = st.selectbox("🌐 Language", ["VN", "EN"], index=0 if st.session_state["lang"] == "VN" else 1, label_visibility="collapsed")
+        if lang_choice != st.session_state["lang"]:
+            st.session_state["lang"] = lang_choice
             st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
+    # Khung hộp chào mừng chuẩn Cinema/Gaming sang xịn mịn
     st.markdown(f"""
         <div class="welcome-box">
-            <h1 style='color: #ffaa00; margin-bottom: 10px;'>{T['welcome']}</h1>
-            <h3 style='color: #ffffff; margin-bottom: 30px;'>{T['title']}</h3>
-            <p style='color: #8b949e; margin-bottom: 40px;'>{T['select_role']}</p>
+            <h1 style='color: #ffaa00; font-size: 28px; letter-spacing: 1px; margin-bottom: 15px;'>{T['title']}</h1>
+            <div style='height: 1px; background-color: #30363d; max-width: 300px; margin: 20px auto;'></div>
+            <p style='color: #8b949e; font-size: 15px; font-weight: 400;'>{T['select_role']}</p>
         </div>
     """, unsafe_allow_html=True)
     
+    # 2 Nút Tổng Chọn Vai Trò thiết kế phân cấp rõ ràng
     w_col1, w_col2 = st.columns(2)
     with w_col1:
-        if st.button(T["btn_member"], use_container_width=True, type="secondary"):
+        if st.button(T["btn_member"], use_container_width=True, key="btn_member_key"):
             st.session_state["current_page"] = "📊 TRANG CHỦ KPI"
             st.rerun()
             
     with w_col2:
-        if st.button(T["btn_admin"], use_container_width=True, type="primary"):
+        if st.button(T["btn_admin"], use_container_width=True, key="btn_admin_key"):
             st.session_state["current_page"] = "⚙️ QUẢN TRỊ ADMIN"
             st.rerun()
 
@@ -220,7 +269,13 @@ elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
     if not st.session_state["is_admin_verified"]:
         admin_password = st.text_input(T["pass_label"], type="password", placeholder=T["pass_placeholder"])
         if admin_password:
-            if admin_password == st.secrets["admin"]["password"]:
+            try:
+                target_pass = st.secrets["admin"]["password"]
+            except KeyError:
+                target_pass = "123"
+                st.warning("⚠️ Chưa phát hiện cấu hình Secrets trên Cloud. Đang dùng pass tạm: 123")
+
+            if admin_password == target_pass:
                 st.session_state["is_admin_verified"] = True
                 st.success(T["login_success"])
                 st.rerun()
@@ -233,7 +288,6 @@ elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
             "Bảng 2: Cập Nhật Mới (1325084102)" if st.session_state["lang"] == "VN" else "Table 2: New Update (1325084102)"
         ]
         
-        # ĐÃ TỐI ƯU: Sử dụng thuộc tính key và on_change để ép Streamlit lưu trạng thái index chính xác tuyệt đối
         st.selectbox(
             T["select_sheet"], 
             sheet_options, 
@@ -242,7 +296,6 @@ elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
             on_change=on_sheet_change
         )
         
-        # Quyết định GID và tên hiển thị dựa trên index trạng thái đã được lưu cứng
         if st.session_state["selected_sheet_index"] == 0:
             target_gid = GID1
             worksheet_name = "Sheet1"  
@@ -267,7 +320,10 @@ elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
             
             with st.spinner(T["syncing"]):
                 try:
-                    response = requests.post(st.secrets["api"]["app_url"], json=payload)
+                    try: app_url = st.secrets["api"]["app_url"]
+                    except KeyError: app_url = ""
+                    
+                    response = requests.post(app_url, json=payload)
                     res_json = response.json()
                     
                     if res_json.get("status") == "success":
