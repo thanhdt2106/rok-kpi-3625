@@ -41,57 +41,80 @@ st.markdown("""
         /* KHU VỰC WELCOME BOX ĐƯỢC THIẾT KẾ LẠI CỰC CHẤT */
         .welcome-box {
             text-align: center;
-            padding: 50px 40px;
-            background: linear-gradient(180deg, #161b22 0%, #0d1117 100%);
-            border-radius: 16px;
-            border: 1px solid #30363d;
-            margin: 4% auto 2% auto;
-            max-width: 750px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        /* Hiệu ứng viền phát sáng nhẹ phía trên hộp chào mừng */
-        .welcome-box::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #ffaa00, #ff5500);
+            padding: 60px 40px;
+            background: linear-gradient(180deg, #1f242c 0%, #0f1319 100%);
+            border-radius: 20px;
+            border: 1px solid #38444d;
+            margin: 5% auto 2% auto;
+            max-width: 700px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
-        /* Tùy biến lại nút bấm Streamlit nhìn chuyên nghiệp hơn */
-        div.stButton > button {
-            background: linear-gradient(135deg, #21262d 0%, #161b22 100%) !important;
-            color: #c9d1d9 !important;
-            border: 1px solid #30363d !important;
-            border-radius: 8px !important;
-            padding: 12px 24px !important;
-            font-weight: 600 !important;
-            font-size: 16px !important;
-            transition: all 0.3s ease !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
-        }
-        
-        /* Hiệu ứng hover nút Member */
-        div.stButton > button[key*="btn_member_key"]:hover {
-            border-color: #58a6ff !important;
-            color: #58a6ff !important;
-            box-shadow: 0 0 15px rgba(88, 166, 255, 0.3) !important;
-            transform: translateY(-2px);
+        .welcome-box h1 {
+            color: #ffaa00; 
+            font-size: 32px; 
+            font-weight: 800;
+            letter-spacing: 1px; 
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 170, 0, 0.2);
         }
 
-        /* Tùy biến riêng cho nút Admin (Nút Primary) */
-        div.stButton > button[key*="btn_admin_key"] {
-            background: linear-gradient(135deg, #ffaa00 0%, #cc8800 100%) !important;
-            color: #0d1117 !important;
-            border: none !important;
+        .welcome-box p {
+            color: #8b949e; 
+            font-size: 16px; 
+            margin-bottom: 40px;
         }
-        div.stButton > button[key*="btn_admin_key"]:hover {
-            background: linear-gradient(135deg, #ffbb33 0%, #ffaa00 100%) !important;
-            box-shadow: 0 0 20px rgba(255, 170, 0, 0.4) !important;
-            transform: translateY(-2px);
+        
+        /* KHU VỰC NÚT BẤM HTML GAMING ĐỒNG BỘ */
+        .btn-wrapper {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .btn-gaming {
+            flex: 1;
+            min-width: 240px;
+            max-width: 280px;
+            padding: 16px 32px;
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            border: none;
+        }
+
+        /* Nút Member - Xanh Neon huyền bí */
+        .btn-member {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            color: #38bdf8;
+            border: 1px solid #1e3a8a;
+        }
+        .btn-member:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: #ffffff;
+            box-shadow: 0 0 25px rgba(37, 99, 235, 0.5);
+            transform: translateY(-3px);
+        }
+
+        /* Nút Admin - Vàng Hổ Phách rực lửa */
+        .btn-admin {
+            background: linear-gradient(135deg, #ffaa00 0%, #d97706 100%);
+            color: #0f1319;
+        }
+        .btn-admin:hover {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.6);
+            transform: translateY(-3px);
         }
     </style>
 """, unsafe_allow_html=True)
@@ -119,8 +142,8 @@ if "selected_sheet_index" not in st.session_state:
 lang_dict = {
     "VN": {
         "welcome": "👋 CHÀO MỪNG",
-        "title": "HỆ THỐNG QUẢN LÝ DKP / KPI VƯƠNG QUỐC 3625",
-        "select_role": "Vui lòng lựa chọn vai trò truy cập để tiếp tục vào hệ thống:",
+        "title": "FTD KPI SYSTEM",
+        "select_role": "VUI LÒNG CHỌN VAI TRÒ ĐỂ TRUY CẬP HỆ THỐNG",
         "btn_member": "👤 BẠN LÀ MEMBER",
         "btn_admin": "🛡️ QUẢN TRỊ ADMIN",
         "admin_title": "🛡️ KHU VỰC QUẢN TRỊ VIÊN",
@@ -147,8 +170,8 @@ lang_dict = {
     },
     "EN": {
         "welcome": "👋 WELCOME",
-        "title": "KINGDOM 3625 DKP / KPI MANAGEMENT SYSTEM",
-        "select_role": "Please select your access role to proceed into the system:",
+        "title": "FTD KPI SYSTEM",
+        "select_role": "PLEASE SELECT YOUR ROLE TO ACCESS THE SYSTEM",
         "btn_member": "👤 I AM A MEMBER",
         "btn_admin": "🛡️ ADMIN DASHBOARD",
         "admin_title": "🛡️ ADMINISTRATOR PANEL",
@@ -209,13 +232,13 @@ def on_sheet_change():
 # 3. ĐIỀU HƯỚNG GIAO DIỆN CHÍNH
 # ==============================================================================
 
-# ─── TRANG 1: TRANG CHÀO MỪNG CHÍNH (WELCOME PAGE NÂNG CẤP) ───
+# ─── TRANG 1: TRANG CHÀO MỪNG CHÍNH (PREMIUM WELCOME SCREEN) ───
 if st.session_state["current_page"] == "👋 CHÀO MỪNG":
-    # THANH MENU TỔNG PHÍA TRÊN (Gọn gàng tích hợp bộ chuyển đổi ngôn ngữ)
+    # MENU BAR PHÍA TRÊN
     st.markdown('<div class="menu-container">', unsafe_allow_html=True)
     top_col1, top_col2 = st.columns([8, 2])
     with top_col1:
-        st.markdown(f"<h3 style='margin:0; color:#ffaa00; font-family:sans-serif;'>🌐 FTD CONSOLE</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h4 style='margin:0; color:#ffaa00; font-family:sans-serif; font-weight:700; letter-spacing:1px;'>👑 FTD KINGDOM COMMAND</h4>", unsafe_allow_html=True)
     with top_col2:
         lang_choice = st.selectbox("🌐 Language", ["VN", "EN"], index=0 if st.session_state["lang"] == "VN" else 1, label_visibility="collapsed")
         if lang_choice != st.session_state["lang"]:
@@ -223,26 +246,31 @@ if st.session_state["current_page"] == "👋 CHÀO MỪNG":
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Khung hộp chào mừng chuẩn Cinema/Gaming sang xịn mịn
+    # KHU VỰC THIẾT KẾ CARD TRUNG TÂM & NÚT BẤM HTML CAO CẤP
     st.markdown(f"""
         <div class="welcome-box">
-            <h1 style='color: #ffaa00; font-size: 28px; letter-spacing: 1px; margin-bottom: 15px;'>{T['title']}</h1>
-            <div style='height: 1px; background-color: #30363d; max-width: 300px; margin: 20px auto;'></div>
-            <p style='color: #8b949e; font-size: 15px; font-weight: 400;'>{T['select_role']}</p>
+            <h1>{T['title']}</h1>
+            <div style='height: 2px; background: linear-gradient(90deg, transparent, #ffaa00, transparent); max-width: 400px; margin: 25px auto;'></div>
+            <p>{T['select_role']}</p>
+            
+            <!-- Bộ nút bấm tùy biến HTML cao cấp tránh lỗi giao diện Streamlit -->
+            <div class="btn-wrapper">
+                <button class="btn-gaming btn-member" onclick="document.getElementById('hidden_member_trigger').click()">{T['btn_member']}</button>
+                <button class="btn-gaming btn-admin" onclick="document.getElementById('hidden_admin_trigger').click()">{T['btn_admin']}</button>
+            </div>
         </div>
     """, unsafe_allow_html=True)
     
-    # 2 Nút Tổng Chọn Vai Trò thiết kế phân cấp rõ ràng
-    w_col1, w_col2 = st.columns(2)
-    with w_col1:
-        if st.button(T["btn_member"], use_container_width=True, key="btn_member_key"):
+    # Các nút kích hoạt ẩn của Streamlit để đồng bộ logic chuyển trang mà không làm xấu giao diện
+    with st.container():
+        st.markdown("<div style='display:none;'>", unsafe_allow_html=True)
+        if st.button("M_TRIG", key="hidden_member_trigger"):
             st.session_state["current_page"] = "📊 TRANG CHỦ KPI"
             st.rerun()
-            
-    with w_col2:
-        if st.button(T["btn_admin"], use_container_width=True, key="btn_admin_key"):
+        if st.button("A_TRIG", key="hidden_admin_trigger"):
             st.session_state["current_page"] = "⚙️ QUẢN TRỊ ADMIN"
             st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
 
 # ─── TRANG 2: TRANG CHỈNH SỬA ADMIN ───
 elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
