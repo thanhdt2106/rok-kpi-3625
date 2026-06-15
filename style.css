@@ -297,3 +297,20 @@ body {
     .stat-card b { font-size: 10px; }
     .profile-box { padding: 15px; }
 }
+/* ... (Toàn bộ CSS cũ của bạn giữ nguyên từ đầu đến đây) ... */
+
+/* --- PHẦN MỚI THÊM VÀO ĐỂ TẠO NÚT BẤM --- */
+.buttons-wrapper-custom { 
+    display: flex; flex-direction: column; gap: 12px; width: 100%; 
+    max-width: 500px; margin: 20px auto; padding: 0 10px; 
+}
+.btn-custom { 
+    display: block; width: 100%; padding: 16px; text-align: center; 
+    text-decoration: none; font-weight: 800; font-size: 14px; 
+    border-radius: 12px; transition: all 0.3s ease; cursor: pointer; 
+    text-transform: uppercase; 
+}
+.btn-member-custom { background: #161b22; color: #58a6ff; border: 1px solid #30363d; }
+.btn-member-custom:hover { background: #58a6ff; color: #000; }
+.btn-admin-custom { background: #2b2210; color: #ffaa00; border: 1px solid #ffaa00; }
+.btn-admin-custom:hover { background: #ffaa00; color: #000; }
