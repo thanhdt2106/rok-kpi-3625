@@ -16,11 +16,11 @@ def read_file(filename):
     return ""
 
 # ==============================================================================
-# 2. CẤU HÌNH GIAO DIỆN CHUẨN ĐỒ HỌA HIGH-END UI (ĐÃ FIX RESPONSIVE MOBILE)
+# 2. CẤU HÌNH GIAO DIỆN CHUẨN ĐỒ HỌA HIGH-END UI (ĐÃ LÀM LẠI MÀU NÚT SIÊU ĐẸP)
 # ==============================================================================
 st.set_page_config(page_title="FTD KPI SYSTEM", layout="wide", initial_sidebar_state="collapsed")
 
-# Inject CSS để ép Darkmode và sửa lỗi giao diện trên điện thoại
+# Inject CSS để ép Darkmode và thiết kế lại màu sắc 2 nút bấm cực sang
 st.markdown("""
     <style>
         /* ÉP TOÀN BỘ GIAO DIỆN HỆ THỐNG SANG DARK THEME (FIX LỖI TRÊN ĐIỆN THOẠI LIGHT MODE) */
@@ -64,7 +64,7 @@ st.markdown("""
             border: 1px solid #38444d;
             margin: 40px auto 20px auto;
             width: 100%;
-            max-width: 500px; /* Thu nhỏ chiều rộng tối đa để vừa vặn mobile */
+            max-width: 500px;
             box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             box-sizing: border-box;
@@ -94,7 +94,7 @@ st.markdown("""
 
         .welcome-box-outer h1 {
             color: #ffaa00 !important; 
-            font-size: 28px !important; /* Giảm size chữ để không bị xuống hàng trên điện thoại nhỏ */
+            font-size: 28px !important;
             font-weight: 800;
             letter-spacing: 1.5px; 
             margin-top: 5px;
@@ -120,7 +120,7 @@ st.markdown("""
             box-sizing: border-box;
         }
 
-        /* ĐÈ CSS TOÀN DIỆN LÊN NÚT BẤM (BẤT CHẤP THIẾT BỊ HOẶC HỆ ĐIỀU HÀNH) */
+        /* THIẾT KẾ ĐÈ TOÀN DIỆN LÊN NÚT BẤM (BẤT CHẤP THIẾT BỊ HOẶC HỆ ĐIỀU HÀNH) */
         div[data-testid="stBlock"] button[key="btn_member_key"],
         div[data-testid="stBlock"] button[key="btn_admin_key"] {
             border: none !important;
@@ -129,55 +129,58 @@ st.markdown("""
             font-size: 13px !important;
             font-weight: 700 !important;
             text-transform: uppercase !important;
-            letter-spacing: 0.5px !important;
+            letter-spacing: 1px !important;
             border-radius: 12px !important;
             width: 100% !important;
             min-height: 52px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            transition: all 0.25s ease !important;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
-            margin-bottom: 10px !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            margin-bottom: 12px !important;
         }
 
-        /* KIỂU NÚT MEMBER MÀU ĐẬM */
+        /* [Cải tiến] NÚT MEMBER - NỀN TỐI SANG TRỌNG, CHỮ CYAN NEON */
         div[data-testid="stBlock"] button[key="btn_member_key"] {
-            background: linear-gradient(135deg, #141b24 0%, #1a2332 100%) !important;
-            color: #38bdf8 !important;
-            border: 1px solid #223147 !important;
+            background: #161b22 !important;
+            color: #58a6ff !important;
+            border: 1px solid #30363d !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
         }
         div[data-testid="stBlock"] button[key="btn_member_key"]:hover, 
         div[data-testid="stBlock"] button[key="btn_member_key"]:active {
-            background: #2563eb !important;
-            color: #ffffff !important;
-            box-shadow: 0 0 20px rgba(37, 99, 235, 0.6) !important;
+            background: #58a6ff !important;
+            color: #0d1117 !important;
+            box-shadow: 0 0 25px rgba(88, 166, 255, 0.6) !important;
+            transform: translateY(-2px) !important;
         }
 
-        /* KIỂU NÚT ADMIN MÀU VÀNG CHUẨN ĐÚNG KHUNG TRÊN MÁY TÍNH */
+        /* [Cải tiến] NÚT ADMIN - NỀN VÀNG HỔ PHÁCH GLOW RỰC RỠ CHUẨN ĐỒ HỌA */
         div[data-testid="stBlock"] button[key="btn_admin_key"] {
-            background: linear-gradient(135deg, #ffaa00 0%, #d97706 100%) !important;
+            background: linear-gradient(135deg, #ffaa00 0%, #cc8800 100%) !important;
             color: #0d1117 !important;
+            box-shadow: 0 4px 15px rgba(255, 170, 0, 0.25) !important;
         }
         div[data-testid="stBlock"] button[key="btn_admin_key"]:hover,
         div[data-testid="stBlock"] button[key="btn_admin_key"]:active {
-            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+            background: linear-gradient(135deg, #ffbb33 0%, #ffaa00 100%) !important;
             color: #000000 !important;
-            box-shadow: 0 0 20px rgba(245, 158, 11, 0.6) !important;
+            box-shadow: 0 0 28px rgba(255, 170, 0, 0.65) !important;
+            transform: translateY(-2px) !important;
         }
 
         /* FIX RESPONSIVE TRÊN THIẾT BỊ DI ĐỘNG DỌC (MOBILE SCREEN) */
         @media (max-width: 768px) {
             .welcome-box-outer {
-                margin-top: 60px auto 15px auto;
+                margin-top: 40px auto 15px auto;
                 padding: 30px 15px;
             }
             .welcome-box-outer h1 { font-size: 24px !important; }
-            /* Trên điện thoại chuyển bộ nút thành hàng dọc để không bị bóp nghẹt diện tích */
+            /* Ép 2 nút xếp chồng lên nhau mượt mà trên mobile */
             div[data-testid="stHorizontalBlock"] {
                 display: flex !important;
                 flex-direction: column !important;
-                gap: 5px !important;
+                gap: 0px !important;
             }
         }
     </style>
@@ -297,7 +300,7 @@ def on_sheet_change():
 # 4. ĐIỀU HƯỚNG GIAO DIỆN CHÍNH
 # ==============================================================================
 
-# ─── TRANG 1: MÀN HÌNH CHÀO MỪNG (ĐÃ FIX RESPONSIVE MOBILE TOÀN DIỆN) ───
+# ─── TRANG 1: MÀN HÌNH CHÀO MỪNG ───
 if st.session_state["current_page"] == "👋 CHÀO MỪNG":
     # Hộp chọn ngôn ngữ ở góc trên bên phải
     st.markdown('<div class="lang-fixed-topright">', unsafe_allow_html=True)
