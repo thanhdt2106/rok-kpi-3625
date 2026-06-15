@@ -7,7 +7,7 @@ import os
 import json
 
 # ==============================================================================
-# 1. KHAI BÁO HÀM ĐỌC FILE (Để tránh lỗi NameError: name 'read_file' is not defined)
+# 1. KHAI BÁO HÀM ĐỌC FILE
 # ==============================================================================
 def read_file(filename):
     if os.path.exists(filename):
@@ -16,75 +16,94 @@ def read_file(filename):
     return ""
 
 # ==============================================================================
-# 2. CẤU HÌNH GIAO DIỆN CHUẨN ĐỒ HỌA HIGH-END UI (ĐÃ FIX KHÔNG VIỀN + MÀU ĐẸP)
+# 2. CẤU HÌNH GIAO DIỆN CHUẨN ĐỒ HỌA HIGH-END UI (ẨN SẠCH TIÊU ĐỀ & HEADER MẶC ĐỊNH)
 # ==============================================================================
 st.set_page_config(page_title="FTD KPI SYSTEM", layout="wide", initial_sidebar_state="collapsed")
 
-# Inject CSS để ẩn thanh Sidebar và bo góc Form Cinema như yêu cầu của ông
+# Inject CSS để diệt tận gốc Header, Thụt lề mặc định, dòng chữ thừa và custom nút bấm Streamlit
 st.markdown("""
     <style>
-        #MainMenu, footer, header {visibility: hidden;}
-        .block-container {padding: 10px !important; max-width: 100% !important;}
-        iframe {width: 100% !important; border: none;}
-        [data-testid="stSidebar"] {display: none !important;}
-        [data-testid="stSidebarCollapseButton"] {display: none !important;}
+        /* Ẩn triệt để menu bar, footer, viền đen trên đầu và các khoảng trống mặc định của Streamlit */
+        #MainMenu, footer, header, [data-testid="stHeader"] {
+            visibility: hidden !important;
+            display: none !important;
+        }
         
-        /* Menu bar tổng phía trên */
-        .menu-container {
-            background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
-            padding: 15px 25px;
-            border-radius: 12px;
-            border: 1px solid #30363d;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        /* Đẩy toàn bộ nội dung sát lên trên, xóa padding thừa thãi */
+        .block-container {
+            padding-top: 0px !important;
+            padding-bottom: 10px !important;
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+            max-width: 100% !important;
+        }
+        
+        iframe {width: 100% !important; border: none;}
+        [data-testid="stSidebar"], [data-testid="stSidebarCollapseButton"] {display: none !important;}
+        
+        /* Cố định hộp chọn ngôn ngữ ở góc trên cùng bên phải (đúng vị trí khoanh tím) */
+        .lang-fixed-topright {
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            width: 90px;
+            z-index: 999999;
         }
 
-        /* KHU VỰC WELCOME BOX ĐƯỢC THIẾT KẾ LẠI CỰC CHẤT */
+        /* KHU VỰC BOX WELCOME CINEMA CHUẨN TÂM MÀN HÌNH */
         .welcome-box-outer {
             text-align: center;
             padding: 50px 40px;
             background: linear-gradient(180deg, #1f242c 0%, #0f1319 100%);
             border-radius: 20px;
             border: 1px solid #38444d;
-            margin: 6% auto 2% auto;
-            max-width: 700px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            margin: 8% auto 25px auto;
+            max-width: 650px;
+            box-shadow: 0 25px 55px rgba(0, 0, 0, 0.85);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
         .welcome-box-outer h1 {
             color: #ffaa00; 
-            font-size: 32px; 
+            font-size: 34px; 
             font-weight: 800;
-            letter-spacing: 1px; 
-            margin-bottom: 10px;
-            text-shadow: 0 0 20px rgba(255, 170, 0, 0.2);
+            letter-spacing: 1.5px; 
+            margin-bottom: 5px;
+            text-shadow: 0 0 25px rgba(255, 170, 0, 0.3);
         }
 
         .welcome-box-outer p {
             color: #8b949e; 
-            font-size: 16px; 
-            margin-bottom: 40px;
+            font-size: 15px; 
+            font-weight: 500;
+            letter-spacing: 0.5px;
         }
 
-        /* ÉP KIỂU CHUNG CHO CẢ 2 NÚT BẤM CỦA STREAMLIT: KHÔNG VIỀN VÀ CÓ GRADIENT */
+        /* KHU VỰC CHỨA BỘ NÚT BẤM CỦA STREAMLIT NẰM GỌN TRONG FORM */
+        .buttons-wrapper-inside {
+            max-width: 650px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        /* TRIỆT TIÊU TOÀN BỘ VIỀN XÁM, THIẾT KẾ ĐẬM CHẤT GAMING CHO NÚT STREAMLIT */
         div[data-testid="stBlock"] button[key="btn_member_key"],
         div[data-testid="stBlock"] button[key="btn_admin_key"] {
-            border: none !important;              /* Xóa hoàn toàn viền xám mặc định */
-            outline: none !important;             /* Không bị viền khi click tụt vào */
-            padding: 15px 30px !important;
-            font-size: 15px !important;
+            border: none !important;
+            outline: none !important;
+            padding: 16px 30px !important;
+            font-size: 14px !important;
             font-weight: 700 !important;
             text-transform: uppercase !important;
             letter-spacing: 1px !important;
             border-radius: 12px !important;
             width: 100% !important;
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5) !important;
             min-height: 55px !important;
         }
 
-        /* NÚT BẤM MEMBER: MÀU XANH GAMING ĐẬM NỀN GRADIENT */
+        /* NÚT BẤM MEMBER: GRADIENT XANH ĐẬM HIGH-TECH */
         div[data-testid="stBlock"] button[key="btn_member_key"] {
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
             color: #38bdf8 !important;
@@ -92,11 +111,11 @@ st.markdown("""
         div[data-testid="stBlock"] button[key="btn_member_key"]:hover {
             background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
             color: #ffffff !important;
-            box-shadow: 0 0 25px rgba(37, 99, 235, 0.6) !important;
+            box-shadow: 0 0 28px rgba(37, 99, 235, 0.65) !important;
             transform: translateY(-3px) !important;
         }
 
-        /* NÚT BẤM ADMIN: MÀU VÀNG HỔ PHÁCH CHÁY RỰC RỠ */
+        /* NÚT BẤM ADMIN: GRADIENT VÀNG HỔ PHÁCH RỰC RỠ */
         div[data-testid="stBlock"] button[key="btn_admin_key"] {
             background: linear-gradient(135deg, #ffaa00 0%, #d97706 100%) !important;
             color: #0d1117 !important;
@@ -104,19 +123,18 @@ st.markdown("""
         div[data-testid="stBlock"] button[key="btn_admin_key"]:hover {
             background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
             color: #000000 !important;
-            box-shadow: 0 0 25px rgba(245, 158, 11, 0.6) !important;
+            box-shadow: 0 0 28px rgba(245, 158, 11, 0.65) !important;
             transform: translateY(-3px) !important;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# ─── THÔNG TIN GOOGLE SHEETS ───
 SHEET_ID = "15CrOFNFsIno34mX0EuXkLKdwiJgn3rrmcM-sEKmoKUQ"
 GID1 = "0"
 GID2 = "1325084102"
 
 # ==============================================================================
-# 3. KHỞI TẠO TRẠNG THÁI & TỪ ĐIỂN NGÔN NGỮ QUỐC TẾ
+# 3. KHỞI TẠO TRẠNG THÁI & TỪ ĐIỂN NGÔN NGỮ NGƯỜI DÙNG
 # ==============================================================================
 if "current_page" not in st.session_state:
     st.session_state["current_page"] = "👋 CHÀO MỪNG"
@@ -132,7 +150,6 @@ if "selected_sheet_index" not in st.session_state:
 
 lang_dict = {
     "VN": {
-        "welcome": "👋 CHÀO MỪNG",
         "title": "FTD KPI SYSTEM",
         "select_role": "VUI LÒNG CHỌN VAI TRÒ ĐỂ TRUY CẬP HỆ THỐNG",
         "btn_member": "👤 BẠN LÀ MEMBER",
@@ -160,7 +177,6 @@ lang_dict = {
         "tip": "💡 Mẹo: Bạn có thể click đúp vào ô để sửa số liệu, hoặc kéo thả, thêm hàng ở dưới bảng."
     },
     "EN": {
-        "welcome": "👋 WELCOME",
         "title": "FTD KPI SYSTEM",
         "select_role": "PLEASE SELECT YOUR ROLE TO ACCESS THE SYSTEM",
         "btn_member": "👤 I AM A MEMBER",
@@ -227,50 +243,43 @@ def on_sheet_change():
 # 4. ĐIỀU HƯỚNG GIAO DIỆN CHÍNH
 # ==============================================================================
 
-# ─── TRANG 1: MÀN HÌNH CHÀO MỪNG ───
+# ─── TRANG 1: MÀN HÌNH CHÀO MỪNG (SẠCH BÓNG RÁC, CHỈ CÒN ĐÚNG KHU VỰC CHỌN VÀ FORM) ───
 if st.session_state["current_page"] == "👋 CHÀO MỪNG":
-    # MENU BAR PHÍA TRÊN VỚI NÚT CHỌN NGÔN NGỮ DUY NHẤT
-    st.markdown('<div class="menu-container">', unsafe_allow_html=True)
-    top_col1, top_col2 = st.columns([8, 2])
-    with top_col1:
-        st.markdown(f"<h4 style='margin:0; color:#ffaa00; font-family:sans-serif; font-weight:700; letter-spacing:1px;'>👑 FTD KINGDOM COMMAND</h4>", unsafe_allow_html=True)
-    with top_col2:
-        lang_choice = st.selectbox("🌐 Language", ["VN", "EN"], index=0 if st.session_state["lang"] == "VN" else 1, label_visibility="collapsed")
-        if lang_choice != st.session_state["lang"]:
-            st.session_state["lang"] = lang_choice
-            st.rerun()
+    # 1. Đặt hộp chọn ngôn ngữ nằm biệt lập ở góc trên bên phải trang web
+    st.markdown('<div class="lang-fixed-topright">', unsafe_allow_html=True)
+    lang_choice = st.selectbox("🌐", ["VN", "EN"], index=0 if st.session_state["lang"] == "VN" else 1, label_visibility="collapsed")
+    if lang_choice != st.session_state["lang"]:
+        st.session_state["lang"] = lang_choice
+        st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Dựng khung hộp chào mừng bằng HTML thuần để lấy layout chuẩn
+    # 2. Tạo Box Cinema bằng HTML thuần
     st.markdown(f"""
         <div class="welcome-box-outer">
             <h1>{T['title']}</h1>
-            <div style="height: 2px; background: linear-gradient(90deg, transparent, #ffaa00, transparent); max-width: 400px; margin: 20px auto;"></div>
+            <div style="height: 2px; background: linear-gradient(90deg, transparent, #ffaa00, transparent); max-width: 380px; margin: 20px auto;"></div>
             <p>{T['select_role']}</p>
         </div>
     """, unsafe_allow_html=True)
 
-    # Đưa các nút bấm thật của Streamlit vào và ép CSS thành giao diện Gaming hoàn chỉnh
-    # Các nút này đặt ngay dưới text chào mừng, nằm cùng cấp trong dòng lệnh Python nên click là chạy
+    # 3. Chèn 2 nút bấm Streamlit thật xịn nằm ngay dưới khung (Được style đè không viền hoàn toàn)
+    st.markdown('<div class="buttons-wrapper-inside">', unsafe_allow_html=True)
     btn_col1, btn_col2 = st.columns([1, 1])
     with btn_col1:
-        # NÚT MEMBER STREAMLIT
         if st.button(T['btn_member'], key="btn_member_key", use_container_width=True):
             st.session_state["current_page"] = "📊 TRANG CHỦ KPI"
             st.rerun()
             
     with btn_col2:
-        # NÚT ADMIN STREAMLIT
         if st.button(T['btn_admin'], key="btn_admin_key", use_container_width=True):
             st.session_state["current_page"] = "⚙️ QUẢN TRỊ ADMIN"
             st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # ─── TRANG 2: TRANG CHỈNH SỬA ADMIN ───
 elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
-    # Dọn dẹp URL Query nếu lỡ có paramgoTo từ cơ chế chuyển trang cũ
-    st.query_params.clear()
-    
-    st.markdown('<div class="menu-container">', unsafe_allow_html=True)
+    # Thanh điều hướng riêng biệt bên trong trang Admin
+    st.markdown('<div style="background: linear-gradient(135deg, #161b22 0%, #0d1117 100%); padding: 15px 25px; border-radius: 12px; border: 1px solid #30363d; margin: 15px 15px 25px 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">', unsafe_allow_html=True)
     m_col1, m_col2, m_col3, m_col4 = st.columns([3.5, 2, 2.5, 2])
     with m_col1: 
         st.markdown(f"### {T['admin_title']}")
@@ -291,6 +300,7 @@ elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
     st.markdown('</div>', unsafe_allow_html=True)
 
     if not st.session_state["is_admin_verified"]:
+        st.markdown('<div style="padding: 0 15px;">', unsafe_allow_html=True)
         admin_password = st.text_input(T["pass_label"], type="password", placeholder=T["pass_placeholder"])
         if admin_password:
             try: target_pass = st.secrets["admin"]["password"]
@@ -304,8 +314,10 @@ elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
                 st.rerun()
             else:
                 st.error(T["login_fail"])
+        st.markdown('</div>', unsafe_allow_html=True)
     
     if st.session_state["is_admin_verified"]:
+        st.markdown('<div style="padding: 0 15px;">', unsafe_allow_html=True)
         sheet_options = [
             "Bảng 1: KPI Gốc (0)" if st.session_state["lang"] == "VN" else "Table 1: Base KPI (0)", 
             "Bảng 2: Cập Nhật Mới (1325084102)" if st.session_state["lang"] == "VN" else "Table 2: New Update (1325084102)"
@@ -352,14 +364,12 @@ elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
                         st.error(f"{T['sync_fail']}: {res_json.get('message')}")
                 except Exception as e:
                     st.error(f"{T['conn_error']}: {e}")
+        st.markdown('</div>', unsafe_allow_html=True)
 
 # ─── TRANG 3: TRANG CHỦ XEM CARDS KPI CỦA THÀNH VIÊN ───
 elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
-    # Dọn dẹp URL Query nếu lỡ có param goTo từ cơ chế chuyển trang cũ
-    st.query_params.clear()
-    
     if st.session_state["is_admin_verified"]:
-        st.markdown('<div class="menu-container">', unsafe_allow_html=True)
+        st.markdown('<div style="background: linear-gradient(135deg, #161b22 0%, #0d1117 100%); padding: 15px 25px; border-radius: 12px; border: 1px solid #30363d; margin: 15px 15px 25px 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">', unsafe_allow_html=True)
         u_col1, u_col2, u_col3 = st.columns([6, 2, 1])
         with u_col1: st.markdown(T["view_title_admin"])
         with u_col2:
@@ -373,7 +383,7 @@ elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
     else:
-        st.markdown('<div class="menu-container">', unsafe_allow_html=True)
+        st.markdown('<div style="background: linear-gradient(135deg, #161b22 0%, #0d1117 100%); padding: 15px 25px; border-radius: 12px; border: 1px solid #30363d; margin: 15px 15px 25px 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">', unsafe_allow_html=True)
         m_c1, m_c2, m_c3 = st.columns([6, 2, 1])
         with m_c1: st.markdown(T["view_title_member"])
         with m_c2:
@@ -485,7 +495,6 @@ elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
         st.error(f"{T['sheet_err']} {e}")
         st.stop()
 
-    # DỰNG THẺ CARDS HTML
     cards_html = ""
     for item in final_data:
         avatar = f"https://api.dicebear.com/7.x/adventurer/svg?seed={item['name']}"
@@ -509,6 +518,8 @@ elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
 
     if html_template_content and style_css_content:
         final_html = html_template_content.replace("{style_css}", style_css_content).replace("{cards_html}", cards_html)
+        st.markdown('<div style="padding: 0 15px;">', unsafe_allow_html=True)
         components.html(final_html, height=900, scrolling=True)
+        st.markdown('</div>', unsafe_allow_html=True)
     else:
         st.error(T["file_err"])
