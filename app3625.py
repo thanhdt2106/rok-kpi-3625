@@ -27,9 +27,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ─── THÔNG TIN GOOGLE SHEETS CỦA BẠN ───
-SHEET_ID = "1CzGPseLzdRK1V-6qy7KD5T58sBRSGjQi"
-GID1 = "855089129"
-GID2 = "316243863"
+SHEET_ID = "15CrOFNFsIno34mX0EuXkLKdwiJgn3rrmcM-sEKmoKUQ"
+GID1 = "0"
+GID2 = "1325084102"
 
 # ==============================================================================
 # 2. HÀM TẢI DỮ LIỆU TỪ GOOGLE SHEETS (DẠNG CSV ĐỂ ĐẠT TỐC ĐỘ CAO NHẤT)
@@ -61,8 +61,8 @@ with st.sidebar:
             
             # Form chọn bảng tính cần chỉnh sửa
             sheet_option = st.selectbox("Chọn bảng tính cần thao tác:", [
-                "Bảng 1: KPI Gốc (855089129)", 
-                "Bảng 2: Cập Nhật Mới (316243863)"
+                "Bảng 1: KPI Gốc (0)", 
+                "Bảng 2: Cập Nhật Mới (1325084102)"
             ])
             
             # ⚠️ CHÚ Ý: Đảm bảo viết đúng tên Tab hiển thị trên file Google Sheets của bạn
