@@ -15,11 +15,10 @@ def read_file(filename):
     return ""
 
 # ==============================================================================
-# 2. CẤU HÌNH GIAO DIỆN CHUẨN ĐỒ HỌA HIGH-END UI
+# 2. CẤU HÌNH GIAO DIỆN CHUẨN ĐỒ HỌA HIGH-END UI (KHÔNG VIỀN + GRADIENT GLOW)
 # ==============================================================================
 st.set_page_config(page_title="FTD KPI SYSTEM", layout="wide", initial_sidebar_state="collapsed")
 
-# Thiết lập CSS đỉnh cao để biến nút bấm mặc định của Streamlit thành nút bấm Gaming Cinema
 st.markdown("""
     <style>
         #MainMenu, footer, header {visibility: hidden;}
@@ -46,6 +45,7 @@ st.markdown("""
             border-radius: 20px;
             border: 1px solid #38444d;
             margin: 40px auto;
+            margin-bottom: 20px;
             max-width: 650px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -54,51 +54,53 @@ st.markdown("""
             color: #ffaa00; font-size: 32px; font-weight: 800; letter-spacing: 1px; margin-bottom: 5px;
             text-shadow: 0 0 20px rgba(255, 170, 0, 0.3);
         }
-        .welcome-box-outer p { color: #8b949e; font-size: 15px; margin-bottom: 35px; }
+        .welcome-box-outer p { color: #8b949e; font-size: 15px; margin-bottom: 15px; }
 
-        /* Ép kiểu NÚT BẤM MEMBER dòng lệnh Streamlit */
-        div[data-testid="stBlock"] button[key="btn_member_key"] {
-            background: linear-gradient(135deg, #1f2937 0%, #111827 100%) !important;
-            color: #38bdf8 !important;
-            border: 1px solid #1e3a8a !important;
-            padding: 15px 30px !important;
+        /* ÉP KIỂU CHUNG CHO CẢ 2 NÚT BẤM CỦA STREAMLIT */
+        div[data-testid="stBlock"] button[key="btn_member_key"],
+        div[data-testid="stBlock"] button[key="btn_admin_key"] {
+            border: none !important;              /* Bỏ hoàn toàn viền xám mặc định */
+            outline: none !important;             /* Khử viền focus khi click */
+            padding: 14px 28px !important;
             font-size: 15px !important;
             font-weight: 700 !important;
             text-transform: uppercase !important;
             letter-spacing: 1px !important;
             border-radius: 12px !important;
             width: 100% !important;
-            transition: all 0.3s ease !important;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
             min-height: 55px !important;
+        }
+
+        /* NÚT BẤM MEMBER: MÀU XANH GAMING ĐẬM NỀN GRADIENT */
+        div[data-testid="stBlock"] button[key="btn_member_key"] {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+            color: #38bdf8 !important;
         }
         div[data-testid="stBlock"] button[key="btn_member_key"]:hover {
             background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
             color: #ffffff !important;
-            box-shadow: 0 0 25px rgba(37, 99, 235, 0.5) !important;
-            transform: translateY(-3px) !important;
+            box-shadow: 0 0 25px rgba(37, 99, 235, 0.6) !important;
+            transform: translateY(-2px) !important;
         }
 
-        /* Ép kiểu NÚT BẤM ADMIN dòng lệnh Streamlit */
+        /* NÚT BẤM ADMIN: MÀU VÀNG HỔ PHÁCH CHÁY RỰC RỠ */
         div[data-testid="stBlock"] button[key="btn_admin_key"] {
             background: linear-gradient(135deg, #ffaa00 0%, #d97706 100%) !important;
-            color: #0f1319 !important;
-            border: none !important;
-            padding: 15px 30px !important;
-            font-size: 15px !important;
-            font-weight: 700 !important;
-            text-transform: uppercase !important;
-            letter-spacing: 1px !important;
-            border-radius: 12px !important;
-            width: 100% !important;
-            transition: all 0.3s ease !important;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
-            min-height: 55px !important;
+            color: #0d1117 !important;
         }
         div[data-testid="stBlock"] button[key="btn_admin_key"]:hover {
             background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+            color: #000000 !important;
             box-shadow: 0 0 25px rgba(245, 158, 11, 0.6) !important;
-            transform: translateY(-3px) !important;
+            transform: translateY(-2px) !important;
+        }
+        
+        /* Căn chỉnh vị trí cột chứa nút bấm sát với form trên */
+        .button-row-container {
+            max-width: 650px;
+            margin: 0 auto;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -219,7 +221,7 @@ def on_sheet_change():
 # 4. ĐIỀU HƯỚNG GIAO DIỆN CHÍNH
 # ==============================================================================
 
-# ─── TRANG 1: MÀN HÌNH CHÀO MỪNG (FIX TRIỆT ĐỂ, CLICK CHẠY NGAY 100%) ───
+# ─── TRANG 1: MÀN HÌNH CHÀO MỪNG (CLICK LÀ CHUYỂN TRANG 100%) ───
 if st.session_state["current_page"] == "👋 CHÀO MỪNG":
     st.markdown('<div class="menu-container">', unsafe_allow_html=True)
     top_col1, top_col2 = st.columns([8, 2])
@@ -232,7 +234,7 @@ if st.session_state["current_page"] == "👋 CHÀO MỪNG":
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Dựng khung hộp chào mừng bằng HTML thuần để lấy layout chuẩn
+    # Khung hộp chứa nội dung text chào mừng
     st.markdown(f"""
         <div class="welcome-box-outer">
             <h1>{T['title']}</h1>
@@ -241,8 +243,8 @@ if st.session_state["current_page"] == "👋 CHÀO MỪNG":
         </div>
     """, unsafe_allow_html=True)
 
-    # Đưa các nút bấm thật của Streamlit vào và ép CSS thành giao diện Gaming hoàn chỉnh
-    # Các nút này đặt ngay dưới text chào mừng, nằm cùng cấp trong dòng lệnh Python nên click là chạy
+    # Hàng chứa 2 nút bấm gốc Streamlit đã được CSS ép kiểu sang giao diện High-end
+    st.markdown('<div class="button-row-container">', unsafe_allow_html=True)
     btn_col1, btn_col2 = st.columns([1, 1])
     with btn_col1:
         if st.button(T['btn_member'], key="btn_member_key", use_container_width=True):
@@ -253,6 +255,7 @@ if st.session_state["current_page"] == "👋 CHÀO MỪNG":
         if st.button(T['btn_admin'], key="btn_admin_key", use_container_width=True):
             st.session_state["current_page"] = "⚙️ QUẢN TRỊ ADMIN"
             st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # ─── TRANG 2: TRANG CHỈNH SỬA ADMIN ───
 elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
