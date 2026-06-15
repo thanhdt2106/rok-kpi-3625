@@ -16,11 +16,11 @@ def read_file(filename):
     return ""
 
 # ==============================================================================
-# 2. CẤU HÌNH GIAO DIỆN CHUẨN ĐỒ HỌA HIGH-END UI (ẨN SẠCH TIÊU ĐỀ & HEADER MẶC ĐỊNH)
+# 2. CẤU HÌNH GIAO DIỆN CHUẨN ĐỒ HỌA HIGH-END UI (CÓ HIỆU ỨNG ĐỘNG CINEMA)
 # ==============================================================================
 st.set_page_config(page_title="FTD KPI SYSTEM", layout="wide", initial_sidebar_state="collapsed")
 
-# Inject CSS để diệt tận gốc Header, Thụt lề mặc định, dòng chữ thừa và custom nút bấm Streamlit
+# Inject CSS nâng cấp hiệu ứng động Neon Phát Sáng cho Trang Chào Mừng
 st.markdown("""
     <style>
         /* Ẩn triệt để menu bar, footer, viền đen trên đầu và các khoảng trống mặc định của Streamlit */
@@ -41,7 +41,7 @@ st.markdown("""
         iframe {width: 100% !important; border: none;}
         [data-testid="stSidebar"], [data-testid="stSidebarCollapseButton"] {display: none !important;}
         
-        /* Cố định hộp chọn ngôn ngữ ở góc trên cùng bên phải (đúng vị trí khoanh tím) */
+        /* Cố định hộp chọn ngôn ngữ ở góc trên cùng bên phải */
         .lang-fixed-topright {
             position: absolute;
             top: 15px;
@@ -50,43 +50,82 @@ st.markdown("""
             z-index: 999999;
         }
 
-        /* KHU VỰC BOX WELCOME CINEMA CHUẨN TÂM MÀN HÌNH */
+        /* KHU VỰC BOX WELCOME CINEMA CÓ HIỆU ỨNG ĐỘNG GLOW NEON */
         .welcome-box-outer {
             text-align: center;
-            padding: 50px 40px;
+            padding: 60px 40px 50px 40px;
             background: linear-gradient(180deg, #1f242c 0%, #0f1319 100%);
             border-radius: 20px;
             border: 1px solid #38444d;
-            margin: 8% auto 25px auto;
+            margin: 6% auto 25px auto;
             max-width: 650px;
             box-shadow: 0 25px 55px rgba(0, 0, 0, 0.85);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Khung chứa Icon Động phía trên tiêu đề */
+        .animated-icon-container {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Hiệu ứng nhấp nháy phát sáng (Pulse Glow) cho Icon Vương Miện */
+        .crown-glow-ani {
+            width: 70px;
+            height: 70px;
+            fill: #ffaa00;
+            filter: drop-shadow(0 0 8px rgba(255, 170, 0, 0.6));
+            animation: pulseGlow 2.5s infinite ease-in-out;
+        }
+
+        @keyframes pulseGlow {
+            0% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 6px rgba(255, 170, 0, 0.5));
+                opacity: 0.9;
+            }
+            50% {
+                transform: scale(1.08);
+                filter: drop-shadow(0 0 20px rgba(255, 170, 0, 0.9));
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 6px rgba(255, 170, 0, 0.5));
+                opacity: 0.9;
+            }
         }
 
         .welcome-box-outer h1 {
             color: #ffaa00; 
-            font-size: 34px; 
+            font-size: 36px; 
             font-weight: 800;
-            letter-spacing: 1.5px; 
+            letter-spacing: 2px; 
+            margin-top: 10px;
             margin-bottom: 5px;
-            text-shadow: 0 0 25px rgba(255, 170, 0, 0.3);
+            text-shadow: 0 0 25px rgba(255, 170, 0, 0.35);
         }
 
         .welcome-box-outer p {
             color: #8b949e; 
-            font-size: 15px; 
+            font-size: 14px; 
             font-weight: 500;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
         }
 
-        /* KHU VỰC CHỨA BỘ NÚT BẤM CỦA STREAMLIT NẰM GỌN TRONG FORM */
+        /* KHU VỰC CHỨA BỘ NÚT BẤM CỦA STREAMLIT */
         .buttons-wrapper-inside {
             max-width: 650px;
             margin: 0 auto;
             padding: 0 40px;
         }
 
-        /* TRIỆT TIÊU TOÀN BỘ VIỀN XÁM, THIẾT KẾ ĐẬM CHẤT GAMING CHO NÚT STREAMLIT */
+        /* CUSTOM NÚT BẤM STREAMLIT KHÔNG VIỀN */
         div[data-testid="stBlock"] button[key="btn_member_key"],
         div[data-testid="stBlock"] button[key="btn_admin_key"] {
             border: none !important;
@@ -103,7 +142,7 @@ st.markdown("""
             min-height: 55px !important;
         }
 
-        /* NÚT BẤM MEMBER: GRADIENT XANH ĐẬM HIGH-TECH */
+        /* NÚT BẤM MEMBER */
         div[data-testid="stBlock"] button[key="btn_member_key"] {
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
             color: #38bdf8 !important;
@@ -115,7 +154,7 @@ st.markdown("""
             transform: translateY(-3px) !important;
         }
 
-        /* NÚT BẤM ADMIN: GRADIENT VÀNG HỔ PHÁCH RỰC RỠ */
+        /* NÚT BẤM ADMIN */
         div[data-testid="stBlock"] button[key="btn_admin_key"] {
             background: linear-gradient(135deg, #ffaa00 0%, #d97706 100%) !important;
             color: #0d1117 !important;
@@ -134,7 +173,7 @@ GID1 = "0"
 GID2 = "1325084102"
 
 # ==============================================================================
-# 3. KHỞI TẠO TRẠNG THÁI & TỪ ĐIỂN NGÔN NGỮ NGƯỜI DÙNG
+# 3. KHỞI TẠO TRẠNG THÁI & TỪ ĐIỂN NGÔN NGỮ
 # ==============================================================================
 if "current_page" not in st.session_state:
     st.session_state["current_page"] = "👋 CHÀO MỪNG"
@@ -243,9 +282,9 @@ def on_sheet_change():
 # 4. ĐIỀU HƯỚNG GIAO DIỆN CHÍNH
 # ==============================================================================
 
-# ─── TRANG 1: MÀN HÌNH CHÀO MỪNG (SẠCH BÓNG RÁC, CHỈ CÒN ĐÚNG KHU VỰC CHỌN VÀ FORM) ───
+# ─── TRANG 1: MÀN HÌNH CHÀO MỪNG (ĐÃ THÊM ICON VƯƠNG MIỆN ĐỘNG PHÁT SÁNG) ───
 if st.session_state["current_page"] == "👋 CHÀO MỪNG":
-    # 1. Đặt hộp chọn ngôn ngữ nằm biệt lập ở góc trên bên phải trang web
+    # 1. Hộp chọn ngôn ngữ ở góc trên bên phải trang web
     st.markdown('<div class="lang-fixed-topright">', unsafe_allow_html=True)
     lang_choice = st.selectbox("🌐", ["VN", "EN"], index=0 if st.session_state["lang"] == "VN" else 1, label_visibility="collapsed")
     if lang_choice != st.session_state["lang"]:
@@ -253,16 +292,21 @@ if st.session_state["current_page"] == "👋 CHÀO MỪNG":
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 2. Tạo Box Cinema bằng HTML thuần
+    # 2. Tạo Box Cinema kèm Vector SVG Vương miện nhấp nháy phát sáng Neon
     st.markdown(f"""
         <div class="welcome-box-outer">
+            <div class="animated-icon-container">
+                <svg class="crown-glow-ani" viewBox="0 0 24 24">
+                    <path d="M5 16L3 5L8.5 10L12 4L15.5 10L21 5L19 16H5M19 19C19 19.6 18.6 20 18 20H6C5.4 20 5 19.6 5 19V18H19V19Z" />
+                </svg>
+            </div>
             <h1>{T['title']}</h1>
-            <div style="height: 2px; background: linear-gradient(90deg, transparent, #ffaa00, transparent); max-width: 380px; margin: 20px auto;"></div>
+            <div style="height: 2px; background: linear-gradient(90deg, transparent, #ffaa00, transparent); max-width: 380px; margin: 15px auto 20px auto;"></div>
             <p>{T['select_role']}</p>
         </div>
     """, unsafe_allow_html=True)
 
-    # 3. Chèn 2 nút bấm Streamlit thật xịn nằm ngay dưới khung (Được style đè không viền hoàn toàn)
+    # 3. Chèn bộ nút bấm thật Streamlit đã ép kiểu không viền dưới khung
     st.markdown('<div class="buttons-wrapper-inside">', unsafe_allow_html=True)
     btn_col1, btn_col2 = st.columns([1, 1])
     with btn_col1:
@@ -278,7 +322,6 @@ if st.session_state["current_page"] == "👋 CHÀO MỪNG":
 
 # ─── TRANG 2: TRANG CHỈNH SỬA ADMIN ───
 elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
-    # Thanh điều hướng riêng biệt bên trong trang Admin
     st.markdown('<div style="background: linear-gradient(135deg, #161b22 0%, #0d1117 100%); padding: 15px 25px; border-radius: 12px; border: 1px solid #30363d; margin: 15px 15px 25px 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">', unsafe_allow_html=True)
     m_col1, m_col2, m_col3, m_col4 = st.columns([3.5, 2, 2.5, 2])
     with m_col1: 
