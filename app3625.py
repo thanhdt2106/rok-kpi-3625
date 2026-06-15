@@ -154,7 +154,7 @@ def on_sheet_change():
 # 4. ĐIỀU HƯỚNG GIAO DIỆN CHÍNH
 # ==============================================================================
 
-# ─── TRANG 1: TRANG CHÀO MỪNG CHÍNH (ĐÃ SỬA CHUYỂN TRANG KHÔNG DÙNG NÚT ẨN) ───
+# ─── TRANG 1: MAN HÌNH CHÀO MỪNG (FIX HOÀN TOÀN LỖI CLICK) ───
 if st.session_state["current_page"] == "👋 CHÀO MỪNG":
     st.markdown('<div class="menu-container">', unsafe_allow_html=True)
     top_col1, top_col2 = st.columns([8, 2])
@@ -167,8 +167,18 @@ if st.session_state["current_page"] == "👋 CHÀO MỪNG":
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Đoạn mã mã hóa HTML sạch sẽ, sử dụng cơ chế thiết lập giá trị chuẩn của Streamlit Iframe
+    # Khung HTML giao diện Gaming chuẩn chỉnh, sạch sẽ và an toàn
     welcome_html_code = f"""
+    <div class="welcome-box">
+        <h1>{T['title']}</h1>
+        <div style="height: 2px; background: linear-gradient(90deg, transparent, #ffaa00, transparent); max-width: 400px; margin: 20px auto;"></div>
+        <p>{T['select_role']}</p>
+        <div class="btn-wrapper">
+            <button class="btn-gaming btn-member" onclick="Streamlit.setComponentValue('MEMBER')">{T['btn_member']}</button>
+            <button class="btn-gaming btn-admin" onclick="Streamlit.setComponentValue('ADMIN')">{T['btn_admin']}</button>
+        </div>
+    </div>
+
     <style>
         .welcome-box {{
             text-align: center;
@@ -197,22 +207,12 @@ if st.session_state["current_page"] == "👋 CHÀO MỪNG":
         .btn-admin {{ background: linear-gradient(135deg, #ffaa00 0%, #d97706 100%); color: #0f1319; }}
         .btn-admin:hover {{ background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); box-shadow: 0 0 25px rgba(245, 158, 11, 0.6); transform: translateY(-3px); }}
     </style>
-    
-    <div class="welcome-box">
-        <h1>{T['title']}</h1>
-        <div style="height: 2px; background: linear-gradient(90deg, transparent, #ffaa00, transparent); max-width: 400px; margin: 20px auto;"></div>
-        <p>{T['select_role']}</p>
-        <div class="btn-wrapper">
-            <button class="btn-gaming btn-member" onclick="Streamlit.setComponentValue('MEMBER')">{T['btn_member']}</button>
-            <button class="btn-gaming btn-admin" onclick="Streamlit.setComponentValue('ADMIN')">{T['btn_admin']}</button>
-        </div>
-    </div>
     """
     
-    # Biến response_action nhận trực tiếp dữ liệu chuỗi khi có sự kiện click nút bấm bên trong HTML gửi lên
+    # Biến response_action hứng dữ liệu đồng bộ khi người dùng tương tác trong Iframe
     response_action = components.html(welcome_html_code, height=380, scrolling=False)
     
-    # Chuyển hướng trang mượt mà dựa theo phản hồi nhận được từ Iframe
+    # Xử lý logic chuyển trang mượt mà từ lõi Python
     if response_action == "MEMBER":
         st.session_state["current_page"] = "📊 TRANG CHỦ KPI"
         st.rerun()
@@ -318,7 +318,7 @@ elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
         with u_col3:
             lang_choice = st.selectbox("🌐", ["VN", "EN"], index=0 if st.session_state["lang"] == "VN" else 1, label_visibility="collapsed")
             if lang_choice != st.session_state["lang"]:
-                st.session_state["lang"] = choice
+                st.session_state["lang"] = lang_choice
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
     else:
