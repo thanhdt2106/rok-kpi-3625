@@ -36,9 +36,9 @@ def get_kpi_dead_value(p):
 # ===== 3. LOAD VÀ XỬ LÝ DỮ LIỆU =====
 @st.cache_data(ttl=60)
 def load_and_process_data():
-    sheet_id = "1CzGPseLzdRK1V-6qy7KD5T58sBRSGjQi"
-    gid1 = "855089129"
-    gid2 = "316243863"
+    sheet_id = "15CrOFNFsIno34mX0EuXkLKdwiJgn3rrmcM-sEKmoKUQ"
+    gid1 = "0"
+    gid2 = "1325084102"
     
     url1 = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid1}"
     url2 = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid2}"
