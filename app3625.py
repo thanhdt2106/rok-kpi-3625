@@ -10,7 +10,14 @@ import os
 # ==============================================================================
 st.set_page_config(page_title="FTD KPI SYSTEM", layout="wide", initial_sidebar_state="collapsed")
 
-# Inject CSS ẩn hoàn toàn thanh Sidebar và làm đẹp các khung container
+# ĐỊNH NGHĨA HÀM ĐỌC FILE LÊN ĐẦU ĐỂ TRÁNH LỖI NAMEERROR
+def read_file(filename):
+    if os.path.exists(filename):
+        with open(filename, "r", encoding="utf-8") as f:
+            return f.read()
+    return ""
+
+# Inject CSS ẩn hoàn toàn thanh Sidebar và định dạng giao diện chuẩn bóng đêm (Cinema)
 st.markdown("""
     <style>
         #MainMenu, footer, header {visibility: hidden;}
@@ -50,12 +57,6 @@ GID2 = "1325084102"
 # ==============================================================================
 # 2. ĐỊNH NGHĨA CÁC HÀM BỔ TRỢ & NGÔN NGỮ EN/VN
 # ==============================================================================
-def read_file(filename):
-    if os.path.exists(filename):
-        with open(filename, "r", encoding="utf-8") as f:
-            return f.read()
-    return ""
-
 def load_csv_data(gid):
     url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={gid}"
     df = pd.read_csv(url, dtype=str)
@@ -91,7 +92,7 @@ if "lang" not in st.session_state:
 if "selected_sheet_index" not in st.session_state:
     st.session_state["selected_sheet_index"] = 0
 
-# Từ điển quản lý từ vựng ngôn ngữ
+# Từ điển quản lý dịch tự động (Đã tinh chỉnh dọn dẹp nhãn thừa)
 lang_dict = {
     "VN": {
         "welcome": "👋 CHÀO MỪNG",
@@ -167,8 +168,6 @@ def on_sheet_change():
 
 # ─── TRANG 1: TRANG CHÀO MỪNG CHÍNH (WELCOME PAGE) ───
 if st.session_state["current_page"] == "👋 CHÀO MỪNG":
-    # ĐÃ XÓA: Thanh selectbox màu vàng cũ góc trên cùng bên phải đã được loại bỏ hoàn toàn
-
     st.markdown(f"""
         <div class="welcome-box">
             <h1 style='color: #ffaa00; margin-bottom: 10px;'>{T['welcome']}</h1>
@@ -177,17 +176,17 @@ if st.session_state["current_page"] == "👋 CHÀO MỪNG":
         </div>
     """, unsafe_allow_html=True)
     
-    # Thiết kế hệ thống 3 Nút Bấm Lựa Chọn Vai Trò kiêm Ngôn Ngữ trực quan
+    # 3 Nút lựa chọn vai trò kiêm chọn ngôn ngữ tổng
     w_col1, w_col2, w_col3 = st.columns(3)
     with w_col1:
         if st.button(T["btn_member"], use_container_width=True, type="secondary"):
-            st.session_state["lang"] = "VN"          # Ép ngôn ngữ sang Tiếng Việt
+            st.session_state["lang"] = "VN"
             st.session_state["current_page"] = "📊 TRANG CHỦ KPI"
             st.rerun()
             
     with w_col2:
         if st.button(T["btn_member_en"], use_container_width=True, type="secondary"):
-            st.session_state["lang"] = "EN"          # Ép ngôn ngữ sang Tiếng Anh
+            st.session_state["lang"] = "EN"
             st.session_state["current_page"] = "📊 TRANG CHỦ KPI"
             st.rerun()
 
@@ -221,7 +220,14 @@ elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
     if not st.session_state["is_admin_verified"]:
         admin_password = st.text_input(T["pass_label"], type="password", placeholder=T["pass_placeholder"])
         if admin_password:
-            if admin_password == st.secrets["admin"]["password"]:
+            # Cơ chế chống crash nếu bạn chưa điền Secrets trên cấu hình Web Streamlit
+            try:
+                target_pass = st.secrets["admin"]["password"]
+            except KeyError:
+                target_pass = "123" # Mật khẩu dự phòng tạm thời nếu chưa nạp Secrets thành công
+                st.warning("⚠️ Chưa phát hiện cấu hình Secrets trên Cloud. Đang dùng pass tạm: 123")
+
+            if admin_password == target_pass:
                 st.session_state["is_admin_verified"] = True
                 st.success(T["login_success"])
                 st.rerun()
@@ -266,7 +272,11 @@ elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
             
             with st.spinner(T["syncing"]):
                 try:
-                    response = requests.post(st.secrets["api"]["app_url"], json=payload)
+                    # Lấy API Endpoint an toàn chống crash
+                    try: app_url = st.secrets["api"]["app_url"]
+                    except KeyError: app_url = ""
+                    
+                    response = requests.post(app_url, json=payload)
                     res_json = response.json()
                     
                     if res_json.get("status") == "success":
