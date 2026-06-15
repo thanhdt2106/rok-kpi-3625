@@ -10,14 +10,7 @@ import os
 # ==============================================================================
 st.set_page_config(page_title="FTD KPI SYSTEM", layout="wide", initial_sidebar_state="collapsed")
 
-# Định nghĩa hàm đọc file ở đầu trang để tránh lỗi NameError
-def read_file(filename):
-    if os.path.exists(filename):
-        with open(filename, "r", encoding="utf-8") as f:
-            return f.read()
-    return ""
-
-# Inject CSS làm đẹp giao diện bóng đêm Cinema và ẩn các thành phần thừa
+# Inject CSS ẩn hoàn toàn thanh Sidebar và làm đẹp các khung container
 st.markdown("""
     <style>
         #MainMenu, footer, header {visibility: hidden;}
@@ -55,8 +48,37 @@ GID1 = "0"
 GID2 = "1325084102"
 
 # ==============================================================================
-# 2. KHỞI TẠO TRẠNG THÁI & TỪ ĐIỂN NGÔN NGỮ QUỐC TẾ
+# 2. ĐỊNH NGHĨA CÁC HÀM BỔ TRỢ & NGÔN NGỮ EN/VN
 # ==============================================================================
+def read_file(filename):
+    if os.path.exists(filename):
+        with open(filename, "r", encoding="utf-8") as f:
+            return f.read()
+    return ""
+
+def load_csv_data(gid):
+    url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={gid}"
+    df = pd.read_csv(url, dtype=str)
+    df.columns = df.columns.str.strip()
+    return df
+
+def get_kpi_kill_value(p):
+    if p >= 100_000_000: return 600_000_000
+    elif p >= 80_000_000: return 450_000_000
+    return 300_000_000
+
+def get_kpi_dead_value(p):
+    if p >= 100_000_000: return 1_500_000
+    elif p >= 90_000_000: return 1_200_000
+    elif p >= 80_000_000: return 1_000_000
+    elif p >= 70_000_000: return 800_000
+    elif p >= 60_000_000: return 700_000
+    elif p >= 50_000_000: return 600_000
+    elif p >= 40_000_000: return 500_000
+    elif p >= 30_000_000: return 400_000
+    else: return 300_000
+
+# Khởi tạo các trạng thái session_state hệ thống
 if "current_page" not in st.session_state:
     st.session_state["current_page"] = "👋 CHÀO MỪNG"
 
@@ -66,17 +88,18 @@ if "is_admin_verified" not in st.session_state:
 if "lang" not in st.session_state:
     st.session_state["lang"] = "VN"
 
+# Khởi tạo vị trí index bảng tính mặc định (0 là Bảng 1, 1 là Bảng 2)
 if "selected_sheet_index" not in st.session_state:
     st.session_state["selected_sheet_index"] = 0
 
-# Hệ thống từ điển chuẩn hóa (Gọn gàng, không đẻ thêm nút phụ)
+# Từ điển quản lý từ vựng ngôn ngữ
 lang_dict = {
     "VN": {
         "welcome": "👋 CHÀO MỪNG",
         "title": "Chào mừng đến với Hệ thống DKP / KPI của Vương Quốc 3625",
         "select_role": "Vui lòng lựa chọn vai trò của bạn để tiếp tục truy cập hệ thống:",
         "btn_member": "👤 Bạn là Member",
-        "btn_admin": "🛡️ Quản trị Admin",
+        "btn_admin": "🛡️ Bạn là ADMIN ?",
         "admin_title": "🛡️ KHU VỰC QUẢN TRỊ VIÊN",
         "pass_placeholder": "Nhập mật khẩu Admin để mở khóa hệ thống...",
         "pass_label": "Mật khẩu Admin:",
@@ -104,7 +127,7 @@ lang_dict = {
         "title": "Welcome to Kingdom 3625 DKP / KPI System",
         "select_role": "Please select your role to proceed into the system:",
         "btn_member": "👤 I am a Member",
-        "btn_admin": "🛡️ Admin Dashboard",
+        "btn_admin": "🛡️ I am an ADMIN ?",
         "admin_title": "🛡️ ADMINISTRATOR PANEL",
         "pass_placeholder": "Enter Admin password to unlock system...",
         "pass_label": "Admin Password:",
@@ -131,29 +154,7 @@ lang_dict = {
 
 T = lang_dict[st.session_state["lang"]]
 
-# Các hàm tải dữ liệu và tính toán logic
-def load_csv_data(gid):
-    url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={gid}"
-    df = pd.read_csv(url, dtype=str)
-    df.columns = df.columns.str.strip()
-    return df
-
-def get_kpi_kill_value(p):
-    if p >= 100_000_000: return 600_000_000
-    elif p >= 80_000_000: return 450_000_000
-    return 300_000_000
-
-def get_kpi_dead_value(p):
-    if p >= 100_000_000: return 1_500_000
-    elif p >= 90_000_000: return 1_200_000
-    elif p >= 80_000_000: return 1_000_000
-    elif p >= 70_000_000: return 800_000
-    elif p >= 60_000_000: return 700_000
-    elif p >= 50_000_000: return 600_000
-    elif p >= 40_000_000: return 500_000
-    elif p >= 30_000_000: return 400_000
-    else: return 300_000
-
+# Hàm xử lý khi Admin thay đổi selectbox chọn bảng tính
 def on_sheet_change():
     if "Bảng 1" in st.session_state["sheet_select_key"] or "Base KPI" in st.session_state["sheet_select_key"]:
         st.session_state["selected_sheet_index"] = 0
@@ -161,32 +162,28 @@ def on_sheet_change():
         st.session_state["selected_sheet_index"] = 1
 
 # ==============================================================================
-# 3. ĐIỀU HƯỚNG GIAO DIỆN CHÍNH
+# 3. ĐIỀU HƯỚNG GIAO DIỆN THEO LỰA CHỌN VÀ NGÔN NGỮ
 # ==============================================================================
 
 # ─── TRANG 1: TRANG CHÀO MỪNG CHÍNH (WELCOME PAGE) ───
 if st.session_state["current_page"] == "👋 CHÀO MỪNG":
-    # THANH MENU TỔNG Ở TRÊN CÙNG: Chứa Selectbox Ngôn ngữ duy nhất điều hướng toàn hệ thống
-    st.markdown('<div class="menu-container">', unsafe_allow_html=True)
-    top_col1, top_col2 = st.columns([8, 2])
-    with top_col1:
-        st.markdown(f"### {T['welcome']}")
-    with top_col2:
-        lang_choice = st.selectbox("🌐 Language", ["VN", "EN"], index=0 if st.session_state["lang"] == "VN" else 1, label_visibility="collapsed")
-        if lang_choice != st.session_state["lang"]:
-            st.session_state["lang"] = lang_choice
+    lang_col1, lang_col2 = st.columns([8, 1.5])
+    with lang_col2:
+        lang_choice = st.selectbox("🌐 Language", ["Tiếng Việt (VN)", "English (EN)"], 
+                                   index=0 if st.session_state["lang"] == "VN" else 1)
+        new_lang = "VN" if "Tiếng Việt" in lang_choice else "EN"
+        if new_lang != st.session_state["lang"]:
+            st.session_state["lang"] = new_lang
             st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown(f"""
         <div class="welcome-box">
-            <h2 style='color: #ffaa00; margin-bottom: 15px;'>FTD KINGDOM SYSTEM</h2>
-            <h4 style='color: #ffffff; margin-bottom: 30px;'>{T['title']}</h4>
-            <p style='color: #8b949e; margin-bottom: 20px;'>{T['select_role']}</p>
+            <h1 style='color: #ffaa00; margin-bottom: 10px;'>{T['welcome']}</h1>
+            <h3 style='color: #ffffff; margin-bottom: 30px;'>{T['title']}</h3>
+            <p style='color: #8b949e; margin-bottom: 40px;'>{T['select_role']}</p>
         </div>
     """, unsafe_allow_html=True)
     
-    # Trở về nguyên bản chuẩn: Chỉ có 2 nút tổng chọn vai trò Member / Admin công tâm
     w_col1, w_col2 = st.columns(2)
     with w_col1:
         if st.button(T["btn_member"], use_container_width=True, type="secondary"):
@@ -214,7 +211,6 @@ elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
             st.session_state["current_page"] = "👋 CHÀO MỪNG"
             st.rerun()
     with m_col4:
-        # Sử dụng chung nút Menu Tổng đồng bộ
         lang_choice = st.selectbox("🌐", ["VN", "EN"], index=0 if st.session_state["lang"] == "VN" else 1, label_visibility="collapsed")
         if lang_choice != st.session_state["lang"]:
             st.session_state["lang"] = lang_choice
@@ -224,13 +220,7 @@ elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
     if not st.session_state["is_admin_verified"]:
         admin_password = st.text_input(T["pass_label"], type="password", placeholder=T["pass_placeholder"])
         if admin_password:
-            try:
-                target_pass = st.secrets["admin"]["password"]
-            except KeyError:
-                target_pass = "123"
-                st.warning("⚠️ Chưa phát hiện cấu hình Secrets trên Cloud. Đang dùng pass tạm: 123")
-
-            if admin_password == target_pass:
+            if admin_password == st.secrets["admin"]["password"]:
                 st.session_state["is_admin_verified"] = True
                 st.success(T["login_success"])
                 st.rerun()
@@ -243,6 +233,7 @@ elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
             "Bảng 2: Cập Nhật Mới (1325084102)" if st.session_state["lang"] == "VN" else "Table 2: New Update (1325084102)"
         ]
         
+        # ĐÃ TỐI ƯU: Sử dụng thuộc tính key và on_change để ép Streamlit lưu trạng thái index chính xác tuyệt đối
         st.selectbox(
             T["select_sheet"], 
             sheet_options, 
@@ -251,6 +242,7 @@ elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
             on_change=on_sheet_change
         )
         
+        # Quyết định GID và tên hiển thị dựa trên index trạng thái đã được lưu cứng
         if st.session_state["selected_sheet_index"] == 0:
             target_gid = GID1
             worksheet_name = "Sheet1"  
@@ -275,10 +267,7 @@ elif st.session_state["current_page"] == "⚙️ QUẢN TRỊ ADMIN":
             
             with st.spinner(T["syncing"]):
                 try:
-                    try: app_url = st.secrets["api"]["app_url"]
-                    except KeyError: app_url = ""
-                    
-                    response = requests.post(app_url, json=payload)
+                    response = requests.post(st.secrets["api"]["app_url"], json=payload)
                     res_json = response.json()
                     
                     if res_json.get("status") == "success":
