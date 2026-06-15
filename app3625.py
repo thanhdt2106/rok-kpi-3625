@@ -1,6 +1,8 @@
+# app.py
 import streamlit as st
 import pandas as pd
 import streamlit.components.v1 as components
+import os
 
 # ===== 1. CẤU HÌNH FULL MÀN HÌNH =====
 st.set_page_config(page_title="FTD KPI SYSTEM", layout="wide", initial_sidebar_state="collapsed")
@@ -10,7 +12,6 @@ st.markdown("""
         [data-testid="stSidebar"] {display: none;}
         .block-container {padding: 0 !important; max-width: 100% !important;}
         #MainMenu, footer, header {visibility: hidden;}
-        /* Đảm bảo component iframe của Streamlit chiếm trọn 100% chiều rộng màn hình */
         iframe {width: 100% !important; border: none;}
     </style>
 """, unsafe_allow_html=True)
@@ -138,26 +139,20 @@ def load_and_process_data():
             "name": current_name,
             "id": str(row["ID"]),
             "alliance": row.get("Liên Minh", "FTD"),
-            
             "diff_pow": diff_pow,
             "diff_kill": diff_kill_score, 
             "diff_dead": diff_dead,          
-            
             "total_pow": pow_s2,
             "total_kill": kill_s2, 
-            "total_dead": dead_s2,           
-            
+            "total_dead": dead_s2,            
             "diff_t4": diff_t4_score,
             "diff_t5": diff_t5_score,
-            
             "real_pct_kill": real_pct_kill,
             "real_pct_dead": real_pct_dead,
             "real_pct_total": real_pct_total,
-            
             "bar_fill_kill": bar_fill_kill,
             "bar_fill_dead": bar_fill_dead,
             "bar_fill_total": bar_fill_total,
-            
             "final_kpi_dead": final_target_dead,
             "final_kpi_kill": final_target_kill
         })
@@ -169,7 +164,7 @@ except Exception as e:
     st.error(f"Lỗi đồng bộ cấu trúc dữ liệu bảng tính: {e}")
     st.stop()
 
-# ===== 4. BUILD HTML CARDS =====
+# ===== 4. DỰNG HTML CARDS DỰA TRÊN DATA =====
 cards_html = ""
 for item in final_data:
     avatar = f"https://api.dicebear.com/7.x/adventurer/svg?seed={item['name']}"
@@ -188,298 +183,22 @@ for item in final_data:
     </div>
     """
 
-# ===== 5. GIAO DIỆN HTML/CSS/JS =====
-html_content = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <style>
-        /* Ép toàn bộ phần tử tính toán kích thước bao gồm cả padding để không bị tràn viền */
-        * {{ box-sizing: border-box; }}
-        
-        body {{ background: #05070d; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 10px; width: 100%; overflow-x: hidden; }}
-        
-        #langBtn {{ position: fixed; top: 12px; right: 12px; background: gold; color: black; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; z-index: 2000; font-size: 12px; }}
-        
-        .avatar-wrap {{
-            width: 70px; height: 70px; margin: 0 auto 10px; border-radius: 50%; padding: 3px;
-            background: linear-gradient(45deg, #ffd700, #ff8c00);
-            box-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
-            animation: pulse-gold 2s infinite;
-        }}
-        @keyframes pulse-gold {{
-            0% {{ box-shadow: 0 0 8px rgba(255, 215, 0, 0.4); transform: scale(1); }}
-            50% {{ box-shadow: 0 0 20px rgba(255, 215, 0, 0.7); transform: scale(1.03); }}
-            100% {{ box-shadow: 0 0 8px rgba(255, 215, 0, 0.4); transform: scale(1); }}
-        }}
-        .avatar-wrap img {{ width: 100%; height: 100%; border-radius: 50%; background: #111; }}
-        
-        .search {{ width: 100%; padding: 12px; background: #111; border: 1px solid #333; color: white; border-radius: 12px; margin-bottom: 12px; font-size: 14px; -webkit-appearance: none; }}
-        
-        /* Bộ lọc tối ưu hiển thị dạng cuộn ngang hoặc thu nhỏ đều trên di động */
-        .filters {{ display: flex; gap: 6px; margin-bottom: 12px; width: 100%; }}
-        .filter {{ flex: 1; padding: 10px 4px; background: #222; border-radius: 8px; text-align: center; font-size: 10px; cursor: pointer; border: 1px solid #333; font-weight: 500; word-break: break-word; display: flex; align-items: center; justify-content: center; }}
-        .filter.active {{ background: gold; color: black; font-weight: bold; border-color: gold; }}
-        
-        /* Grid tự động chia cột thông minh tương thích mobile */
-        .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 10px; width: 100%; }}
-        .card {{ background: #161b22; padding: 12px; border-radius: 16px; text-align: center; border: 1px solid #222; cursor: pointer; transition: transform 0.2s, border-color 0.2s; }}
-        .card:hover {{ border-color: gold; transform: translateY(-3px); }}
-        .card-name {{ font-weight: bold; font-size: 13px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
-        .value {{ color: gold; font-family: monospace; font-size: 11px; }}
-        
-        /* Modal tối ưu giao diện tràn viền chống lỗi bị khuất góc trên màn hình nhỏ */
-        .modal {{ position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 3000; padding: 10px; }}
-        .profile-box {{ width: 100%; max-width: 360px; background: #1b1f2e; padding: 20px; border-radius: 20px; border: 1px solid gold; position: relative; max-height: 94vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }}
-        
-        /* Khối hiển thị 3 chỉ số chính trên 1 hàng ngang */
-        .stat-row {{ display: flex; gap: 6px; margin: 15px 0; width: 100%; }}
-        .stat-card {{ flex: 1; background: rgba(255,255,255,0.05); padding: 8px 4px; border-radius: 10px; text-align: center; font-size: 9px; min-width: 0; }}
-        .stat-card b {{ font-size: 11px; color: gold; display: block; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
-        
-        .info-trigger {{ background: #ffd700; color: #000; border: none; border-radius: 50%; width: 15px; height: 15px; font-size: 9px; font-weight: bold; cursor: pointer; display: inline-block; margin-left: 2px; line-height: 15px; text-align: center; vertical-align: middle; }}
-        
-        .t-detail-box {{ display: none; background: #0f111a; border: 1px dashed #ffd700; padding: 10px; margin-top: 8px; border-radius: 8px; font-size: 11px; text-align: left; }}
-        .t-detail-box div {{ display: flex; justify-content: space-between; margin: 4px 0; color: #ccc; }}
-        .t-detail-box span {{ color: #00ffcc; font-family: monospace; font-weight: bold; }}
+# ===== 5. ĐỌC FILE TÀI NGUYÊN GIAO DIỆN =====
+def read_file(filename):
+    if os.path.exists(filename):
+        with open(filename, "r", encoding="utf-8") as f:
+            return f.read()
+    return ""
 
-        .kpi-section {{ font-size: 11px; margin-top: 12px; }}
-        .kpi-label {{ display: flex; justify-content: space-between; margin-bottom: 4px; font-weight: bold; align-items: center; }}
-        .pct-tag {{ color: #00ffcc; font-family: monospace; background: rgba(0,255,204,0.1); padding: 1px 4px; border-radius: 4px; font-size: 10px; }}
-        .bar {{ height: 8px; background: #333; border-radius: 4px; margin-bottom: 10px; overflow: hidden; width: 100%; }}
-        .fill {{ height: 100%; background: linear-gradient(90deg, #ffd700, #ff8c00); width: 0%; transition: width 0.4s ease-in-out; }}
-        .fill-total {{ background: linear-gradient(90deg, #00ffcc, #0099ff) !important; }}
-        
-        .alert-box {{ background: rgba(255,255,255,0.04); border-left: 4px solid gold; padding: 10px; border-radius: 6px; margin-top: 12px; font-size: 11px; line-height: 1.4; text-align: left; word-break: break-word; }}
-        .close-btn {{ width: 100%; padding: 12px; background: #ff4b4b; color: white; border: none; border-radius: 10px; cursor: pointer; margin-top: 12px; font-weight: bold; font-size: 13px; }}
-        
-        /* Tối ưu hóa kích thước chữ khi xem trên các thiết bị màn hình siêu nhỏ (như iPhone SE) */
-        @media (max-width: 350px) {{
-            .filter {{ font-size: 9px; }}
-            .stat-card b {{ font-size: 10px; }}
-            .profile-box {{ padding: 15px; }}
-        }}
-    </style>
-</head>
-<body>
-    <div id="langBtn">EN</div>
-    <input class="search" id="searchInput" placeholder="🔍 Nhập tên hoặc ID..." onkeyup="search(this.value)">
-    <div class="filters">
-        <div class="filter active" id="fPow" onclick="setMode('power', this)">⚡ SỨC MẠNH BIẾN ĐỘNG</div>
-        <div class="filter" id="fKill" onclick="setMode('kill', this)">🔥 TIÊU DIỆT BIẾN ĐỘNG</div>
-        <div class="filter" id="fDead" onclick="setMode('dead', this)">💀 ĐIỂM CHẾT BIẾN ĐỘNG</div>
-    </div>
-    <div class="grid" id="grid">{cards_html}</div>
-    <div class="modal" id="modal"><div class="profile-box" id="profileContent"></div></div>
+style_css_content = read_file("style.css")
+html_template_content = read_file("template.html")
 
-<script>
-    let activeProfileData = null; 
-    let lang = "vn";
+# Trộn dữ liệu vào khung xương HTML
+if html_template_content and style_css_content:
+    final_html = html_template_content.replace("{style_css}", style_css_content).replace("{cards_html}", cards_html)
+else:
+    st.error("Không tìm thấy tệp cấu hình giao diện `style.css` hoặc `template.html`!")
+    st.stop()
 
-    const TEXT = {{
-        vn: {{ 
-            search: "🔍 Nhập tên hoặc ID...", 
-            pow: "⚡ SỨC MẠNH BIẾN ĐỘNG", 
-            kill: "🔥 TIÊU DIỆT BIẾN ĐỘNG", 
-            dead: "💀 ĐIỂM CHẾT BIẾN ĐỘNG", 
-            
-            lbl_pow: "⚡ SỨC MẠNH",
-            lbl_kill: "🔥 TIÊU DIỆT",
-            lbl_dead: "💀 ĐIỂM CHẾT",
-            
-            box_title: "BIẾN ĐỘNG ĐIỂM TIÊU DIỆT",
-            box_t4: "• Điểm T4 tăng thêm:",
-            box_t5: "• Điểm T5 tăng thêm:",
-            box_total: "• Tổng điểm (T4 + T5):",
-            
-            kK_label: "🔥 KPI Tiêu Diệt (T4+T5)", 
-            kD_label: "💀 KPI Điểm chết", 
-            kT_label: "📊 KPI TỔNG ĐẠT ĐƯỢC",
-            exit: "QUAY LẠI",
-            
-            msg_perfect: "Đỉnh đấy bro 😎",
-            msg_good: "Cũng khá ổn đấy nhưng cần cố gắng thêm 🫣",
-            msg_warn: "Bạn cần nộp phạt Rss để ở lại hoặc nhận vé bay miễn phí và rời đi 💸",
-            msg_kick: "Vui lòng rời đi trước ngày 29/6 🚨"
-        }},
-        en: {{ 
-            search: "🔍 Search name or ID...", 
-            pow: "⚡ POWER CHANGE", 
-            kill: "🔥 KILLS CHANGE", 
-            dead: "💀 DEAD CHANGE", 
-            
-            lbl_pow: "⚡ POWER",
-            lbl_kill: "🔥 KILLS",
-            lbl_dead: "💀 DEAD",
-            
-            box_title: "KILL POINTS CHANGE",
-            box_t4: "• T4 Points Gained:",
-            box_t5: "• T5 Points Gained:",
-            box_total: "• Total Points (T4 + T5):",
-            
-            kK_label: "🔥 Kills KPI (T4+T5)", 
-            kD_label: "💀 Dead KPI", 
-            kT_label: "📊 OVERALL KPI ACHIEVED",
-            exit: "CLOSE",
-            
-            msg_perfect: "Absolute beast, bro! 😎",
-            msg_good: "Not bad, but you need to push harder 🫣",
-            msg_warn: "Pay RSS fine to stay, or take a free passport and leave 💸",
-            msg_kick: "Please migrate out before June 29th 🚨"
-        }}
-    }};
-
-    document.getElementById("langBtn").onclick = function() {{
-        lang = lang === "vn" ? "en" : "vn";
-        this.innerText = lang.toUpperCase();
-        
-        document.getElementById("searchInput").placeholder = TEXT[lang].search;
-        document.getElementById("fPow").innerText = TEXT[lang].pow;
-        document.getElementById("fKill").innerText = TEXT[lang].kill;
-        document.getElementById("fDead").innerText = TEXT[lang].dead;
-        
-        let activeFilter = document.querySelector('.filter.active');
-        if(activeFilter) {{
-            let mode = activeFilter.id === 'fPow' ? 'power' : (activeFilter.id === 'fKill' ? 'kill' : 'dead');
-            updateCardValues(mode);
-        }}
-        
-        if (activeProfileData) {{
-            renderModalContent();
-        }}
-    }};
-
-    function search(v) {{
-        v = v.toLowerCase();
-        document.querySelectorAll('.card').forEach(c => {{
-            const name = c.querySelector('.card-name').innerText.toLowerCase();
-            const id = c.getAttribute('data-id').toLowerCase();
-            if (name.includes(v) || id.includes(v)) {{
-                c.style.display = 'block';
-            }} else {{
-                c.style.display = 'none';
-            }}
-        }});
-    }}
-
-    function setMode(m, el) {{
-        document.querySelectorAll('.filter').forEach(f => f.classList.remove('active'));
-        el.classList.add('active');
-        let grid = document.getElementById('grid');
-        let cards = Array.from(grid.getElementsByClassName('card'));
-        cards.sort((a,b) => Number(b.dataset[m]) - Number(a.dataset[m]));
-        grid.innerHTML = "";
-        cards.forEach(c => grid.appendChild(c));
-        updateCardValues(m);
-    }}
-
-    function updateCardValues(m) {{
-        document.querySelectorAll('.card').forEach(c => {{
-            let prefix = m === 'power' ? '⚡ ' : (m === 'kill' ? '🔥 ' : '💀 ');
-            c.querySelector('.value').innerText = prefix + Number(c.dataset[m]).toLocaleString();
-        }});
-    }}
-
-    function toggleTDetail() {{
-        let box = document.getElementById('tDetailBox');
-        if(box.style.display === 'none' || box.style.display === '') {{
-            box.style.display = 'block';
-        }} else {{
-            box.style.display = 'none';
-        }}
-    }}
-
-    function openProfile(name, id, all, tPow, tKill, tDead, dKill, dDead, kK, kD, realPctK, realPctD, realPctT, barK, barD, barT, dt4, dt5, avatar) {{
-        activeProfileData = {{ name, id, all, tPow, tKill, tDead, dKill, dDead, kK, kD, realPctK, realPctD, realPctT, barK, barD, barT, dt4, dt5, avatar }};
-        document.getElementById('modal').style.display = 'flex';
-        renderModalContent();
-    }}
-
-    function renderModalContent() {{
-        if (!activeProfileData) return;
-        let d = activeProfileData;
-        let t = TEXT[lang];
-        
-        let systemMsg = "";
-        let alertBorderColor = "#ff4b4b"; 
-        let pct = Number(d.realPctT);
-        
-        if(pct >= 100) {{
-            systemMsg = t.msg_perfect;
-            alertBorderColor = "#00ffcc";
-        }} else if(pct >= 70) {{
-            systemMsg = t.msg_good;
-            alertBorderColor = "gold";
-        }} else if(pct >= 50) {{
-            systemMsg = t.msg_warn;
-            alertBorderColor = "#ff9900";
-        }} else {{
-            systemMsg = t.msg_kick;
-            alertBorderColor = "#ff4b4b";
-        }}
-        
-        document.getElementById('profileContent').innerHTML = `
-            <center>
-                <div class="avatar-wrap" style="width:65px; height:65px;"><img src="${{d.avatar}}"></div>
-                <h3 style="margin:5px 0 3px 0; font-size:16px;">${{d.name}}</h3>
-                <small style="color:#888; font-size:11px;">ID: ${{d.id}} | ${{d.all}}</small>
-            </center>
-            
-            <div class="stat-row">
-                <div class="stat-card">${{t.lbl_pow}}<br><b>${{Number(d.tPow).toLocaleString()}}</b></div>
-                <div class="stat-card">
-                    ${{t.lbl_kill}} <button class="info-trigger" onclick="toggleTDetail()">!</button>
-                    <br><b>${{Number(d.tKill).toLocaleString()}}</b>
-                </div>
-                <div class="stat-card">${{t.lbl_dead}}<br><b>${{Number(d.tDead).toLocaleString()}}</b></div>
-            </div>
-            
-            <div class="t-detail-box" id="tDetailBox">
-                <div style="color: gold; font-weight: bold; margin-bottom: 5px; text-align: center;">${{t.box_title}}</div>
-                <div>${{t.box_t4}} <span>${{Number(d.dt4) > 0 ? '+' : ''}}${{Number(d.dt4).toLocaleString()}}</span></div>
-                <div>${{t.box_t5}} <span>${{Number(d.dt5) > 0 ? '+' : ''}}${{Number(d.dt5).toLocaleString()}}</span></div>
-                <div style="border-top: 1px dashed #333; margin-top: 5px; padding-top: 5px;">${{t.box_total}} <span style="color: gold;">${{Number(d.dKill).toLocaleString()}}</span></div>
-            </div>
-
-            <div class="kpi-section">
-                <div class="kpi-label">
-                    <span>${{t.kK_label}} <span class="pct-tag">${{d.realPctK}}%</span></span>
-                    <span style="font-family: monospace;">${{Number(d.dKill).toLocaleString()}}/${{Number(d.kK).toLocaleString()}}</span>
-                </div>
-                <div class="bar"><div class="fill" style="width: ${{d.barK}}%;"></div></div>
-                
-                <div class="kpi-label">
-                    <span>${{t.kD_label}} <span class="pct-tag">${{d.realPctD}}%</span></span>
-                    <span style="font-family: monospace;">${{Number(d.dDead).toLocaleString()}}/${{Number(d.kD).toLocaleString()}}</span>
-                </div>
-                <div class="bar"><div class="fill" style="width: ${{d.barD}}%;"></div></div>
-                
-                <hr style="border: 0; border-top: 1px solid #333; margin: 12px 0;">
-                
-                <div class="kpi-label" style="color: #00ffcc;">
-                    <span>${{t.kT_label}} <span class="pct-tag" style="background: rgba(0,255,150,0.2); color: #00ffcc; font-weight: bold;">${{d.realPctT}}%</span></span>
-                </div>
-                <div class="bar"><div class="fill fill-total" style="width: ${{d.barT}}%;"></div></div>
-            </div>
-            
-            <div class="alert-box" style="border-left-color: ${{alertBorderColor}};">
-                <b style="color: ${{alertBorderColor}}; font-size: 10px; display:block; margin-bottom:2px;">SYSTEM NOTICE:</b>
-                <span>${{systemMsg}}</span>
-            </div>
-            
-            <button class="close-btn" onclick="closeProfile()">${{t.exit}}</button>
-        `;
-    }}
-
-    function closeProfile() {{
-        document.getElementById('modal').style.display = 'none';
-        activeProfileData = null;
-    }}
-</script>
-</body>
-</html>
-"""
-
-# Sử dụng chiều cao tự động hoặc đảm bảo vừa vặn, bật scrolling mượt mà cho điện thoại
-components.html(html_content, height=900, scrolling=True)
+# Hiển thị tích hợp Component lên Streamlit
+components.html(final_html, height=900, scrolling=True)
