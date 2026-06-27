@@ -552,35 +552,34 @@ elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
             })
         return processed_list
 
-    try: final_data = process_cards_data()
+    try: 
+        final_data = process_cards_data()
     except Exception as e:
         st.error(f"{T['sheet_err']} {e}")
         st.stop()
 
-
-
-
-   cards_html = ""
-    for item in final_data:
-        avatar = f"https://api.dicebear.com/7.x/adventurer/svg?seed={item['name']}"
-        
-        # Thêm logic cảnh báo đỏ nếu KPI < 50%
-        alert_class = "card-below-50" if item.get('is_below_50') == 1 else ""
-        alert_icon = "⚠️" if item.get('is_below_50') == 1 else ""
-        
-        cards_html += f"""
-        <div class="card {alert_class}" data-id="{item['id']}" onclick="openProfile('{item['name']}','{item['id']}','{item['alliance']}',
-                                    '{item['total_pow']}','{item['total_kill']}','{item['total_dead']}',
-                                    '{item['diff_kill']}','{item['diff_dead']}',
-                                    '{item['final_kpi_kill']}','{item['final_kpi_dead']}',
-                                    '{item['real_pct_kill']}','{item['real_pct_dead']}','{item['real_pct_total']}',
-                                    '{item['bar_fill_kill']}','{item['bar_fill_dead']}','{item['bar_fill_total']}',
-                                    '{item['diff_t4']}','{item['diff_t5']}','{avatar}')">
-            <div class="avatar-wrap"><img src="{avatar}"></div>
-            <div class="card-name">{item['name']} {alert_icon}</div>
-            <div class="value">⚡ {item['diff_pow']:,}</div>
-        </div>
-        """
+# Đảm bảo dòng dưới đây không có khoảng trắng dư thừa ở đầu dòng
+cards_html = ""
+for item in final_data:
+    avatar = f"https://api.dicebear.com/7.x/adventurer/svg?seed={item['name']}"
+    
+    # Logic cảnh báo
+    alert_class = "card-below-50" if item.get('is_below_50') == 1 else ""
+    alert_icon = "⚠️" if item.get('is_below_50') == 1 else ""
+    
+    cards_html += f"""
+    <div class="card {alert_class}" data-id="{item['id']}" onclick="openProfile('{item['name']}','{item['id']}','{item['alliance']}',
+                                '{item['total_pow']}','{item['total_kill']}','{item['total_dead']}',
+                                '{item['diff_kill']}','{item['diff_dead']}',
+                                '{item['final_kpi_kill']}','{item['final_kpi_dead']}',
+                                '{item['real_pct_kill']}','{item['real_pct_dead']}','{item['real_pct_total']}',
+                                '{item['bar_fill_kill']}','{item['bar_fill_dead']}','{item['bar_fill_total']}',
+                                '{item['diff_t4']}','{item['diff_t5']}','{avatar}')">
+        <div class="avatar-wrap"><img src="{avatar}"></div>
+        <div class="card-name">{item['name']} {alert_icon}</div>
+        <div class="value">⚡ {item['diff_pow']:,}</div>
+    </div>
+    """
 
     style_css_content = read_file("style.css")
     html_template_content = read_file("template.html")
