@@ -465,8 +465,11 @@ elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
         df2 = load_csv_data(GID2)
 
         def to_int(x):
-            try: return int(str(x).replace(",", ""))
-            except: return 0
+            try:
+                # Xử lý: chuyển về chuỗi, bỏ dấu phẩy, ép về float rồi int để tránh NaN
+                return int(float(str(x).replace(",", "").replace("nan", "0").replace("None", "0") or 0))
+            except:
+                return 0
 
         def find_col(df, keywords):
             for col in df.columns:
@@ -474,86 +477,56 @@ elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
                     return col
             return None
 
+        # Thiết lập cột
         col_pow = find_col(df2, ["sức", "mạnh"]) or "Sức Mạnh"
-        col_kill = find_col(df2, ["tổng", "tiêu", "diệt"]) or find_col(df2, ["kill"]) or "Tổng Tiêu Diệt"
+        col_kill = find_col(df2, ["tổng", "tiêu", "diệt"]) or "Tổng Tiêu Diệt"
         col_dead = find_col(df2, ["chết"]) or "Điểm Chết"
-        col_t4, col_t5 = "T4", "T5"
-
+        
         df1["ID_str"] = df1["ID"].astype(str).str.strip()
         df2["ID_str"] = df2["ID"].astype(str).str.strip()
 
-        name_sheet2 = df2.set_index("ID_str")["Tên"].to_dict()
-        pow_sheet2 = df2.set_index("ID_str")[col_pow].to_dict()
-        kill_sheet2 = df2.set_index("ID_str")[col_kill].to_dict()
-        dead_sheet2 = df2.set_index("ID_str")[col_dead].to_dict()
-        
-        t4_sheet1 = df1.set_index("ID_str")[col_t4].to_dict() if col_t4 in df1.columns else {}
-        t5_sheet1 = df1.set_index("ID_str")[col_t5].to_dict() if col_t5 in df1.columns else {}
-        t4_sheet2 = df2.set_index("ID_str")[col_t4].to_dict() if col_t4 in df2.columns else {}
-        t5_sheet2 = df2.set_index("ID_str")[col_t5].to_dict() if col_t5 in df2.columns else {}
-
-        col_dead_s1 = find_col(df1, ["chết"]) or "Điểm Chết"
-        df1["Power_Goc"] = df1[find_col(df1, ["sức", "mạnh"]) or "Sức Mạnh"].apply(to_int)
-        df1['Indiv_KPI_Dead'] = df1['Power_Goc'].apply(get_kpi_dead_value)
-        df1['Group'] = df1['Tên'].apply(lambda x: str(x).split()[0].upper() if pd.notnull(x) else "")
-        
-        def calc_indiv_diff_dead(row):
-            p_id = row['ID_str']
-            d_s1 = to_int(row[col_dead_s1])
-            d_s2 = to_int(dead_sheet2.get(p_id, d_s1))
-            return d_s2 - d_s1
-
-        df1['Indiv_Diff_Dead'] = df1.apply(calc_indiv_diff_dead, axis=1)
-        group_kpi_dead_sum = df1.groupby('Group')['Indiv_KPI_Dead'].transform('sum')
-        group_diff_dead_sum = df1.groupby('Group')['Indiv_Diff_Dead'].transform('sum')
-        group_max_power = df1.groupby('Group')['Power_Goc'].transform('max')
+        # Tạo map dữ liệu sạch
+        name_map = df2.set_index("ID_str")["Tên"].to_dict()
+        pow_map = {k: to_int(v) for k, v in df2.set_index("ID_str")[col_pow].to_dict().items()}
+        kill_map = {k: to_int(v) for k, v in df2.set_index("ID_str")[col_kill].to_dict().items()}
+        dead_map = {k: to_int(v) for k, v in df2.set_index("ID_str")[col_dead].to_dict().items()}
 
         processed_list = []
-        for i, row in df1.iterrows():
+        for _, row in df1.iterrows():
             p_id = row['ID_str']
-            is_main = (row['Power_Goc'] == group_max_power[i])
-            final_target_dead = group_kpi_dead_sum[i] if is_main else row['Indiv_KPI_Dead']
-            diff_dead = group_diff_dead_sum[i] if is_main else row['Indiv_Diff_Dead']
-            current_name = name_sheet2.get(p_id, row["Tên"])
+            pow_s1 = to_int(row.get(find_col(df1, ["sức", "mạnh"]), 0))
+            dead_s1 = to_int(row.get(find_col(df1, ["chết"]), 0))
             
-            pow_s1 = to_int(row[find_col(df1, ["sức", "mạnh"]) or "Sức Mạnh"])
-            dead_s1 = to_int(row[col_dead_s1])
-            t4_s1 = to_int(t4_sheet1.get(p_id, 0))
-            t5_s1 = to_int(t5_sheet1.get(p_id, 0))
+            # Tính toán
+            pow_s2 = pow_map.get(p_id, pow_s1)
+            kill_s2 = kill_map.get(p_id, 0)
+            dead_s2 = dead_map.get(p_id, dead_s1)
             
-            pow_s2 = to_int(pow_sheet2.get(p_id, pow_s1))
-            kill_s2 = to_int(kill_sheet2.get(p_id, 0))
-            dead_s2 = to_int(dead_sheet2.get(p_id, dead_s1))
-            t4_s2 = to_int(t4_sheet2.get(p_id, 0))
-            t5_s2 = to_int(t5_sheet2.get(p_id, 0))
-            
-            diff_t4_score = t4_s2 - t4_s1
-            diff_t5_score = t5_s2 - t5_s1
-            diff_kill_score = diff_t4_score + diff_t5_score
             diff_pow = pow_s2 - pow_s1
+            diff_kill = kill_s2 - to_int(row.get("Tổng Tiêu Diệt", 0))
+            diff_dead = dead_s2 - dead_s1
             
-            final_target_kill = get_kpi_kill_value(row['Power_Goc'])
-            real_pct_kill = round((diff_kill_score / final_target_kill) * 100, 1) if final_target_kill > 0 else 0.0
-            real_pct_dead = round((diff_dead / final_target_dead) * 100, 1) if final_target_dead > 0 else 0.0
-            real_pct_total = round((real_pct_kill + real_pct_dead) / 2, 1)
+            target_kill = get_kpi_kill_value(pow_s1)
+            target_dead = get_kpi_dead_value(pow_s1)
             
-            bar_fill_kill = min(100, max(0, int(real_pct_kill)))
-            bar_fill_dead = min(100, max(0, int(real_pct_dead)))
-            bar_fill_total = min(100, max(0, int(real_pct_total)))
+            pct_k = round((diff_kill / target_kill) * 100, 1) if target_kill > 0 else 0
+            pct_d = round((diff_dead / target_dead) * 100, 1) if target_dead > 0 else 0
+            pct_total = round((pct_k + pct_d) / 2, 1)
             
             processed_list.append({
-                "name": current_name, "id": str(row["ID"]), "alliance": row.get("Liên Minh", "FTD"),
-                "diff_pow": diff_pow, "diff_kill": diff_kill_score, "diff_dead": diff_dead,          
-                "total_pow": pow_s2, "total_kill": kill_s2, "total_dead": dead_s2,            
-                "diff_t4": diff_t4_score, "diff_t5": diff_t5_score,
-                "real_pct_kill": real_pct_kill, "real_pct_dead": real_pct_dead, "real_pct_total": real_pct_total,
-                "bar_fill_kill": bar_fill_kill, "bar_fill_dead": bar_fill_dead, "bar_fill_total": bar_fill_total,
-                "final_kpi_dead": final_target_dead, "final_kpi_kill": final_target_kill,
-                "is_below_50": 1 if real_pct_total < 50 else 0
+                "name": name_map.get(p_id, row.get("Tên", "Unknown")), "id": p_id,
+                "diff_pow": diff_pow, "diff_kill": diff_kill, "diff_dead": diff_dead,
+                "total_pow": pow_s2, "total_kill": kill_s2, "total_dead": dead_s2,
+                "real_pct_kill": pct_k, "real_pct_dead": pct_d, "real_pct_total": pct_total,
+                "bar_fill_kill": min(100, max(0, int(pct_k))),
+                "bar_fill_dead": min(100, max(0, int(pct_d))),
+                "bar_fill_total": min(100, max(0, int(pct_total))),
+                "final_kpi_dead": target_dead, "final_kpi_kill": target_kill,
+                "is_below_50": 1 if pct_total < 50 else 0
             })
         return processed_list
 
-    # --- Đảm bảo đoạn hiển thị thẻ HTML này thẳng hàng với lệnh gọi hàm ---
+    # --- Phần hiển thị (Đảm bảo thụt lề đúng 4 khoảng trắng) ---
     try:
         final_data = process_cards_data()
         cards_html = ""
@@ -569,13 +542,15 @@ elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
                                         '{item['final_kpi_kill']}','{item['final_kpi_dead']}',
                                         '{item['real_pct_kill']}','{item['real_pct_dead']}','{item['real_pct_total']}',
                                         '{item['bar_fill_kill']}','{item['bar_fill_dead']}','{item['bar_fill_total']}',
-                                        '{item['diff_t4']}','{item['diff_t5']}','{avatar}')">
+                                        '0','0','{avatar}')">
                 <div class="avatar-wrap"><img src="{avatar}"></div>
                 <div class="card-name">{item['name']} {alert_icon}</div>
                 <div class="value">⚡ {item['diff_pow']:,}</div>
             </div>
             """
     except Exception as e:
+        st.error(f"Lỗi hiển thị dữ liệu: {e}")
+        st.stop()
         st.error(f"{T['sheet_err']} {e}")
         st.stop()
     except Exception as e:
