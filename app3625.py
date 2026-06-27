@@ -558,6 +558,8 @@ elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
         st.stop()
 
 
+
+
    cards_html = ""
     for item in final_data:
         avatar = f"https://api.dicebear.com/7.x/adventurer/svg?seed={item['name']}"
