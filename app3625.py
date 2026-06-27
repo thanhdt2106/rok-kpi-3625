@@ -547,7 +547,7 @@ elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
                 "diff_t4": diff_t4_score, "diff_t5": diff_t5_score,
                 "real_pct_kill": real_pct_kill, "real_pct_dead": real_pct_dead, "real_pct_total": real_pct_total,
                 "bar_fill_kill": bar_fill_kill, "bar_fill_dead": bar_fill_dead, "bar_fill_total": bar_fill_total,
-                "final_kpi_dead": final_target_dead, "final_kpi_kill": final_target_kill
+                "final_kpi_dead": final_target_dead, "final_kpi_kill": final_target_kill,
                 "is_below_50": 1 if real_pct_total < 50 else 0  
             })
         return processed_list
