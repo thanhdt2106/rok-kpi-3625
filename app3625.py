@@ -266,8 +266,8 @@ T = lang_dict[st.session_state["lang"]]
 
 def load_csv_data(gid):
     url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={gid}"
-    # Đọc dữ liệu và điền 0 vào mọi ô trống để tránh NaN
-    df = pd.read_csv(url).fillna(0) 
+    # Đọc dữ liệu, thay tất cả các ô trống (NaN) bằng số 0
+    df = pd.read_csv(url).fillna(0)
     df.columns = df.columns.str.strip()
     return df
 
@@ -465,10 +465,12 @@ elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
         df2 = load_csv_data(GID2)
 
         # Đảm bảo hàm này lùi vào đúng 8 khoảng trắng (2 cấp tab)
+        # Hàm ép kiểu an toàn tuyệt đối
         def to_int(x):
-            try: 
-                return int(str(x).replace(",", ""))
-            except: 
+            try:
+                # Chuyển mọi thứ sang chuỗi, bỏ dấu phẩy, ép sang float rồi int
+                return int(float(str(x).replace(",", "")))
+            except (ValueError, TypeError):
                 return 0
 
         # Các dòng tiếp theo của hàm này cũng phải lùi 8 khoảng trắng
