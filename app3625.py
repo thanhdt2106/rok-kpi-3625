@@ -548,6 +548,7 @@ elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
                 "real_pct_kill": real_pct_kill, "real_pct_dead": real_pct_dead, "real_pct_total": real_pct_total,
                 "bar_fill_kill": bar_fill_kill, "bar_fill_dead": bar_fill_dead, "bar_fill_total": bar_fill_total,
                 "final_kpi_dead": final_target_dead, "final_kpi_kill": final_target_kill
+                "is_below_50": 1 if real_pct_total < 50 else 0  
             })
         return processed_list
 
@@ -556,20 +557,24 @@ elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
         st.error(f"{T['sheet_err']} {e}")
         st.stop()
 
-    cards_html = ""
+   cards_html = ""
     for item in final_data:
         avatar = f"https://api.dicebear.com/7.x/adventurer/svg?seed={item['name']}"
+        
+        # Thêm logic cảnh báo đỏ nếu KPI < 50%
+        alert_class = "card-below-50" if item.get('is_below_50') == 1 else ""
+        alert_icon = "⚠️" if item.get('is_below_50') == 1 else ""
+        
         cards_html += f"""
-        <div class="card" data-id="{item['id']}" data-power="{item['diff_pow']}" data-id-attr="{item['id']}" data-kill="{item['diff_kill']}" data-dead="{item['diff_dead']}"
-            onclick="openProfile('{item['name']}','{item['id']}','{item['alliance']}',
-                                 '{item['total_pow']}','{item['total_kill']}','{item['total_dead']}',
-                                 '{item['diff_kill']}','{item['diff_dead']}',
-                                 '{item['final_kpi_kill']}','{item['final_kpi_dead']}',
-                                 '{item['real_pct_kill']}','{item['real_pct_dead']}','{item['real_pct_total']}',
-                                 '{item['bar_fill_kill']}','{item['bar_fill_dead']}','{item['bar_fill_total']}',
-                                 '{item['diff_t4']}','{item['diff_t5']}','{avatar}')">
+        <div class="card {alert_class}" data-id="{item['id']}" onclick="openProfile('{item['name']}','{item['id']}','{item['alliance']}',
+                                    '{item['total_pow']}','{item['total_kill']}','{item['total_dead']}',
+                                    '{item['diff_kill']}','{item['diff_dead']}',
+                                    '{item['final_kpi_kill']}','{item['final_kpi_dead']}',
+                                    '{item['real_pct_kill']}','{item['real_pct_dead']}','{item['real_pct_total']}',
+                                    '{item['bar_fill_kill']}','{item['bar_fill_dead']}','{item['bar_fill_total']}',
+                                    '{item['diff_t4']}','{item['diff_t5']}','{avatar}')">
             <div class="avatar-wrap"><img src="{avatar}"></div>
-            <div class="card-name">{item['name']}</div>
+            <div class="card-name">{item['name']} {alert_icon}</div>
             <div class="value">⚡ {item['diff_pow']:,}</div>
         </div>
         """
