@@ -464,14 +464,14 @@ elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
         df1 = load_csv_data(GID1)
         df2 = load_csv_data(GID2)
 
-      def to_int(x):
-            try:
-                # Ép kiểu an toàn, kể cả khi dữ liệu là số, chuỗi hay ô trống (NaN)
-                val = float(str(x).replace(",", "").replace("nan", "0"))
-                return int(val)
-            except (ValueError, TypeError):
+        # Đảm bảo hàm này lùi vào đúng 8 khoảng trắng (2 cấp tab)
+        def to_int(x):
+            try: 
+                return int(str(x).replace(",", ""))
+            except: 
                 return 0
 
+        # Các dòng tiếp theo của hàm này cũng phải lùi 8 khoảng trắng
         def find_col(df, keywords):
             for col in df.columns:
                 if all(k.lower() in col.lower() for k in keywords):
