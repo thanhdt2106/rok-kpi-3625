@@ -540,19 +540,7 @@ elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
             bar_fill_dead = min(100, max(0, int(real_pct_dead)))
             bar_fill_total = min(100, max(0, int(real_pct_total)))
             
-            processed_list.append({
-                "name": current_name, "id": str(row["ID"]), "alliance": row.get("Liên Minh", "FTD"),
-                "diff_pow": diff_pow, "diff_kill": diff_kill_score, "diff_dead": diff_dead,          
-                "total_pow": pow_s2, "total_kill": kill_s2, "total_dead": dead_s2,            
-                "diff_t4": diff_t4_score, "diff_t5": diff_t5_score,
-                "real_pct_kill": real_pct_kill, "real_pct_dead": real_pct_dead, "real_pct_total": real_pct_total,
-                "bar_fill_kill": bar_fill_kill, "bar_fill_dead": bar_fill_dead, "bar_fill_total": bar_fill_total,
-                "final_kpi_dead": final_target_dead, "final_kpi_kill": final_target_kill,
-                "is_below_50": 1 if real_pct_total < 50 else 0  
-            })
-        return processed_list
-
-  # --- Thay thế đoạn processed_list.append cũ bằng đoạn này ---
+          # --- Thay thế đoạn processed_list.append cũ bằng đoạn này ---
             processed_list.append({
                 "name": current_name, "id": str(row["ID"]), "alliance": row.get("Liên Minh", "FTD"),
                 "diff_pow": diff_pow, "diff_kill": diff_kill_score, "diff_dead": diff_dead,          
@@ -588,6 +576,9 @@ elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
                 <div class="value">⚡ {item['diff_pow']:,}</div>
             </div>
             """
+    except Exception as e:
+        st.error(f"{T['sheet_err']} {e}")
+        st.stop()
     except Exception as e:
         st.error(f"{T['sheet_err']} {e}")
         st.stop()
