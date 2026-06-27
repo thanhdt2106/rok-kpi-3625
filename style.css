@@ -314,21 +314,6 @@ body {
 .btn-member-custom:hover { background: #58a6ff; color: #000; }
 .btn-admin-custom { background: #2b2210; color: #ffaa00; border: 1px solid #ffaa00; }
 /* Cảnh báo KPI dưới 50% */
-.card.card-below-50 {
-    border: 2px solid #ff4d4d !important;
-    background: linear-gradient(135deg, #2d1a1a 0%, #0d1117 100%) !important;
-    box-shadow: 0 0 15px rgba(255, 77, 77, 0.3) !important;
-    animation: pulseRed 2s infinite;
-}
 
-.card.card-below-50 .card-name {
-    color: #ff8080 !important;
-    font-weight: bold;
-}
-
-@keyframes pulseRed {
-    0% { box-shadow: 0 0 5px rgba(255, 77, 77, 0.2); }
-    50% { box-shadow: 0 0 15px rgba(255, 77, 77, 0.6); }
-    100% { box-shadow: 0 0 5px rgba(255, 77, 77, 0.2); }
 }
 .btn-admin-custom:hover { background: #ffaa00; color: #000; }
