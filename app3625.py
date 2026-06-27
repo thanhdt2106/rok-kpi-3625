@@ -266,7 +266,8 @@ T = lang_dict[st.session_state["lang"]]
 
 def load_csv_data(gid):
     url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={gid}"
-    df = pd.read_csv(url, dtype=str)
+    # Đọc dữ liệu và điền 0 vào mọi ô trống để tránh NaN
+    df = pd.read_csv(url).fillna(0) 
     df.columns = df.columns.str.strip()
     return df
 
@@ -463,9 +464,13 @@ elif st.session_state["current_page"] == "📊 TRANG CHỦ KPI":
         df1 = load_csv_data(GID1)
         df2 = load_csv_data(GID2)
 
-        def to_int(x):
-            try: return int(str(x).replace(",", ""))
-            except: return 0
+      def to_int(x):
+            try:
+                # Ép kiểu an toàn, kể cả khi dữ liệu là số, chuỗi hay ô trống (NaN)
+                val = float(str(x).replace(",", "").replace("nan", "0"))
+                return int(val)
+            except (ValueError, TypeError):
+                return 0
 
         def find_col(df, keywords):
             for col in df.columns:
